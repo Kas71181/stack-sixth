@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { ArrowLeft, Building2, Users, Info, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import BudgetSummary from "../components/results/BudgetSummary";
+import ROISimulator from "../components/results/ROISimulator";
 import RecommendationCard from "../components/results/RecommendationCard";
 
 const fade = (delay = 0) => ({
@@ -105,6 +106,13 @@ export default function Results() {
           ))}
         </div>
       </motion.div>
+
+      {/* ROI Simulator */}
+      {result.recommendations?.some((r) => r.estimated_savings_opportunity > 0) && (
+        <motion.div {...fade(0.28)}>
+          <ROISimulator recommendations={result.recommendations} />
+        </motion.div>
+      )}
 
       {/* Assumptions */}
       {result.assumptions?.length > 0 && (
