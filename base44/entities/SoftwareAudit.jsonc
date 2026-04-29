@@ -1,0 +1,76 @@
+{
+  "name": "SoftwareAudit",
+  "type": "object",
+  "properties": {
+    "company_name": {
+      "type": "string",
+      "title": "Company Name"
+    },
+    "user_type": {
+      "type": "string",
+      "enum": [
+        "startup",
+        "optimize"
+      ],
+      "title": "User Type"
+    },
+    "team_size": {
+      "type": "number",
+      "title": "Team Size"
+    },
+    "monthly_budget": {
+      "type": "number",
+      "title": "Monthly Budget"
+    },
+    "business_processes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Business Processes"
+    },
+    "pain_points": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Pain Points"
+    },
+    "existing_software": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "monthly_cost": {
+            "type": "number"
+          }
+        }
+      },
+      "title": "Existing Software"
+    },
+    "analysis_result": {
+      "type": "object",
+      "title": "Analysis Result"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "error"
+      ],
+      "title": "Status"
+    }
+  },
+  "required": [
+    "company_name",
+    "user_type",
+    "team_size"
+  ]
+}
