@@ -1,13 +1,10 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { ArrowLeft, Building2, Users, Info } from "lucide-react";
+import { ArrowLeft, Building2, Users, Info, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import BudgetSummary from "../components/results/BudgetSummary";
 import RecommendationCard from "../components/results/RecommendationCard";
-import OverlapFlags from "../components/results/OverlapFlags";
-import QuickWins from "../components/results/QuickWins";
-import NextSteps from "../components/results/NextSteps";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -80,17 +77,27 @@ export default function Results() {
       </motion.div>
 
       {/* Quick Wins */}
-      <motion.div {...fade(0.15)}>
-        <QuickWins wins={result.quick_wins} />
-      </motion.div>
-
-      {/* Overlap Flags */}
-      <motion.div {...fade(0.2)}>
-        <OverlapFlags flags={result.overlap_flags} />
-      </motion.div>
+      {result.quick_wins?.length > 0 && (
+        <motion.div {...fade(0.15)} className="bg-accent/50 border border-primary/10 rounded-2xl p-5">
+          <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+            <Zap className="w-4 h-4 text-primary" />
+            Quick Wins
+          </h3>
+          <ul className="space-y-2">
+            {result.quick_wins.map((w, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-sm">
+                <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                  {i + 1}
+                </span>
+                {w}
+              </li>
+            ))}
+          </ul>
+        </motion.div>
+      )}
 
       {/* Recommendations */}
-      <motion.div {...fade(0.25)}>
+      <motion.div {...fade(0.2)}>
         <h2 className="text-lg font-semibold mb-3">Recommendations</h2>
         <div className="space-y-3">
           {result.recommendations?.map((rec, i) => (
@@ -99,14 +106,9 @@ export default function Results() {
         </div>
       </motion.div>
 
-      {/* Next Steps */}
-      <motion.div {...fade(0.3)}>
-        <NextSteps steps={result.next_30_day_plan} />
-      </motion.div>
-
       {/* Assumptions */}
       {result.assumptions?.length > 0 && (
-        <motion.div {...fade(0.35)} className="bg-muted/50 rounded-2xl p-5">
+        <motion.div {...fade(0.25)} className="bg-muted/50 rounded-2xl p-5">
           <h3 className="text-xs font-semibold flex items-center gap-2 mb-2 text-muted-foreground uppercase tracking-wider">
             <Info className="w-3.5 h-3.5" />
             Assumptions Made

@@ -16,10 +16,7 @@ export default function BudgetSummary({ result, audit }) {
     0
   ) || 0;
 
-  const totalWaste = result.overlap_flags?.reduce(
-    (sum, f) => sum + (f.estimated_monthly_waste || 0),
-    0
-  ) || 0;
+  const totalWaste = 0;
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -58,16 +55,6 @@ export default function BudgetSummary({ result, audit }) {
         <p className="text-xs text-muted-foreground">/month</p>
       </div>
 
-      <div className={`rounded-xl p-4 border ${totalWaste > 0 ? "bg-destructive/5 border-destructive/20" : "bg-card border-border/60"}`}>
-        <div className="flex items-center gap-2 mb-2">
-          <AlertTriangle className={`w-4 h-4 ${totalWaste > 0 ? "text-destructive" : "text-muted-foreground"}`} />
-          <span className="text-xs text-muted-foreground">Overlap Waste</span>
-        </div>
-        <p className={`text-xl font-bold font-mono ${totalWaste > 0 ? "text-destructive" : ""}`}>
-          ${totalWaste.toLocaleString()}
-        </p>
-        <p className="text-xs text-muted-foreground">/month</p>
-      </div>
     </div>
   );
 }

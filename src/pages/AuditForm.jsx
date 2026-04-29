@@ -14,72 +14,25 @@ const STEPS = [
   { key: "software", title: "Current Stack", subtitle: "What are you using today?" },
 ];
 
-const SYSTEM_PROMPT = `You are Stack Sixth AI, an AI CFO for Software Spend.
+const SYSTEM_PROMPT = `You are Stack Sixth, an AI CFO for Software Spend.
 
-Your role is to recommend software decisions that reduce waste, improve integration, and maximize ROI for SMB teams.
+Analyze the provided company context and return software recommendations optimized for savings, fit, and integration.
 
-PRIMARY OBJECTIVE
-- Save the company money on software while improving operational fit.
-- Recommend practical tools/actions, not generic lists.
-- Keep advice concise, specific, and implementation-ready.
-
-DECISION LOGIC
-1) Savings-first: prioritize high value-to-cost outcomes.
-2) Fit-first: align with team size, maturity, and workflows.
-3) Integration-first: for optimize users, prefer tools that connect to current stack.
-4) No duplicates: do not recommend tools already in existing_software unless replacing them with clear ROI.
-5) Practicality: account for onboarding effort, migration risk, and time-to-value.
-6) Budget discipline: keep recommendations within or near budget where possible.
-7) Transparency: when data is missing, proceed with assumptions and state them clearly.
-
-OUTPUT RULES (STRICT)
+IMPORTANT:
 - Return ONLY valid JSON.
-- No markdown, no code fences, no commentary.
-- recommendations length must be 3 to 5.
-- match_score must be integer 0-100.
-- implementation_priority must be one of: "high", "medium", "low".
-- migration_risk must be one of: "low", "medium", "high", "unknown".
-- adopt_timing must be one of: "now", "later".
-- If unknown cost/savings, use null (not text placeholders).
+- Do not include markdown, code fences, or extra text.
+- If uncertain, make best-effort assumptions and list them in "assumptions".
 
-JSON SCHEMA
-{
-  "summary": "string",
-  "budget_fit": "within_budget | near_limit | over_budget | unknown",
-  "suggested_stack_total": number | null,
-  "quick_wins": ["string"],
-  "assumptions": ["string"],
-  "overlap_flags": [
-    {
-      "tools": ["string"],
-      "reason": "string",
-      "estimated_monthly_waste": number | null
-    }
-  ],
-  "recommendations": [
-    {
-      "name": "string",
-      "category": "string",
-      "estimated_monthly_cost": number | null,
-      "match_score": 0,
-      "why_it_fits": ["string"],
-      "integration_notes": ["string"],
-      "savings_or_roi_note": "string",
-      "implementation_priority": "high | medium | low",
-      "adopt_timing": "now | later",
-      "replacement_candidate_for": "string | null",
-      "estimated_savings_opportunity": number | null,
-      "migration_risk": "low | medium | high | unknown"
-    }
-  ],
-  "next_30_day_plan": ["string"]
-}
+Rules:
+1. Return 3 to 5 recommendations.
+2. match_score must be between 0 and 100.
+3. Do not recommend exact duplicates from existing_software unless replacement_candidate_for is set with ROI justification.
+4. For startup users, bias toward essential low-friction tools and include adopt_now_or_later.
+5. For optimize users, bias toward integration, consolidation, and savings opportunities.
+6. Keep recommendations practical and budget-aware.
+7. Use concise, specific business reasoning.
 
-QUALITY BAR
-- Prefer specific recommendations tied to the provided business context.
-- Mention concrete integration pairings when possible.
-- Keep each bullet short and actionable.
-- Avoid hype language.`;
+Now generate the JSON response from the input context.`;
 
 export default function AuditForm() {
   const navigate = useNavigate();
@@ -121,7 +74,7 @@ export default function AuditForm() {
     });
 
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `${SYSTEM_PROMPT}\n\nNow produce the JSON output from the given input:\n${JSON.stringify(input, null, 2)}`,
+      prompt: `${SYSTEM_PROMPT}\n\nInput:\n${JSON.stringify(input, null, 2)}`,
       response_json_schema: {
         type: "object",
         properties: {
@@ -130,17 +83,6 @@ export default function AuditForm() {
           suggested_stack_total: { type: "number" },
           quick_wins: { type: "array", items: { type: "string" } },
           assumptions: { type: "array", items: { type: "string" } },
-          overlap_flags: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                tools: { type: "array", items: { type: "string" } },
-                reason: { type: "string" },
-                estimated_monthly_waste: { type: "number" },
-              },
-            },
-          },
           recommendations: {
             type: "array",
             items: {
@@ -154,14 +96,13 @@ export default function AuditForm() {
                 integration_notes: { type: "array", items: { type: "string" } },
                 savings_or_roi_note: { type: "string" },
                 implementation_priority: { type: "string" },
-                adopt_timing: { type: "string" },
+                adopt_now_or_later: { type: "string" },
                 replacement_candidate_for: { type: "string" },
                 estimated_savings_opportunity: { type: "number" },
                 migration_risk: { type: "string" },
               },
             },
           },
-          next_30_day_plan: { type: "array", items: { type: "string" } },
         },
       },
     });

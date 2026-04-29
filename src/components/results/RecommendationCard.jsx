@@ -56,7 +56,7 @@ export default function RecommendationCard({ rec, index }) {
               {rec.implementation_priority} priority
             </Badge>
             <Badge variant="outline" className="text-[10px] font-medium px-2">
-              {rec.adopt_timing === "now" ? "Adopt now" : "Adopt later"}
+              {rec.adopt_now_or_later === "now" ? "Adopt now" : "Adopt later"}
             </Badge>
           </div>
         </div>
