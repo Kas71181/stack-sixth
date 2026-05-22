@@ -2,11 +2,12 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
-import { Monitor, Layers, Link } from "lucide-react";
+import { Monitor, Layers } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 import SoftwareEvaluationTable from "../components/itdashboard/SoftwareEvaluationTable";
 import DecisionPanel from "../components/itdashboard/DecisionPanel";
 import ITSummaryStats from "../components/itdashboard/ITSummaryStats";
+import ExportToSheetsButton from "../components/itdashboard/ExportToSheetsButton";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -98,9 +99,15 @@ export default function ITDashboard() {
             <p className="text-sm text-muted-foreground mt-0.5">Evaluate AI recommendations and execute software decisions</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/60 border border-border/60 rounded-xl px-3 py-2">
-          <Layers className="w-3.5 h-3.5" />
-          <span><strong className="text-foreground">{completedAudits.length}</strong> audit{completedAudits.length !== 1 ? "s" : ""} analyzed</span>
+        <div className="flex items-center gap-3">
+          <ExportToSheetsButton
+            tools={selectedAudit ? allTools.filter((t) => t._auditId === selectedAudit) : allTools}
+            auditName={selectedAudit ? completedAudits.find((a) => a.id === selectedAudit)?.company_name : "All Audits"}
+          />
+          <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/60 border border-border/60 rounded-xl px-3 py-2">
+            <Layers className="w-3.5 h-3.5" />
+            <span><strong className="text-foreground">{completedAudits.length}</strong> audit{completedAudits.length !== 1 ? "s" : ""} analyzed</span>
+          </div>
         </div>
       </motion.div>
 
