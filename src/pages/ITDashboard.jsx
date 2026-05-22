@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
-import { Monitor, CheckCircle2, XCircle, Clock, DollarSign, Package, Users, TrendingDown } from "lucide-react";
+import { Monitor, Layers, Link } from "lucide-react";
+import { Link as RouterLink } from "react-router-dom";
 import SoftwareEvaluationTable from "../components/itdashboard/SoftwareEvaluationTable";
 import DecisionPanel from "../components/itdashboard/DecisionPanel";
 import ITSummaryStats from "../components/itdashboard/ITSummaryStats";
@@ -68,26 +69,38 @@ export default function ITDashboard() {
 
   if (completedAudits.length === 0) {
     return (
-      <div className="text-center py-32 text-muted-foreground">
-        <Monitor className="w-10 h-10 mx-auto mb-3 opacity-30" />
-        <p className="font-medium">No completed audits yet</p>
-        <p className="text-sm mt-1">Run an audit first to unlock the IT dashboard.</p>
+      <div className="text-center py-32">
+        <div className="w-16 h-16 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto mb-5">
+          <Monitor className="w-8 h-8 text-muted-foreground/40" />
+        </div>
+        <p className="font-bold text-lg text-foreground">No audits yet</p>
+        <p className="text-sm text-muted-foreground mt-1.5 max-w-xs mx-auto">Complete a software audit first to unlock the IT Manager Dashboard.</p>
+        <RouterLink
+          to="/audit"
+          className="inline-flex items-center gap-2 mt-5 px-5 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-xl hover:bg-primary/90 transition-colors"
+        >
+          Start Your First Audit
+        </RouterLink>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-7">
       {/* Header */}
-      <motion.div {...fade()}>
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Monitor className="w-5 h-5 text-primary" />
+      <motion.div {...fade()} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+            <Monitor className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">IT Manager Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Evaluate software recommendations and execute decisions</p>
+            <h1 className="text-2xl font-extrabold tracking-tight">IT Manager Dashboard</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">Evaluate AI recommendations and execute software decisions</p>
           </div>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/60 border border-border/60 rounded-xl px-3 py-2">
+          <Layers className="w-3.5 h-3.5" />
+          <span><strong className="text-foreground">{completedAudits.length}</strong> audit{completedAudits.length !== 1 ? "s" : ""} analyzed</span>
         </div>
       </motion.div>
 
@@ -103,23 +116,27 @@ export default function ITDashboard() {
       </motion.div>
 
       {/* Audit filter */}
-      <motion.div {...fade(0.1)}>
-        <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider mr-1">Filter by audit:</span>
+      <motion.div {...fade(0.1)} className="bg-card border border-border/60 rounded-2xl px-5 py-4">
+        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Filter by Audit</p>
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setSelectedAudit(null)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-              !selectedAudit ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border text-muted-foreground hover:border-primary/40"
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+              !selectedAudit
+                ? "bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20"
+                : "bg-muted/50 border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
             }`}
           >
-            All ({completedAudits.length})
+            All Audits ({completedAudits.length})
           </button>
           {completedAudits.map((a) => (
             <button
               key={a.id}
               onClick={() => setSelectedAudit(a.id === selectedAudit ? null : a.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                selectedAudit === a.id ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border text-muted-foreground hover:border-primary/40"
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                selectedAudit === a.id
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20"
+                  : "bg-muted/50 border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
               }`}
             >
               {a.company_name}
@@ -129,15 +146,15 @@ export default function ITDashboard() {
       </motion.div>
 
       {/* Main Table + Panel */}
-      <motion.div {...fade(0.15)} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+      <motion.div {...fade(0.15)} className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+        <div className="lg:col-span-3">
           <SoftwareEvaluationTable
             tools={selectedAudit ? allTools.filter((t) => t._auditId === selectedAudit) : allTools}
             selectedRec={selectedRec}
             onSelect={setSelectedRec}
           />
         </div>
-        <div>
+        <div className="lg:col-span-2">
           <DecisionPanel
             tool={selectedRec}
             onDecision={handleDecision}

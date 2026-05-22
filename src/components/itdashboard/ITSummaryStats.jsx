@@ -1,4 +1,4 @@
-import { CheckCircle2, XCircle, Clock, TrendingDown } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, TrendingDown, Layers } from "lucide-react";
 
 export default function ITSummaryStats({ total, pending, approved, rejected, tools }) {
   const totalSavings = tools
@@ -9,37 +9,47 @@ export default function ITSummaryStats({ total, pending, approved, rejected, too
     {
       label: "Total Tools",
       value: total,
-      icon: Clock,
-      color: "text-muted-foreground",
-      bg: "bg-muted/50",
+      icon: Layers,
+      color: "text-slate-500",
+      iconBg: "bg-slate-100",
+      border: "border-slate-200",
+      bg: "bg-white",
     },
     {
-      label: "Awaiting Decision",
+      label: "Awaiting Review",
       value: pending,
       icon: Clock,
       color: "text-amber-600",
-      bg: "bg-amber-50 border-amber-100",
+      iconBg: "bg-amber-100",
+      border: "border-amber-200",
+      bg: "bg-amber-50/50",
     },
     {
       label: "Approved",
       value: approved,
       icon: CheckCircle2,
-      color: "text-green-600",
-      bg: "bg-green-50 border-green-100",
+      color: "text-emerald-600",
+      iconBg: "bg-emerald-100",
+      border: "border-emerald-200",
+      bg: "bg-emerald-50/50",
     },
     {
       label: "Rejected",
       value: rejected,
       icon: XCircle,
       color: "text-red-500",
-      bg: "bg-red-50 border-red-100",
+      iconBg: "bg-red-100",
+      border: "border-red-200",
+      bg: "bg-red-50/50",
     },
     {
       label: "Approved Savings/mo",
       value: `$${totalSavings.toLocaleString()}`,
       icon: TrendingDown,
       color: "text-primary",
-      bg: "bg-primary/5 border-primary/10",
+      iconBg: "bg-primary/10",
+      border: "border-primary/20",
+      bg: "bg-primary/5",
       highlight: true,
     },
   ];
@@ -47,12 +57,17 @@ export default function ITSummaryStats({ total, pending, approved, rejected, too
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
       {stats.map((s) => (
-        <div key={s.label} className={`rounded-xl p-4 border ${s.bg}`}>
-          <div className="flex items-center gap-2 mb-1">
-            <s.icon className={`w-3.5 h-3.5 ${s.color}`} />
-            <p className="text-[11px] text-muted-foreground uppercase tracking-wider">{s.label}</p>
+        <div
+          key={s.label}
+          className={`rounded-2xl p-4 border shadow-sm ${s.bg} ${s.border} transition-all hover:shadow-md`}
+        >
+          <div className={`w-8 h-8 rounded-lg ${s.iconBg} flex items-center justify-center mb-3`}>
+            <s.icon className={`w-4 h-4 ${s.color}`} />
           </div>
-          <p className={`text-xl font-bold font-mono ${s.highlight ? "text-primary" : ""}`}>{s.value}</p>
+          <p className={`text-2xl font-bold ${s.highlight ? "text-primary" : "text-foreground"}`}>
+            {s.value}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1 leading-tight">{s.label}</p>
         </div>
       ))}
     </div>
