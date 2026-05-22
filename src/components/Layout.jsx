@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { BarChart3, History, Home, Monitor, ShoppingCart, LogOut, User } from "lucide-react";
+import { BarChart3, History, Home, Monitor, ShoppingCart, LogOut, User, Activity } from "lucide-react";
 import { useCart } from "@/components/cart/CartContext";
 import CartDrawer from "@/components/cart/CartDrawer";
 import AssistantChat from "@/components/assistant/AssistantChat";
@@ -10,6 +10,7 @@ const navItems = [
   { path: "/audit", label: "New Audit", icon: BarChart3 },
   { path: "/history", label: "History", icon: History },
   { path: "/it-dashboard", label: "IT Manager", icon: Monitor },
+  { path: "/monitoring", label: "Monitor", icon: Activity },
 ];
 
 export default function Layout() {

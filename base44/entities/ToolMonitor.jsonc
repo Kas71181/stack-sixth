@@ -1,0 +1,97 @@
+{
+  "name": "ToolMonitor",
+  "type": "object",
+  "properties": {
+    "audit_id": {
+      "type": "string",
+      "title": "Audit ID"
+    },
+    "company_name": {
+      "type": "string",
+      "title": "Company Name"
+    },
+    "report_period": {
+      "type": "string",
+      "title": "Report Period (e.g. 2026-05)"
+    },
+    "frequency": {
+      "type": "string",
+      "enum": [
+        "weekly",
+        "monthly",
+        "quarterly"
+      ],
+      "default": "monthly",
+      "title": "Monitoring Frequency"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "title": "Active Monitoring"
+    },
+    "tools_snapshot": {
+      "type": "array",
+      "title": "Tools Snapshot",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "monthly_cost": {
+            "type": "number"
+          },
+          "usage_score": {
+            "type": "number"
+          },
+          "risk_flag": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "report_summary": {
+      "type": "string",
+      "title": "Report Summary"
+    },
+    "total_spend": {
+      "type": "number",
+      "title": "Total Spend"
+    },
+    "flagged_tools": {
+      "type": "number",
+      "title": "Flagged Tools"
+    },
+    "savings_identified": {
+      "type": "number",
+      "title": "New Savings Identified"
+    },
+    "recommendations": {
+      "type": "array",
+      "title": "Periodic Recommendations",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "generated",
+        "error"
+      ],
+      "default": "pending",
+      "title": "Report Status"
+    }
+  },
+  "required": [
+    "audit_id",
+    "company_name"
+  ]
+}
