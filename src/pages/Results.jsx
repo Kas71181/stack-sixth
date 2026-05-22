@@ -1,8 +1,8 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { ArrowLeft, Building2, Users, Info, Zap, Globe, Target, LayoutList, Columns2, Tag } from "lucide-react";
+import { ArrowLeft, Building2, Users, Info, Zap, Globe, Target, LayoutList, Columns2, Tag, RefreshCw, Activity } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import BudgetSummary from "../components/results/BudgetSummary";
@@ -18,18 +18,90 @@ const fade = (delay = 0) => ({
   transition: { duration: 0.4, delay },
 });
 
+const SYSTEM_PROMPT = `You are Stack Sixth, an AI CFO for Software Spend.
+
+Analyze the provided company context and return software recommendations optimized for savings, fit, and integration.
+
+IMPORTANT:
+- Return ONLY valid JSON.
+- Do not include markdown, code fences, or extra text.
+
+Rules:
+1. Return 3 to 5 recommendations.
+2. match_score must be between 0 and 100.
+3. Do not recommend exact duplicates from existing_software unless replacement_candidate_for is set.
+4. For startup users, bias toward essential low-friction tools.
+5. For optimize users, bias toward integration, consolidation, and savings.
+6. Keep recommendations practical and budget-aware.`;
+
 export default function Results() {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [viewMode, setViewMode] = useState("list");
+  const [groupByCategory, setGroupByCategory] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+
+  // Check if this is a freshly completed audit
+  const isNew = new URLSearchParams(window.location.search).get("new") === "1";
+  const [showMonitorPrompt, setShowMonitorPrompt] = useState(isNew);
+
   const { data: audit, isLoading } = useQuery({
     queryKey: ["audit", id],
     queryFn: () => base44.entities.SoftwareAudit.get(id),
     enabled: !!user,
   });
 
-  const [viewMode, setViewMode] = useState("list");
-  const [groupByCategory, setGroupByCategory] = useState(false);
+  const handleRetry = async () => {
+    setRetrying(true);
+    const input = {
+      company_name: audit.company_name,
+      user_type: audit.user_type,
+      team_size: audit.team_size,
+      monthly_budget: audit.monthly_budget || null,
+      business_processes: audit.business_processes,
+      pain_points: audit.pain_points,
+      existing_software: audit.existing_software,
+      icp_profile: audit.icp_profile || null,
+    };
+    const result = await base44.integrations.Core.InvokeLLM({
+      prompt: `${SYSTEM_PROMPT}\n\nInput:\n${JSON.stringify(input, null, 2)}`,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          summary: { type: "string" },
+          budget_fit: { type: "string" },
+          suggested_stack_total: { type: "number" },
+          quick_wins: { type: "array", items: { type: "string" } },
+          assumptions: { type: "array", items: { type: "string" } },
+          recommendations: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                category: { type: "string" },
+                estimated_monthly_cost: { type: "number" },
+                match_score: { type: "number" },
+                why_it_fits: { type: "array", items: { type: "string" } },
+                integration_notes: { type: "array", items: { type: "string" } },
+                savings_or_roi_note: { type: "string" },
+                implementation_priority: { type: "string" },
+                adopt_now_or_later: { type: "string" },
+                replacement_candidate_for: { type: "string" },
+                estimated_savings_opportunity: { type: "number" },
+                migration_risk: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+    });
+    await base44.entities.SoftwareAudit.update(audit.id, { analysis_result: result, status: "completed" });
+    queryClient.invalidateQueries({ queryKey: ["audit", id] });
+    setRetrying(false);
+  };
 
   if (isLoading) {
     return (
@@ -39,13 +111,30 @@ export default function Results() {
     );
   }
 
-  // Block access if audit doesn't belong to the current user
   if (!audit || (audit.created_by && audit.created_by !== user?.email)) {
     return (
       <div className="text-center py-32">
         <p className="text-muted-foreground font-medium">Access denied.</p>
         <p className="text-sm text-muted-foreground mt-1">This audit does not belong to your account.</p>
         <Link to="/" className="text-primary text-sm underline mt-3 inline-block">Back to dashboard</Link>
+      </div>
+    );
+  }
+
+  // Error state
+  if (audit.status === "error") {
+    return (
+      <div className="max-w-2xl mx-auto text-center py-32">
+        <p className="font-bold text-lg">Analysis failed</p>
+        <p className="text-sm text-muted-foreground mt-1.5 mb-6">Something went wrong during the AI analysis. You can retry below.</p>
+        <button
+          onClick={handleRetry}
+          disabled={retrying}
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-60"
+        >
+          {retrying ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+          {retrying ? "Retrying..." : "Retry Analysis"}
+        </button>
       </div>
     );
   }
@@ -79,6 +168,35 @@ export default function Results() {
           <ExportPptxButton audit={audit} />
         </div>
       </motion.div>
+
+      {/* Post-audit monitoring prompt */}
+      {showMonitorPrompt && (
+        <motion.div {...fade(0.02)} className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Activity className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold">Enable continuous monitoring?</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Get monthly AI health reports on this stack automatically.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link
+              to="/monitoring"
+              className="px-3.5 py-1.5 bg-primary text-primary-foreground text-xs font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              Set Up
+            </Link>
+            <button
+              onClick={() => setShowMonitorPrompt(false)}
+              className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Dismiss
+            </button>
+          </div>
+        </motion.div>
+      )}
 
       {/* ICP Profile */}
       {icp && (
@@ -184,26 +302,26 @@ export default function Results() {
                 By Category
               </button>
             )}
-          <div className="flex items-center gap-1 bg-muted/60 border border-border/60 rounded-xl p-1">
-            <button
-              onClick={() => setViewMode("list")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                viewMode === "list" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <LayoutList className="w-3.5 h-3.5" />
-              List
-            </button>
-            <button
-              onClick={() => setViewMode("compare")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                viewMode === "compare" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Columns2 className="w-3.5 h-3.5" />
-              Compare
-            </button>
-          </div>
+            <div className="flex items-center gap-1 bg-muted/60 border border-border/60 rounded-xl p-1">
+              <button
+                onClick={() => setViewMode("list")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  viewMode === "list" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <LayoutList className="w-3.5 h-3.5" />
+                List
+              </button>
+              <button
+                onClick={() => setViewMode("compare")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  viewMode === "compare" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Columns2 className="w-3.5 h-3.5" />
+                Compare
+              </button>
+            </div>
           </div>
         </div>
         {viewMode === "list" ? (

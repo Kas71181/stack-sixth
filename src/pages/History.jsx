@@ -1,17 +1,29 @@
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { ArrowRight, Building2, Clock } from "lucide-react";
+import { ArrowRight, Building2, Clock, Trash2 } from "lucide-react";
 import moment from "moment";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/AuthContext";
+import { useState } from "react";
 
 export default function History() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
   const { data: audits, isLoading } = useQuery({
     queryKey: ["audits-all", user?.email],
     queryFn: () => base44.entities.SoftwareAudit.filter({ created_by: user?.email }, "-created_date", 50),
     enabled: !!user?.email,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.SoftwareAudit.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["audits-all"] });
+      setConfirmDelete(null);
+    },
   });
 
   if (isLoading) {
@@ -51,41 +63,66 @@ export default function History() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
               >
-                <Link
-                  to={`/results/${audit.id}`}
-                  className="flex items-center justify-between bg-card border border-border/60 rounded-xl px-5 py-4 hover:shadow-md transition-all group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center">
-                      <Building2 className="w-4 h-4 text-primary" />
+                <div className="flex items-center gap-2">
+                  <Link
+                    to={`/results/${audit.id}`}
+                    className="flex-1 flex items-center justify-between bg-card border border-border/60 rounded-xl px-5 py-4 hover:shadow-md transition-all group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center">
+                        <Building2 className="w-4 h-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">{audit.company_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {audit.team_size} people · {moment(audit.created_date).fromNow()}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-sm">{audit.company_name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {audit.team_size} people · {moment(audit.created_date).fromNow()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {totalSavings > 0 && (
-                      <span className="text-sm font-mono font-semibold text-primary">
-                        ${totalSavings.toLocaleString()} savings
+                    <div className="flex items-center gap-3">
+                      {totalSavings > 0 && (
+                        <span className="text-sm font-mono font-semibold text-primary">
+                          ${totalSavings.toLocaleString()} savings
+                        </span>
+                      )}
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          audit.status === "completed"
+                            ? "bg-primary/10 text-primary"
+                            : audit.status === "error"
+                            ? "bg-destructive/10 text-destructive"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {audit.status}
                       </span>
-                    )}
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                        audit.status === "completed"
-                          ? "bg-primary/10 text-primary"
-                          : audit.status === "error"
-                          ? "bg-destructive/10 text-destructive"
-                          : "bg-muted text-muted-foreground"
-                      }`}
+                      <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </div>
+                  </Link>
+                  {confirmDelete === audit.id ? (
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => deleteMutation.mutate(audit.id)}
+                        className="px-3 py-2 bg-destructive text-destructive-foreground text-xs font-semibold rounded-lg hover:bg-destructive/90 transition-colors"
+                      >
+                        Confirm
+                      </button>
+                      <button
+                        onClick={() => setConfirmDelete(null)}
+                        className="px-3 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmDelete(audit.id)}
+                      className="p-2 text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-destructive/5"
                     >
-                      {audit.status}
-                    </span>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                  </div>
-                </Link>
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </motion.div>
             );
           })}

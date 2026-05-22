@@ -149,7 +149,7 @@ Return a structured ICP profile with: industry, business_model (B2B/B2C/B2B2C), 
 
     setLoading(false);
     setLoadingStep("");
-    navigate(`/results/${audit.id}`);
+    navigate(`/results/${audit.id}?new=1`);
   };
 
   return (

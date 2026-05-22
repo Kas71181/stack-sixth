@@ -9,7 +9,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import AuditForm from './pages/AuditForm';
-import Results from './pages/Results';
+import Results from './pages/Results.jsx';
 import History from './pages/History';
 import ITDashboard from './pages/ITDashboard';
 import Monitoring from './pages/Monitoring';

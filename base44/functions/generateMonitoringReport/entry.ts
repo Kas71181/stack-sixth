@@ -110,6 +110,20 @@ Respond as JSON matching this schema:
       status: 'generated',
     });
 
+    // Send email notification to the audit owner
+    const savingsText = result.new_savings_identified > 0
+      ? `\n\n💰 New savings identified: $${result.new_savings_identified}/mo`
+      : '';
+    const flagsText = result.flagged_count > 0
+      ? `\n⚠️ Flagged tools: ${result.flagged_count}`
+      : '';
+
+    await base44.integrations.Core.SendEmail({
+      to: user.email,
+      subject: `Stack Sixth: Monthly Report Ready — ${audit.company_name} (${reportPeriod})`,
+      body: `Hi ${user.full_name || 'there'},\n\nYour monthly stack monitoring report for ${audit.company_name} is ready.\n\n${result.report_summary}${savingsText}${flagsText}\n\nView the full report in your Stack Sixth dashboard.\n\n— Stack Sixth AI`,
+    });
+
     return Response.json({ success: true, report });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
