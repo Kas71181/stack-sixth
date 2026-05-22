@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/lib/AuthContext";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -30,9 +31,11 @@ const features = [
 ];
 
 export default function Dashboard() {
+  const { user } = useAuth();
   const { data: audits } = useQuery({
-    queryKey: ["audits-summary"],
-    queryFn: () => base44.entities.SoftwareAudit.list("-created_date", 5),
+    queryKey: ["audits-summary", user?.email],
+    queryFn: () => base44.entities.SoftwareAudit.filter({ created_by: user?.email }, "-created_date", 5),
+    enabled: !!user?.email,
   });
 
   const completedAudits = audits?.filter((a) => a.status === "completed") || [];

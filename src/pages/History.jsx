@@ -4,11 +4,14 @@ import { base44 } from "@/api/base44Client";
 import { ArrowRight, Building2, Clock } from "lucide-react";
 import moment from "moment";
 import { motion } from "framer-motion";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function History() {
+  const { user } = useAuth();
   const { data: audits, isLoading } = useQuery({
-    queryKey: ["audits-all"],
-    queryFn: () => base44.entities.SoftwareAudit.list("-created_date", 50),
+    queryKey: ["audits-all", user?.email],
+    queryFn: () => base44.entities.SoftwareAudit.filter({ created_by: user?.email }, "-created_date", 50),
+    enabled: !!user?.email,
   });
 
   if (isLoading) {
