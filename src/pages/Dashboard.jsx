@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, BarChart3, DollarSign, Layers, Zap } from "lucide-react";
+import { ArrowRight, BarChart3, DollarSign, Layers, Zap, Search, TrendingDown, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
@@ -13,19 +13,19 @@ const fade = (delay = 0) => ({
 
 const features = [
   {
-    icon: DollarSign,
-    title: "Eliminate Waste",
-    desc: "Identify overlapping tools and unused licenses draining your budget.",
+    icon: Search,
+    title: "Identify Wasted Spend",
+    desc: "Detect duplicate tools, idle licenses, and overpriced plans draining your budget.",
   },
   {
-    icon: Layers,
-    title: "Optimize Stack",
-    desc: "Get AI-powered recommendations that fit your team's actual workflows.",
+    icon: TrendingDown,
+    title: "Savings Engine",
+    desc: "Get a ranked savings plan — redundant software, cheaper alternatives, and consolidation opportunities.",
   },
   {
-    icon: Zap,
-    title: "Actionable Plans",
-    desc: "Receive a 30-day implementation plan, not just a generic report.",
+    icon: RefreshCw,
+    title: "Optimize & Track ROI",
+    desc: "Implement your savings plan and track ROI. From insight → action → savings.",
   },
 ];
 
@@ -54,22 +54,29 @@ export default function Dashboard() {
       <motion.section {...fade()} className="text-center max-w-2xl mx-auto pt-8">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent text-accent-foreground text-xs font-medium mb-6">
           <BarChart3 className="w-3.5 h-3.5" />
-          AI-Powered Software Intelligence
+          AI CFO for Software Spend
         </div>
         <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight mb-4">
-          Your AI CFO for{" "}
-          <span className="text-primary">Software Spend</span>
+          Stop Wasting Money{" "}
+          <span className="text-primary">on Software</span>
         </h1>
-        <p className="text-muted-foreground text-lg leading-relaxed mb-8">
-          Stop overpaying for tools your team doesn't fully use. Get specific,
-          actionable recommendations to cut waste and improve ROI.
+        <p className="text-muted-foreground text-lg leading-relaxed mb-3">
+          SMBs waste <strong className="text-foreground">30–40% of their SaaS spend</strong> on duplicate tools, idle licenses, and overpriced plans. Stack Sixth identifies and eliminates that waste.
         </p>
-        <Link to="/audit">
-          <Button size="lg" className="gap-2 text-base px-8 h-12 rounded-xl shadow-lg shadow-primary/20">
-            Start Your Audit
-            <ArrowRight className="w-4 h-4" />
-          </Button>
-        </Link>
+        <p className="text-muted-foreground text-sm mb-8 italic">The sixth sense for software decisions.</p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link to="/audit">
+            <Button size="lg" className="gap-2 text-base px-8 h-12 rounded-xl shadow-lg shadow-primary/20 w-full sm:w-auto">
+              Start Free Audit
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </Link>
+          <Link to="/audit?type=optimize">
+            <Button size="lg" variant="outline" className="gap-2 text-base px-8 h-12 rounded-xl w-full sm:w-auto">
+              Optimize Existing Stack
+            </Button>
+          </Link>
+        </div>
       </motion.section>
 
       {/* Stats */}

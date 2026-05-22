@@ -17,12 +17,14 @@ export default function Layout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">S6</span>
-              </div>
+              <img
+                src="https://media.base44.com/images/public/69f28176704facfd454194e1/1136b18ad_StackAsset300x.png"
+                alt="Stack Sixth"
+                className="h-8 w-8 object-contain"
+              />
               <div className="flex flex-col">
-                <span className="font-semibold text-sm leading-tight tracking-tight">Stack Sixth</span>
-                <span className="text-[10px] text-muted-foreground leading-tight uppercase tracking-widest">AI CFO</span>
+                <span className="font-bold text-sm leading-tight tracking-tight">Stack Sixth</span>
+                <span className="text-[10px] text-muted-foreground leading-tight italic">The sixth sense for software decisions.</span>
               </div>
             </Link>
             <nav className="flex items-center gap-1">
