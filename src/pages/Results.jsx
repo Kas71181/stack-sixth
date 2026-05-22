@@ -9,6 +9,7 @@ import BudgetSummary from "../components/results/BudgetSummary";
 import ROISimulator from "../components/results/ROISimulator";
 import RecommendationCard from "../components/results/RecommendationCard";
 import ComparisonView from "../components/results/ComparisonView";
+import ProjectedROICalculator from "../components/results/ProjectedROICalculator";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -251,6 +252,17 @@ export default function Results() {
       {result.recommendations?.some((r) => r.estimated_savings_opportunity > 0) && (
         <motion.div {...fade(0.28)}>
           <ROISimulator recommendations={result.recommendations} />
+        </motion.div>
+      )}
+
+      {/* Long-Term ROI Calculator */}
+      {result.recommendations?.some((r) => r.estimated_savings_opportunity > 0) && (
+        <motion.div {...fade(0.32)}>
+          <ProjectedROICalculator
+            recommendations={result.recommendations}
+            currentBudget={audit.monthly_budget}
+            teamSize={audit.team_size}
+          />
         </motion.div>
       )}
 
