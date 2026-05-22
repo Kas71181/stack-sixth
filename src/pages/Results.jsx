@@ -2,11 +2,13 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { ArrowLeft, Building2, Users, Info, Zap, Globe, Target, Layers, TrendingUp, Cpu } from "lucide-react";
+import { ArrowLeft, Building2, Users, Info, Zap, Globe, Target, LayoutList, Columns2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState } from "react";
 import BudgetSummary from "../components/results/BudgetSummary";
 import ROISimulator from "../components/results/ROISimulator";
 import RecommendationCard from "../components/results/RecommendationCard";
+import ComparisonView from "../components/results/ComparisonView";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -23,6 +25,8 @@ export default function Results() {
     queryFn: () => base44.entities.SoftwareAudit.get(id),
     enabled: !!user,
   });
+
+  const [viewMode, setViewMode] = useState("list");
 
   if (isLoading) {
     return (
@@ -162,12 +166,42 @@ export default function Results() {
 
       {/* Recommendations */}
       <motion.div {...fade(0.2)}>
-        <h2 className="text-lg font-semibold mb-3">Recommendations</h2>
-        <div className="space-y-3">
-          {result.recommendations?.map((rec, i) => (
-            <RecommendationCard key={i} rec={rec} index={i} auditName={audit.company_name} />
-          ))}
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold">Recommendations</h2>
+          <div className="flex items-center gap-1 bg-muted/60 border border-border/60 rounded-xl p-1">
+            <button
+              onClick={() => setViewMode("list")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                viewMode === "list" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <LayoutList className="w-3.5 h-3.5" />
+              List
+            </button>
+            <button
+              onClick={() => setViewMode("compare")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                viewMode === "compare" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Columns2 className="w-3.5 h-3.5" />
+              Compare
+            </button>
+          </div>
         </div>
+        {viewMode === "list" ? (
+          <div className="space-y-3">
+            {result.recommendations?.map((rec, i) => (
+              <RecommendationCard key={i} rec={rec} index={i} auditName={audit.company_name} />
+            ))}
+          </div>
+        ) : (
+          <ComparisonView
+            recommendations={result.recommendations || []}
+            auditName={audit.company_name}
+            monthlyBudget={audit.monthly_budget}
+          />
+        )}
       </motion.div>
 
       {/* ROI Simulator */}
