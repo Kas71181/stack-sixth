@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard';
 import AuditForm from './pages/AuditForm';
 import Results from './pages/Results';
 import History from './pages/History';
+import ITDashboard from './pages/ITDashboard';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -42,6 +43,7 @@ const AuthenticatedApp = () => {
         <Route path="/audit" element={<AuditForm />} />
         <Route path="/results/:id" element={<Results />} />
         <Route path="/history" element={<History />} />
+        <Route path="/it-dashboard" element={<ITDashboard />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
     </Routes>

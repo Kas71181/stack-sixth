@@ -1,10 +1,11 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { BarChart3, History, Home } from "lucide-react";
+import { BarChart3, History, Home, Monitor } from "lucide-react";
 
 const navItems = [
   { path: "/", label: "Dashboard", icon: Home },
   { path: "/audit", label: "New Audit", icon: BarChart3 },
   { path: "/history", label: "History", icon: History },
+  { path: "/it-dashboard", label: "IT Manager", icon: Monitor },
 ];
 
 export default function Layout() {
