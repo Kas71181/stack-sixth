@@ -8,6 +8,7 @@ import { Link as RouterLink } from "react-router-dom";
 import MonitorCard from "../components/monitoring/MonitorCard";
 import MonitorSetupModal from "../components/monitoring/MonitorSetupModal";
 import MonitorReportDetail from "../components/monitoring/MonitorReportDetail";
+import SpendTrendChart from "../components/monitoring/SpendTrendChart";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -97,8 +98,15 @@ export default function Monitoring() {
         </motion.div>
       ) : (
         <>
+          {/* Spend Trend Chart */}
+          {reports.length > 1 && (
+            <motion.div {...fade(0.05)}>
+              <SpendTrendChart reports={reports} audits={completedAudits} />
+            </motion.div>
+          )}
+
           {/* Monitor cards per audit */}
-          <motion.div {...fade(0.05)} className="space-y-4">
+          <motion.div {...fade(0.08)} className="space-y-4">
             {completedAudits.map((audit) => {
               const auditReports = reports
                 .filter((r) => r.audit_id === audit.id)
