@@ -1,6 +1,7 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import { ArrowLeft, Building2, Users, Info, Zap, Globe, Target, Layers, TrendingUp, Cpu } from "lucide-react";
 import { motion } from "framer-motion";
 import BudgetSummary from "../components/results/BudgetSummary";
@@ -15,9 +16,12 @@ const fade = (delay = 0) => ({
 
 export default function Results() {
   const { id } = useParams();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { data: audit, isLoading } = useQuery({
     queryKey: ["audit", id],
     queryFn: () => base44.entities.SoftwareAudit.get(id),
+    enabled: !!user,
   });
 
   if (isLoading) {
@@ -28,11 +32,13 @@ export default function Results() {
     );
   }
 
-  if (!audit) {
+  // Block access if audit doesn't belong to the current user
+  if (!audit || (audit.created_by && audit.created_by !== user?.email)) {
     return (
       <div className="text-center py-32">
-        <p className="text-muted-foreground">Audit not found.</p>
-        <Link to="/" className="text-primary text-sm underline mt-2 inline-block">Back to dashboard</Link>
+        <p className="text-muted-foreground font-medium">Access denied.</p>
+        <p className="text-sm text-muted-foreground mt-1">This audit does not belong to your account.</p>
+        <Link to="/" className="text-primary text-sm underline mt-3 inline-block">Back to dashboard</Link>
       </div>
     );
   }

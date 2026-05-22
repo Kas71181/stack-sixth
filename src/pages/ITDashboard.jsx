@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { Monitor, Layers } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
+import { useAuth } from "@/lib/AuthContext";
 import SoftwareEvaluationTable from "../components/itdashboard/SoftwareEvaluationTable";
 import DecisionPanel from "../components/itdashboard/DecisionPanel";
 import ITSummaryStats from "../components/itdashboard/ITSummaryStats";
@@ -17,12 +18,14 @@ const fade = (delay = 0) => ({
 
 export default function ITDashboard() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [selectedAudit, setSelectedAudit] = useState(null);
   const [selectedRec, setSelectedRec] = useState(null);
 
   const { data: audits = [], isLoading } = useQuery({
-    queryKey: ["audits-it"],
-    queryFn: () => base44.entities.SoftwareAudit.list("-created_date", 50),
+    queryKey: ["audits-it", user?.email],
+    queryFn: () => base44.entities.SoftwareAudit.filter({ created_by: user?.email }, "-created_date", 50),
+    enabled: !!user?.email,
   });
 
   const completedAudits = audits.filter((a) => a.status === "completed");
