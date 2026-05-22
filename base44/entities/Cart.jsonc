@@ -1,0 +1,41 @@
+{
+  "name": "Cart",
+  "type": "object",
+  "properties": {
+    "audit_id": {
+      "type": "string",
+      "title": "Audit ID"
+    },
+    "items": {
+      "type": "array",
+      "title": "Cart Items",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "estimated_monthly_cost": {
+            "type": "number"
+          },
+          "estimated_savings_opportunity": {
+            "type": "number"
+          },
+          "match_score": {
+            "type": "number"
+          },
+          "audit_name": {
+            "type": "string"
+          },
+          "added_at": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": []
+}

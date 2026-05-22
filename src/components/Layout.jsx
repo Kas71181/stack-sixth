@@ -1,5 +1,8 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { BarChart3, History, Home, Monitor } from "lucide-react";
+import { BarChart3, History, Home, Monitor, ShoppingCart } from "lucide-react";
+import { useCart } from "@/components/cart/CartContext";
+import CartDrawer from "@/components/cart/CartDrawer";
+import AssistantChat from "@/components/assistant/AssistantChat";
 
 const navItems = [
   { path: "/", label: "Dashboard", icon: Home },
@@ -11,8 +14,11 @@ const navItems = [
 export default function Layout() {
   const location = useLocation();
 
+  const { items, setIsOpen } = useCart();
+
   return (
     <div className="min-h-screen bg-background">
+      <CartDrawer />
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -45,6 +51,18 @@ export default function Layout() {
                   </Link>
                 );
               })}
+              <button
+                onClick={() => setIsOpen(true)}
+                className="relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                <span className="hidden sm:inline">Cart</span>
+                {items.length > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center">
+                    {items.length}
+                  </span>
+                )}
+              </button>
             </nav>
           </div>
         </div>
@@ -52,6 +70,7 @@ export default function Layout() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Outlet />
       </main>
+      <AssistantChat />
     </div>
   );
 }

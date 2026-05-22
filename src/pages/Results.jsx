@@ -159,7 +159,7 @@ export default function Results() {
         <h2 className="text-lg font-semibold mb-3">Recommendations</h2>
         <div className="space-y-3">
           {result.recommendations?.map((rec, i) => (
-            <RecommendationCard key={i} rec={rec} index={i} />
+            <RecommendationCard key={i} rec={rec} index={i} auditName={audit.company_name} />
           ))}
         </div>
       </motion.div>
