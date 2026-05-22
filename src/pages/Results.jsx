@@ -1,7 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { ArrowLeft, Building2, Users, Info, Zap } from "lucide-react";
+import { ArrowLeft, Building2, Users, Info, Zap, Globe, Target, Layers, TrendingUp, Cpu } from "lucide-react";
 import { motion } from "framer-motion";
 import BudgetSummary from "../components/results/BudgetSummary";
 import ROISimulator from "../components/results/ROISimulator";
@@ -38,6 +38,7 @@ export default function Results() {
   }
 
   const result = audit.analysis_result || {};
+  const icp = audit.icp_profile;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -64,6 +65,62 @@ export default function Results() {
           </div>
         </div>
       </motion.div>
+
+      {/* ICP Profile */}
+      {icp && (
+        <motion.div {...fade(0.04)} className="bg-gradient-to-r from-primary/5 to-accent/30 border border-primary/15 rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Target className="w-3.5 h-3.5 text-primary" />
+            </div>
+            <h3 className="text-sm font-bold">Company ICP Detected</h3>
+            {audit.company_website && (
+              <a href={audit.company_website} target="_blank" rel="noopener noreferrer" className="ml-auto flex items-center gap-1 text-xs text-primary hover:underline">
+                <Globe className="w-3 h-3" />
+                Source
+              </a>
+            )}
+          </div>
+          {icp.summary && (
+            <p className="text-sm text-muted-foreground leading-relaxed mb-4">{icp.summary}</p>
+          )}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {icp.industry && (
+              <div className="bg-white/70 rounded-xl p-3 border border-border/40">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Industry</p>
+                <p className="text-xs font-semibold">{icp.industry}</p>
+              </div>
+            )}
+            {icp.business_model && (
+              <div className="bg-white/70 rounded-xl p-3 border border-border/40">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Model</p>
+                <p className="text-xs font-semibold">{icp.business_model}</p>
+              </div>
+            )}
+            {icp.company_stage && (
+              <div className="bg-white/70 rounded-xl p-3 border border-border/40">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Stage</p>
+                <p className="text-xs font-semibold capitalize">{icp.company_stage}</p>
+              </div>
+            )}
+            {icp.tech_maturity && (
+              <div className="bg-white/70 rounded-xl p-3 border border-border/40">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Tech Maturity</p>
+                <p className="text-xs font-semibold capitalize">{icp.tech_maturity}</p>
+              </div>
+            )}
+          </div>
+          {icp.key_use_cases?.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {icp.key_use_cases.map((uc, i) => (
+                <span key={i} className="text-[11px] bg-primary/10 text-primary px-2.5 py-0.5 rounded-full font-medium border border-primary/15">
+                  {uc}
+                </span>
+              ))}
+            </div>
+          )}
+        </motion.div>
+      )}
 
       {/* Summary */}
       {result.summary && (

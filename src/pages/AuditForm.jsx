@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Sparkles, Globe, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import StepCompanyInfo from "../components/audit/StepCompanyInfo";
@@ -16,7 +16,7 @@ const STEPS = [
 
 const SYSTEM_PROMPT = `You are Stack Sixth, an AI CFO for Software Spend.
 
-Analyze the provided company context and return software recommendations optimized for savings, fit, and integration.
+Analyze the provided company context — including any ICP (Ideal Customer Profile) data derived from their website — and return software recommendations optimized for savings, fit, and integration.
 
 IMPORTANT:
 - Return ONLY valid JSON.
@@ -25,12 +25,13 @@ IMPORTANT:
 
 Rules:
 1. Return 3 to 5 recommendations.
-2. match_score must be between 0 and 100.
+2. match_score must be between 0 and 100. Use the ICP profile to increase or decrease match scores based on industry fit and company stage.
 3. Do not recommend exact duplicates from existing_software unless replacement_candidate_for is set with ROI justification.
 4. For startup users, bias toward essential low-friction tools and include adopt_now_or_later.
 5. For optimize users, bias toward integration, consolidation, and savings opportunities.
 6. Keep recommendations practical and budget-aware.
-7. Use concise, specific business reasoning.
+7. Use concise, specific business reasoning that references the company's ICP where relevant (industry, growth stage, customer type).
+8. If ICP data is available, tailor why_it_fits bullets to explicitly reference the company's industry, business model, or growth stage.
 
 Now generate the JSON response from the input context.`;
 
@@ -38,8 +39,10 @@ export default function AuditForm() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(""); // "icp" | "analysis"
   const [formData, setFormData] = useState({
     company_name: "",
+    company_website: "",
     user_type: "",
     team_size: "",
     monthly_budget: "",
@@ -58,14 +61,45 @@ export default function AuditForm() {
 
   const handleSubmit = async () => {
     setLoading(true);
+
+    // Step 1: Fetch ICP from website if provided
+    let icpProfile = null;
+    if (formData.company_website) {
+      setLoadingStep("icp");
+      icpProfile = await base44.integrations.Core.InvokeLLM({
+        prompt: `Analyze this company's online presence and extract their Ideal Customer Profile (ICP) and business context.
+Company name: ${formData.company_name}
+Website/URL: ${formData.company_website}
+
+Return a structured ICP profile with: industry, business_model (B2B/B2C/B2B2C), company_stage (startup/growth/enterprise), primary_customers (who they sell to), key_use_cases (what they do), tech_maturity (low/medium/high), and growth_focus (cost_reduction/scaling/automation/compliance).`,
+        add_context_from_internet: true,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            industry: { type: "string" },
+            business_model: { type: "string" },
+            company_stage: { type: "string" },
+            primary_customers: { type: "string" },
+            key_use_cases: { type: "array", items: { type: "string" } },
+            tech_maturity: { type: "string" },
+            growth_focus: { type: "string" },
+            summary: { type: "string" },
+          },
+        },
+      });
+    }
+
+    setLoadingStep("analysis");
     const input = {
       company_name: formData.company_name,
+      company_website: formData.company_website || null,
       user_type: formData.user_type,
       team_size: formData.team_size,
       monthly_budget: formData.monthly_budget || null,
       business_processes: formData.business_processes,
       pain_points: formData.pain_points,
       existing_software: formData.existing_software,
+      icp_profile: icpProfile || null,
     };
 
     const audit = await base44.entities.SoftwareAudit.create({
@@ -109,10 +143,12 @@ export default function AuditForm() {
 
     await base44.entities.SoftwareAudit.update(audit.id, {
       analysis_result: result,
+      icp_profile: icpProfile || null,
       status: "completed",
     });
 
     setLoading(false);
+    setLoadingStep("");
     navigate(`/results/${audit.id}`);
   };
 
@@ -196,7 +232,7 @@ export default function AuditForm() {
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Analyzing...
+                  {loadingStep === "icp" ? "Building ICP..." : "Analyzing Stack..."}
                 </>
               ) : (
                 <>

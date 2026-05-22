@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Globe, Sparkles } from "lucide-react";
 
 export default function StepCompanyInfo({ data, onChange }) {
   return (
@@ -56,6 +57,28 @@ export default function StepCompanyInfo({ data, onChange }) {
             </div>
           </label>
         </RadioGroup>
+      </div>
+
+      <div>
+        <Label htmlFor="company_website" className="text-sm font-medium mb-2 block">
+          Company Website or LinkedIn URL
+          <span className="ml-2 text-xs font-normal text-primary bg-primary/10 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+            <Sparkles className="w-3 h-3" /> ICP Auto-detect
+          </span>
+        </Label>
+        <div className="relative">
+          <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            id="company_website"
+            placeholder="https://yourcompany.com"
+            value={data.company_website || ""}
+            onChange={(e) => onChange({ company_website: e.target.value })}
+            className="h-11 rounded-xl pl-9"
+          />
+        </div>
+        <p className="text-xs text-muted-foreground mt-1.5">
+          We'll analyze your online presence to build your ICP and align recommendations to your business model.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

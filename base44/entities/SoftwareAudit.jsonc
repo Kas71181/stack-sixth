@@ -6,6 +6,14 @@
       "type": "string",
       "title": "Company Name"
     },
+    "company_website": {
+      "type": "string",
+      "title": "Company Website"
+    },
+    "icp_profile": {
+      "type": "object",
+      "title": "ICP Profile"
+    },
     "user_type": {
       "type": "string",
       "enum": [
