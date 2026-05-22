@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, BarChart3, DollarSign, Layers, Zap, Search, TrendingDown, RefreshCw } from "lucide-react";
+import { ArrowRight, BarChart3, Search, TrendingDown, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/AuthContext";
+import SpendReductionChart from "@/components/dashboard/SpendReductionChart";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -34,7 +35,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { data: audits } = useQuery({
     queryKey: ["audits-summary", user?.email],
-    queryFn: () => base44.entities.SoftwareAudit.filter({ created_by: user?.email }, "-created_date", 5),
+    queryFn: () => base44.entities.SoftwareAudit.filter({ created_by: user?.email }, "-created_date", 50),
     enabled: !!user?.email,
   });
 
@@ -116,6 +117,13 @@ export default function Dashboard() {
           </div>
         ))}
       </motion.section>
+
+      {/* Spend Reduction Chart */}
+      {completedAudits.length > 0 && (
+        <motion.section {...fade(0.3)}>
+          <SpendReductionChart audits={completedAudits} />
+        </motion.section>
+      )}
 
       {/* Recent Audits */}
       {completedAudits.length > 0 && (
