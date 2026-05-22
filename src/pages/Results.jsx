@@ -10,6 +10,7 @@ import ROISimulator from "../components/results/ROISimulator";
 import RecommendationCard from "../components/results/RecommendationCard";
 import ComparisonView from "../components/results/ComparisonView";
 import ProjectedROICalculator from "../components/results/ProjectedROICalculator";
+import ExportPptxButton from "../components/results/ExportPptxButton";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -75,6 +76,7 @@ export default function Results() {
               {audit.monthly_budget && <span>${audit.monthly_budget.toLocaleString()}/mo budget</span>}
             </div>
           </div>
+          <ExportPptxButton audit={audit} />
         </div>
       </motion.div>
 
