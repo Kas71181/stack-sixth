@@ -6,6 +6,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/AuthContext";
 import SpendReductionChart from "@/components/dashboard/SpendReductionChart";
+import SpendByCategoryChart from "@/components/dashboard/SpendByCategoryChart";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -118,9 +119,16 @@ export default function Dashboard() {
         ))}
       </motion.section>
 
-      {/* Spend Reduction Chart */}
+      {/* Spend by Category */}
       {completedAudits.length > 0 && (
         <motion.section {...fade(0.3)}>
+          <SpendByCategoryChart audits={completedAudits} />
+        </motion.section>
+      )}
+
+      {/* Spend Reduction Chart */}
+      {completedAudits.length > 0 && (
+        <motion.section {...fade(0.35)}>
           <SpendReductionChart audits={completedAudits} />
         </motion.section>
       )}
