@@ -2,7 +2,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { ArrowLeft, Building2, Users, Info, Zap, Globe, Target, LayoutList, Columns2 } from "lucide-react";
+import { ArrowLeft, Building2, Users, Info, Zap, Globe, Target, LayoutList, Columns2, Tag } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import BudgetSummary from "../components/results/BudgetSummary";
@@ -27,6 +27,7 @@ export default function Results() {
   });
 
   const [viewMode, setViewMode] = useState("list");
+  const [groupByCategory, setGroupByCategory] = useState(false);
 
   if (isLoading) {
     return (
@@ -168,6 +169,18 @@ export default function Results() {
       <motion.div {...fade(0.2)}>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">Recommendations</h2>
+          <div className="flex items-center gap-2">
+            {viewMode === "list" && (
+              <button
+                onClick={() => setGroupByCategory(!groupByCategory)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                  groupByCategory ? "bg-primary/10 text-primary border-primary/20" : "bg-card text-muted-foreground border-border/60 hover:text-foreground"
+                }`}
+              >
+                <Tag className="w-3.5 h-3.5" />
+                By Category
+              </button>
+            )}
           <div className="flex items-center gap-1 bg-muted/60 border border-border/60 rounded-xl p-1">
             <button
               onClick={() => setViewMode("list")}
@@ -188,13 +201,43 @@ export default function Results() {
               Compare
             </button>
           </div>
+          </div>
         </div>
         {viewMode === "list" ? (
-          <div className="space-y-3">
-            {result.recommendations?.map((rec, i) => (
-              <RecommendationCard key={i} rec={rec} index={i} auditName={audit.company_name} />
-            ))}
-          </div>
+          groupByCategory ? (
+            (() => {
+              const grouped = (result.recommendations || []).reduce((acc, rec) => {
+                const cat = rec.category || "Other";
+                if (!acc[cat]) acc[cat] = [];
+                acc[cat].push(rec);
+                return acc;
+              }, {});
+              return (
+                <div className="space-y-6">
+                  {Object.entries(grouped).map(([category, recs]) => (
+                    <div key={category}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Tag className="w-3.5 h-3.5 text-primary" />
+                        <h3 className="text-sm font-semibold text-foreground">{category}</h3>
+                        <span className="text-xs text-muted-foreground">({recs.length})</span>
+                      </div>
+                      <div className="space-y-3">
+                        {recs.map((rec, i) => (
+                          <RecommendationCard key={i} rec={rec} index={result.recommendations.indexOf(rec)} auditName={audit.company_name} />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()
+          ) : (
+            <div className="space-y-3">
+              {result.recommendations?.map((rec, i) => (
+                <RecommendationCard key={i} rec={rec} index={i} auditName={audit.company_name} />
+              ))}
+            </div>
+          )
         ) : (
           <ComparisonView
             recommendations={result.recommendations || []}
