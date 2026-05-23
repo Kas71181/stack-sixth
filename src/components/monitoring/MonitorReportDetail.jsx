@@ -1,4 +1,7 @@
-import { X, AlertTriangle, CheckCircle2, Clock, TrendingUp, DollarSign, Activity } from "lucide-react";
+import { X, AlertTriangle, CheckCircle2, Clock, TrendingUp, DollarSign, Activity, RotateCcw, Flag } from "lucide-react";
+import { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQueryClient } from "@tanstack/react-query";
 
 function formatCurrency(val) {
   if (val == null) return "—";
@@ -14,6 +17,21 @@ const TOOL_STATUS = {
 };
 
 export default function MonitorReportDetail({ report, onClose }) {
+  const queryClient = useQueryClient();
+  const [toolStatuses, setToolStatuses] = useState({});
+  const [saving, setSaving] = useState({});
+
+  const updateToolStatus = async (toolIndex, newStatus) => {
+    setSaving((prev) => ({ ...prev, [toolIndex]: true }));
+    const updatedSnapshot = report.tools_snapshot.map((t, i) =>
+      i === toolIndex ? { ...t, status: newStatus } : t
+    );
+    await base44.entities.ToolMonitor.update(report.id, { tools_snapshot: updatedSnapshot });
+    setToolStatuses((prev) => ({ ...prev, [toolIndex]: newStatus }));
+    queryClient.invalidateQueries({ queryKey: ["monitor-reports"] });
+    setSaving((prev) => ({ ...prev, [toolIndex]: false }));
+  };
+
   if (!report) return null;
 
   return (
@@ -70,10 +88,14 @@ export default function MonitorReportDetail({ report, onClose }) {
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Tool Status Snapshot</p>
             <div className="space-y-2">
               {report.tools_snapshot.map((tool, i) => {
-                const s = TOOL_STATUS[tool.status] || TOOL_STATUS.pending;
+                const currentStatus = toolStatuses[i] ?? tool.status;
+                const s = TOOL_STATUS[currentStatus] || TOOL_STATUS.pending;
                 const Icon = s.icon;
+                const isSaving = saving[i];
+                const isRenewed = currentStatus === "adopted";
+                const isFlagged = currentStatus === "at_risk";
                 return (
-                  <div key={i} className="flex items-center justify-between bg-muted/40 rounded-xl px-4 py-3 gap-3">
+                  <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between bg-muted/40 rounded-xl px-4 py-3 gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <Icon className={`w-4 h-4 flex-shrink-0 ${s.color.split(" ")[0]}`} />
                       <div className="min-w-0">
@@ -81,7 +103,7 @@ export default function MonitorReportDetail({ report, onClose }) {
                         {tool.category && <p className="text-xs text-muted-foreground">{tool.category}</p>}
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 flex-shrink-0 text-right">
+                    <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
                       {tool.risk_flag && (
                         <p className="text-xs text-destructive max-w-[140px] text-right">{tool.risk_flag}</p>
                       )}
@@ -102,6 +124,33 @@ export default function MonitorReportDetail({ report, onClose }) {
                       <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${s.color}`}>
                         {s.label}
                       </span>
+                      {/* Action buttons */}
+                      <button
+                        onClick={() => updateToolStatus(i, isRenewed ? "pending" : "adopted")}
+                        disabled={isSaving}
+                        title={isRenewed ? "Undo renewed" : "Mark as Renewed"}
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-all disabled:opacity-50 ${
+                          isRenewed
+                            ? "bg-primary/10 text-primary border-primary/20 hover:bg-muted"
+                            : "bg-muted text-muted-foreground border-border/60 hover:bg-primary/10 hover:text-primary hover:border-primary/20"
+                        }`}
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        {isRenewed ? "Renewed" : "Renew"}
+                      </button>
+                      <button
+                        onClick={() => updateToolStatus(i, isFlagged ? "pending" : "at_risk")}
+                        disabled={isSaving}
+                        title={isFlagged ? "Remove flag" : "Flag for Review"}
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-all disabled:opacity-50 ${
+                          isFlagged
+                            ? "bg-destructive/10 text-destructive border-destructive/20 hover:bg-muted"
+                            : "bg-muted text-muted-foreground border-border/60 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20"
+                        }`}
+                      >
+                        <Flag className="w-3 h-3" />
+                        {isFlagged ? "Flagged" : "Flag"}
+                      </button>
                     </div>
                   </div>
                 );
