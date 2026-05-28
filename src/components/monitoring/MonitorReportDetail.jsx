@@ -1,4 +1,4 @@
-import { X, AlertTriangle, CheckCircle2, Clock, TrendingUp, DollarSign, Activity, RotateCcw, Flag } from "lucide-react";
+import { X, AlertTriangle, CheckCircle2, Clock, TrendingUp, DollarSign, Activity, RotateCcw, Flag, CalendarClock } from "lucide-react";
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -21,6 +21,8 @@ export default function MonitorReportDetail({ report, onClose }) {
   const [toolStatuses, setToolStatuses] = useState({});
   const [saving, setSaving] = useState({});
 
+  const [renewalDates, setRenewalDates] = useState({});
+
   const updateToolStatus = async (toolIndex, newStatus) => {
     setSaving((prev) => ({ ...prev, [toolIndex]: true }));
     const updatedSnapshot = report.tools_snapshot.map((t, i) =>
@@ -30,6 +32,15 @@ export default function MonitorReportDetail({ report, onClose }) {
     setToolStatuses((prev) => ({ ...prev, [toolIndex]: newStatus }));
     queryClient.invalidateQueries({ queryKey: ["monitor-reports"] });
     setSaving((prev) => ({ ...prev, [toolIndex]: false }));
+  };
+
+  const updateRenewalDate = async (toolIndex, date) => {
+    setRenewalDates((prev) => ({ ...prev, [toolIndex]: date }));
+    const updatedSnapshot = report.tools_snapshot.map((t, i) =>
+      i === toolIndex ? { ...t, renewal_date: date, renewal_reminder_sent: false } : t
+    );
+    await base44.entities.ToolMonitor.update(report.id, { tools_snapshot: updatedSnapshot });
+    queryClient.invalidateQueries({ queryKey: ["monitor-reports"] });
   };
 
   if (!report) return null;
@@ -94,8 +105,10 @@ export default function MonitorReportDetail({ report, onClose }) {
                 const isSaving = saving[i];
                 const isRenewed = currentStatus === "adopted";
                 const isFlagged = currentStatus === "at_risk";
+                const renewalDate = renewalDates[i] ?? tool.renewal_date ?? "";
+                const reminderSent = tool.renewal_reminder_sent && !renewalDates[i];
                 return (
-                  <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between bg-muted/40 rounded-xl px-4 py-3 gap-3">
+                  <div key={i} className="flex flex-col bg-muted/40 rounded-xl px-4 py-3 gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <Icon className={`w-4 h-4 flex-shrink-0 ${s.color.split(" ")[0]}`} />
                       <div className="min-w-0">
@@ -151,6 +164,22 @@ export default function MonitorReportDetail({ report, onClose }) {
                         <Flag className="w-3 h-3" />
                         {isFlagged ? "Flagged" : "Flag"}
                       </button>
+                    </div>
+                    {/* Renewal date row */}
+                    <div className="flex items-center gap-2 pt-1 border-t border-border/30">
+                      <CalendarClock className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                      <span className="text-[11px] text-muted-foreground">Renewal date:</span>
+                      <input
+                        type="date"
+                        value={renewalDate}
+                        onChange={(e) => updateRenewalDate(i, e.target.value)}
+                        className="text-[11px] border border-border/60 rounded-md px-2 py-0.5 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+                      />
+                      {renewalDate && (
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${reminderSent ? "bg-primary/10 text-primary border border-primary/20" : "bg-muted text-muted-foreground border border-border"}`}>
+                          {reminderSent ? "✓ Reminder sent" : "Reminder will be sent 30 days before"}
+                        </span>
+                      )}
                     </div>
                   </div>
                 );

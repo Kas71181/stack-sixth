@@ -52,6 +52,14 @@
           },
           "risk_flag": {
             "type": "string"
+          },
+          "renewal_date": {
+            "type": "string",
+            "title": "Renewal Date (YYYY-MM-DD)"
+          },
+          "renewal_reminder_sent": {
+            "type": "boolean",
+            "default": false
           }
         }
       }
