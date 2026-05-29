@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { ArrowRight, Building2, Clock, Trash2 } from "lucide-react";
+import { ArrowRight, Building2, Clock, Trash2, AlertCircle } from "lucide-react";
 import moment from "moment";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/AuthContext";
@@ -24,6 +24,7 @@ export default function History() {
       queryClient.invalidateQueries({ queryKey: ["audits-all"] });
       setConfirmDelete(null);
     },
+    onError: () => setConfirmDelete(null),
   });
 
   if (isLoading) {
@@ -36,9 +37,25 @@ export default function History() {
 
   const list = audits || [];
 
+  if (!audits && !isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 gap-3 text-center">
+        <AlertCircle className="w-8 h-8 text-destructive" />
+        <p className="font-semibold">Failed to load audit history</p>
+        <p className="text-sm text-muted-foreground">Please refresh the page or try again later.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Audit History</h1>
+      {deleteMutation.isError && (
+        <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/5 border border-destructive/20 rounded-xl px-4 py-3 mb-4">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          Failed to delete audit. Please try again.
+        </div>
+      )}
 
       {list.length === 0 ? (
         <div className="text-center py-20 bg-card border border-border/60 rounded-2xl">

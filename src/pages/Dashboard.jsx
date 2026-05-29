@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, BarChart3, Search, TrendingDown, RefreshCw } from "lucide-react";
+import { ArrowRight, BarChart3, Search, TrendingDown, RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
@@ -34,7 +34,7 @@ const features = [
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { data: audits } = useQuery({
+  const { data: audits, isError: auditsError } = useQuery({
     queryKey: ["audits-summary", user?.email],
     queryFn: () => base44.entities.SoftwareAudit.filter({ created_by: user?.email }, "-created_date", 50),
     enabled: !!user?.email,
@@ -52,6 +52,16 @@ export default function Dashboard() {
       )
     );
   }, 0);
+
+  if (auditsError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 gap-3 text-center">
+        <AlertCircle className="w-8 h-8 text-destructive" />
+        <p className="font-semibold">Failed to load your audits</p>
+        <p className="text-sm text-muted-foreground">Please refresh the page or try again later.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-12">

@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { motion } from "framer-motion";
-import { Activity, Bell, BellOff, RefreshCw, Plus, ChevronDown, ChevronUp, Mail } from "lucide-react";
+import { Activity, Bell, BellOff, RefreshCw, Plus, ChevronDown, ChevronUp, Mail, AlertCircle } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 import MonitorCard from "../components/monitoring/MonitorCard";
 import MonitorSetupModal from "../components/monitoring/MonitorSetupModal";
@@ -22,12 +22,20 @@ export default function Monitoring() {
   const [showSetup, setShowSetup] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
   const [generatingId, setGeneratingId] = useState(null);
+  const [generateError, setGenerateError] = useState(null);
   const [savingFreq, setSavingFreq] = useState(false);
+  const [freqError, setFreqError] = useState(false);
 
   const handleFrequencyChange = async (val) => {
     setSavingFreq(true);
-    await base44.auth.updateMe({ reminder_frequency: val });
-    setSavingFreq(false);
+    setFreqError(false);
+    try {
+      await base44.auth.updateMe({ reminder_frequency: val });
+    } catch {
+      setFreqError(true);
+    } finally {
+      setSavingFreq(false);
+    }
   };
 
   const { data: audits = [] } = useQuery({
@@ -54,9 +62,12 @@ export default function Monitoring() {
 
   const handleGenerateReport = async (auditId) => {
     setGeneratingId(auditId);
+    setGenerateError(null);
     try {
       await base44.functions.invoke("generateMonitoringReport", { audit_id: auditId });
       queryClient.invalidateQueries({ queryKey: ["monitor-reports"] });
+    } catch {
+      setGenerateError(auditId);
     } finally {
       setGeneratingId(null);
     }
@@ -98,6 +109,7 @@ export default function Monitoring() {
               <option value="monthly">Monthly</option>
               <option value="never">Never</option>
             </select>
+            {freqError && <AlertCircle className="w-3.5 h-3.5 text-destructive" title="Failed to save preference" />}
           </div>
           <button
             onClick={() => setShowSetup(true)}
@@ -136,8 +148,8 @@ export default function Monitoring() {
                 .filter((r) => r.audit_id === audit.id)
                 .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
               return (
+                <div key={audit.id}>
                 <MonitorCard
-                  key={audit.id}
                   audit={audit}
                   reports={auditReports}
                   isGenerating={generatingId === audit.id}
@@ -145,6 +157,13 @@ export default function Monitoring() {
                   onSelectReport={setSelectedReport}
                   selectedReport={selectedReport}
                 />
+                {generateError === audit.id && (
+                  <p className="flex items-center gap-1.5 text-xs text-destructive mt-2 px-1">
+                    <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                    Report generation failed. Please try again.
+                  </p>
+                )}
+              </div>
               );
             })}
           </motion.div>

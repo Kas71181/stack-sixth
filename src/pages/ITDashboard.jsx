@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
-import { Monitor, Layers } from "lucide-react";
+import { Monitor, Layers, AlertCircle } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import SoftwareEvaluationTable from "../components/itdashboard/SoftwareEvaluationTable";
@@ -33,6 +33,7 @@ export default function ITDashboard() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.SoftwareAudit.update(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["audits-it"] }),
+    onError: () => {},
   });
 
   // Flatten all recommendations across audits with audit context
@@ -113,6 +114,14 @@ export default function ITDashboard() {
           </div>
         </div>
       </motion.div>
+
+      {/* Decision save error */}
+      {updateMutation.isError && (
+        <motion.div {...fade()} className="flex items-center gap-2 text-sm text-destructive bg-destructive/5 border border-destructive/20 rounded-xl px-4 py-3">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          Failed to save decision. Please try again.
+        </motion.div>
+      )}
 
       {/* Stats */}
       <motion.div {...fade(0.05)}>

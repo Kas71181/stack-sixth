@@ -2,7 +2,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { ArrowLeft, Building2, Users, Info, Zap, Globe, Target, LayoutList, Columns2, Tag, RefreshCw, Activity, Share2, Check } from "lucide-react";
+import { ArrowLeft, Building2, Users, Info, Zap, Globe, Target, LayoutList, Columns2, Tag, RefreshCw, Activity, Share2, Check, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import BudgetSummary from "../components/results/BudgetSummary";
@@ -42,11 +42,18 @@ export default function Results() {
   const [viewMode, setViewMode] = useState("list");
   const [groupByCategory, setGroupByCategory] = useState(false);
   const [retrying, setRetrying] = useState(false);
+  const [retryError, setRetryError] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const handleShare = () => {
+  const handleShare = async () => {
     const url = window.location.href.split("?")[0];
-    navigator.clipboard.writeText(url);
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // Fallback for browsers that block clipboard access
+      prompt("Copy this link:", url);
+      return;
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -63,6 +70,7 @@ export default function Results() {
 
   const handleRetry = async () => {
     setRetrying(true);
+    setRetryError(false);
     const input = {
       company_name: audit.company_name,
       user_type: audit.user_type,
@@ -106,9 +114,14 @@ export default function Results() {
         },
       },
     });
-    await base44.entities.SoftwareAudit.update(audit.id, { analysis_result: result, status: "completed" });
-    queryClient.invalidateQueries({ queryKey: ["audit", id] });
-    setRetrying(false);
+    try {
+      await base44.entities.SoftwareAudit.update(audit.id, { analysis_result: result, status: "completed" });
+      queryClient.invalidateQueries({ queryKey: ["audit", id] });
+    } catch {
+      setRetryError(true);
+    } finally {
+      setRetrying(false);
+    }
   };
 
   if (isLoading) {
@@ -143,6 +156,12 @@ export default function Results() {
           {retrying ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <RefreshCw className="w-4 h-4" />}
           {retrying ? "Retrying..." : "Retry Analysis"}
         </button>
+        {retryError && (
+          <p className="flex items-center gap-1.5 text-sm text-destructive mt-3">
+            <AlertCircle className="w-4 h-4" />
+            Retry failed. Please check your connection and try again.
+          </p>
+        )}
       </div>
     );
   }
