@@ -26,7 +26,7 @@ export default function Layout() {
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center">
               <img
-                src="https://media.base44.com/images/public/69f28176704facfd454194e1/1982f4a68_ChatGPTImageMay29202601_03_02PM.png"
+                src="https://media.base44.com/images/public/69f28176704facfd454194e1/c66e4be1b_Untitleddesign1.svg"
                 alt="Stack Sixth"
                 className="h-10 object-contain"
               />
