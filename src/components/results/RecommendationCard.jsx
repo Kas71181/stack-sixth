@@ -1,7 +1,8 @@
-import { ChevronDown, ArrowRight, Link2, Star, Clock, AlertTriangle, CheckCircle2, ShoppingCart, Check } from "lucide-react";
+import { ChevronDown, ArrowRight, Link2, Star, Clock, AlertTriangle, CheckCircle2, ShoppingCart, Check, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/components/cart/CartContext";
+import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 
 const PRIORITY_STYLES = {
   high: "bg-primary/10 text-primary border-primary/20",
@@ -19,7 +20,9 @@ const RISK_ICONS = {
 export default function RecommendationCard({ rec, index, auditName = "" }) {
   const [expanded, setExpanded] = useState(false);
   const { addItem, items } = useCart();
+  const { getUrl } = useAffiliateLinks();
   const inCart = items.some((i) => i.name === rec.name);
+  const buyUrl = getUrl(rec.name);
   const RiskIcon = RISK_ICONS[rec.migration_risk]?.icon || Clock;
   const riskColor = RISK_ICONS[rec.migration_risk]?.color || "text-muted-foreground";
 
@@ -53,6 +56,18 @@ export default function RecommendationCard({ rec, index, auditName = "" }) {
                 {inCart ? <Check className="w-3 h-3" /> : <ShoppingCart className="w-3 h-3" />}
                 {inCart ? "Added" : "Add"}
               </button>
+              {buyUrl && (
+                <a
+                  href={buyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border font-medium bg-primary text-primary-foreground border-primary hover:bg-primary/90 transition-all"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  Buy
+                </a>
+              )}
               <ChevronDown
                 className={`w-4 h-4 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
               />

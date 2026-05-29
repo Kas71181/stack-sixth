@@ -13,6 +13,7 @@ import Results from './pages/Results.jsx';
 import History from './pages/History';
 import ITDashboard from './pages/ITDashboard';
 import Monitoring from './pages/Monitoring';
+import AffiliateAdmin from './pages/AffiliateAdmin';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -47,6 +48,7 @@ const AuthenticatedApp = () => {
         <Route path="/history" element={<History />} />
         <Route path="/it-dashboard" element={<ITDashboard />} />
         <Route path="/monitoring" element={<Monitoring />} />
+        <Route path="/affiliate-admin" element={<AffiliateAdmin />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
     </Routes>

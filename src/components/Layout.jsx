@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { BarChart3, History, Home, Monitor, ShoppingCart, LogOut, User, Activity } from "lucide-react";
+import { BarChart3, History, Home, Monitor, ShoppingCart, LogOut, User, Activity, Link2 } from "lucide-react";
 import { useCart } from "@/components/cart/CartContext";
 import CartDrawer from "@/components/cart/CartDrawer";
 import AssistantChat from "@/components/assistant/AssistantChat";
@@ -65,6 +65,19 @@ export default function Layout() {
                   </span>
                 )}
               </button>
+              {user?.role === "admin" && (
+                <Link
+                  to="/affiliate-admin"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    location.pathname === "/affiliate-admin"
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Link2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Affiliates</span>
+                </Link>
+              )}
               <div className="flex items-center gap-1 ml-1 pl-2 border-l border-border/60">
                 {user && (
                   <span className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground px-2">

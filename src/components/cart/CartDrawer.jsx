@@ -1,9 +1,18 @@
 import { useCart } from "./CartContext";
 import { ShoppingCart, X, Trash2, TrendingDown, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 
 export default function CartDrawer() {
   const { items, removeItem, clearCart, isOpen, setIsOpen, totalCost, totalSavings } = useCart();
+  const { getUrl } = useAffiliateLinks();
+
+  const handleBuyAll = () => {
+    items.forEach((item) => {
+      const url = getUrl(item.name);
+      if (url) window.open(url, "_blank");
+    });
+  };
 
   if (!isOpen) return null;
 
@@ -62,9 +71,22 @@ export default function CartDrawer() {
                       </p>
                     )}
                   </div>
-                  <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium border border-primary/15">
-                    Score: {item.match_score}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium border border-primary/15">
+                      Score: {item.match_score}
+                    </span>
+                    {getUrl(item.name) && (
+                      <a
+                        href={getUrl(item.name)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        Buy
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
             ))
@@ -94,9 +116,14 @@ export default function CartDrawer() {
               <Button variant="outline" size="sm" className="flex-1" onClick={clearCart}>
                 Clear All
               </Button>
-              <Button size="sm" className="flex-1 gap-1.5">
+              <Button
+                size="sm"
+                className="flex-1 gap-1.5"
+                onClick={handleBuyAll}
+                disabled={items.every((i) => !getUrl(i.name))}
+              >
                 <ExternalLink className="w-3.5 h-3.5" />
-                Request Procurement
+                Buy All
               </Button>
             </div>
           </div>

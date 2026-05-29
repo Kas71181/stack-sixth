@@ -1,0 +1,22 @@
+{
+  "name": "AffiliateLink",
+  "type": "object",
+  "properties": {
+    "tool_name": {
+      "type": "string",
+      "title": "Tool Name (exact match, e.g. HubSpot)"
+    },
+    "affiliate_url": {
+      "type": "string",
+      "title": "Affiliate URL"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes (e.g. commission rate, program name)"
+    }
+  },
+  "required": [
+    "tool_name",
+    "affiliate_url"
+  ]
+}
