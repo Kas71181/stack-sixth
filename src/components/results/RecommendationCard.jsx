@@ -1,5 +1,5 @@
 import { ChevronDown, ArrowRight, Link2, Star, Clock, AlertTriangle, CheckCircle2, ShoppingCart, Check, ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/components/cart/CartContext";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
@@ -21,8 +21,13 @@ export default function RecommendationCard({ rec, index, auditName = "" }) {
   const [expanded, setExpanded] = useState(false);
   const { addItem, items } = useCart();
   const { getUrl } = useAffiliateLinks();
+  const [buyUrl, setBuyUrl] = useState(null);
   const inCart = items.some((i) => i.name === rec.name);
-  const buyUrl = getUrl(rec.name);
+
+  useEffect(() => {
+    getUrl(rec.name).then(setBuyUrl);
+  }, [rec.name]);
+
   const RiskIcon = RISK_ICONS[rec.migration_risk]?.icon || Clock;
   const riskColor = RISK_ICONS[rec.migration_risk]?.color || "text-muted-foreground";
 

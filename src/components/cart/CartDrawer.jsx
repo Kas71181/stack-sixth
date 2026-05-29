@@ -2,14 +2,26 @@ import { useCart } from "./CartContext";
 import { ShoppingCart, X, Trash2, TrendingDown, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { useState, useEffect } from "react";
 
 export default function CartDrawer() {
   const { items, removeItem, clearCart, isOpen, setIsOpen, totalCost, totalSavings } = useCart();
   const { getUrl } = useAffiliateLinks();
+  const [urlMap, setUrlMap] = useState({});
+
+  // Resolve affiliate URLs for all cart items
+  useEffect(() => {
+    if (!isOpen || items.length === 0) return;
+    items.forEach(async (item) => {
+      if (urlMap[item.name] !== undefined) return;
+      const url = await getUrl(item.name);
+      setUrlMap((prev) => ({ ...prev, [item.name]: url || "" }));
+    });
+  }, [isOpen, items]);
 
   const handleBuyAll = () => {
     items.forEach((item) => {
-      const url = getUrl(item.name);
+      const url = urlMap[item.name];
       if (url) window.open(url, "_blank");
     });
   };
@@ -48,48 +60,51 @@ export default function CartDrawer() {
               <p className="text-xs mt-1">Add software recommendations to review for purchase</p>
             </div>
           ) : (
-            items.map((item) => (
-              <div key={item.name} className="bg-card border border-border/60 rounded-xl p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="font-semibold text-sm truncate">{item.name}</p>
-                    <p className="text-[10px] text-muted-foreground">{item.category} · {item.audit_name}</p>
+            items.map((item) => {
+              const buyUrl = urlMap[item.name];
+              return (
+                <div key={item.name} className="bg-card border border-border/60 rounded-xl p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm truncate">{item.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{item.category} · {item.audit_name}</p>
+                    </div>
+                    <button onClick={() => removeItem(item.name)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                  <button onClick={() => removeItem(item.name)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center justify-between mt-3">
+                    <div>
+                      {item.estimated_monthly_cost != null && (
+                        <p className="text-sm font-bold font-mono">${item.estimated_monthly_cost}<span className="text-xs font-normal text-muted-foreground">/mo</span></p>
+                      )}
+                      {item.estimated_savings_opportunity > 0 && (
+                        <p className="text-[11px] text-emerald-600 flex items-center gap-1 mt-0.5">
+                          <TrendingDown className="w-3 h-3" />
+                          Saves ${item.estimated_savings_opportunity}/mo
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium border border-primary/15">
+                        Score: {item.match_score}
+                      </span>
+                      {buyUrl && (
+                        <a
+                          href={buyUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          Buy
+                        </a>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between mt-3">
-                  <div>
-                    {item.estimated_monthly_cost != null && (
-                      <p className="text-sm font-bold font-mono">${item.estimated_monthly_cost}<span className="text-xs font-normal text-muted-foreground">/mo</span></p>
-                    )}
-                    {item.estimated_savings_opportunity > 0 && (
-                      <p className="text-[11px] text-emerald-600 flex items-center gap-1 mt-0.5">
-                        <TrendingDown className="w-3 h-3" />
-                        Saves ${item.estimated_savings_opportunity}/mo
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium border border-primary/15">
-                      Score: {item.match_score}
-                    </span>
-                    {getUrl(item.name) && (
-                      <a
-                        href={getUrl(item.name)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
-                      >
-                        <ExternalLink className="w-3 h-3" />
-                        Buy
-                      </a>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
@@ -120,7 +135,7 @@ export default function CartDrawer() {
                 size="sm"
                 className="flex-1 gap-1.5"
                 onClick={handleBuyAll}
-                disabled={items.every((i) => !getUrl(i.name))}
+                disabled={items.every((i) => !urlMap[i.name])}
               >
                 <ExternalLink className="w-3.5 h-3.5" />
                 Buy All
