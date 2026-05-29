@@ -24,16 +24,12 @@ export default function Layout() {
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2.5">
+            <Link to="/" className="flex items-center">
               <img
-                src="https://media.base44.com/images/public/69f28176704facfd454194e1/1136b18ad_StackAsset300x.png"
+                src="https://media.base44.com/images/public/69f28176704facfd454194e1/1982f4a68_ChatGPTImageMay29202601_03_02PM.png"
                 alt="Stack Sixth"
-                className="h-8 w-8 object-contain"
+                className="h-10 object-contain"
               />
-              <div className="flex flex-col">
-                <span className="font-bold text-sm leading-tight tracking-tight">Stack Sixth</span>
-                <span className="text-[10px] text-muted-foreground leading-tight italic">The sixth sense for software decisions.</span>
-              </div>
             </Link>
             <nav className="flex items-center gap-1">
               {navItems.map(({ path, label, icon: Icon }) => {
