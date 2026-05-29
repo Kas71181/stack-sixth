@@ -39,7 +39,7 @@ function ComparisonCell({ rec, auditName, monthlyBudget }) {
   const overBudget = monthlyBudget && rec.estimated_monthly_cost > monthlyBudget;
 
   return (
-    <div className="flex flex-col bg-card border border-border/60 rounded-2xl overflow-hidden min-w-[220px] max-w-[280px] flex-1">
+    <div className="flex flex-col bg-card border border-border/60 rounded-2xl overflow-hidden w-full h-full">
       {/* Header */}
       <div className="p-4 border-b border-border/40 bg-accent/20">
         <div className="flex items-start justify-between gap-2 mb-2">
@@ -174,14 +174,15 @@ export default function ComparisonView({ recommendations, auditName, monthlyBudg
 
       {/* Comparison grid */}
       {visibleRecs.length > 0 ? (
-        <div className="flex gap-4 overflow-x-auto pb-2">
+        <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory">
           {visibleRecs.map((rec, i) => (
-            <ComparisonCell
-              key={rec.name + i}
-              rec={rec}
-              auditName={auditName}
-              monthlyBudget={monthlyBudget}
-            />
+            <div key={rec.name + i} className="snap-start flex-shrink-0 w-[85vw] sm:w-auto sm:flex-1 sm:min-w-[220px] sm:max-w-[280px]">
+              <ComparisonCell
+                rec={rec}
+                auditName={auditName}
+                monthlyBudget={monthlyBudget}
+              />
+            </div>
           ))}
         </div>
       ) : (

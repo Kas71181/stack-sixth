@@ -102,14 +102,14 @@ export default function ITDashboard() {
             <p className="text-sm text-muted-foreground mt-0.5">Evaluate AI recommendations and execute software decisions</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <ExportToSheetsButton
             tools={selectedAudit ? allTools.filter((t) => t._auditId === selectedAudit) : allTools}
             auditName={selectedAudit ? completedAudits.find((a) => a.id === selectedAudit)?.company_name : "All Audits"}
           />
           <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/60 border border-border/60 rounded-xl px-3 py-2">
             <Layers className="w-3.5 h-3.5" />
-            <span><strong className="text-foreground">{completedAudits.length}</strong> audit{completedAudits.length !== 1 ? "s" : ""} analyzed</span>
+            <span><strong className="text-foreground">{completedAudits.length}</strong> audit{completedAudits.length !== 1 ? "s" : ""}</span>
           </div>
         </div>
       </motion.div>
@@ -157,7 +157,7 @@ export default function ITDashboard() {
 
       {/* Main Table + Panel */}
       <motion.div {...fade(0.15)} className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 min-w-0">
           <SoftwareEvaluationTable
             tools={selectedAudit ? allTools.filter((t) => t._auditId === selectedAudit) : allTools}
             selectedRec={selectedRec}

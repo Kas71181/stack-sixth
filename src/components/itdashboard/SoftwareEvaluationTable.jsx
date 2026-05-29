@@ -85,7 +85,7 @@ export default function SoftwareEvaluationTable({ tools, selectedRec, onSelect }
             <button
               key={`${tool._auditId}-${tool._recIdx}`}
               onClick={() => onSelect(isSelected ? null : tool)}
-              className={`w-full text-left px-5 py-4 flex items-center gap-4 transition-all group ${
+              className={`w-full text-left px-3 sm:px-5 py-3 sm:py-4 flex items-center gap-2 sm:gap-4 transition-all group ${
                 isSelected
                   ? "bg-primary/5 border-l-2 border-l-primary"
                   : "hover:bg-muted/30 border-l-2 border-l-transparent"
@@ -118,7 +118,7 @@ export default function SoftwareEvaluationTable({ tools, selectedRec, onSelect }
                 </div>
               )}
 
-              <div className="flex-shrink-0">
+              <div className="flex-shrink-0 hidden xs:block sm:block">
                 <DecisionBadge decision={tool._decision} />
               </div>
 
