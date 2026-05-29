@@ -4,6 +4,31 @@ import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/components/cart/CartContext";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 
+function ToolLogo({ name, index }) {
+  const [imgError, setImgError] = useState(false);
+  const domain = name.toLowerCase().replace(/\s+/g, "") + ".com";
+  const logoUrl = `https://logo.clearbit.com/${domain}`;
+
+  if (!imgError) {
+    return (
+      <div className="w-10 h-10 rounded-xl bg-white border border-border/60 shadow-sm flex items-center justify-center flex-shrink-0 overflow-hidden">
+        <img
+          src={logoUrl}
+          alt={name}
+          className="w-7 h-7 object-contain"
+          onError={() => setImgError(true)}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center flex-shrink-0">
+      <span className="text-sm font-bold text-primary">{index + 1}</span>
+    </div>
+  );
+}
+
 const PRIORITY_STYLES = {
   high: "bg-primary/10 text-primary border-primary/20",
   medium: "bg-yellow-50 text-yellow-700 border-yellow-200",
@@ -37,9 +62,7 @@ export default function RecommendationCard({ rec, index, auditName = "" }) {
         onClick={() => setExpanded(!expanded)}
         className="w-full text-left p-5 flex items-start gap-4"
       >
-        <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center flex-shrink-0">
-          <span className="text-sm font-bold text-primary">{index + 1}</span>
-        </div>
+        <ToolLogo name={rec.name} index={index} />
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div>
