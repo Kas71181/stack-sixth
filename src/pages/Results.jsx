@@ -2,7 +2,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { ArrowLeft, Building2, Users, Info, Zap, Globe, Target, LayoutList, Columns2, Tag, RefreshCw, Activity } from "lucide-react";
+import { ArrowLeft, Building2, Users, Info, Zap, Globe, Target, LayoutList, Columns2, Tag, RefreshCw, Activity, Share2, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import BudgetSummary from "../components/results/BudgetSummary";
@@ -42,6 +42,14 @@ export default function Results() {
   const [viewMode, setViewMode] = useState("list");
   const [groupByCategory, setGroupByCategory] = useState(false);
   const [retrying, setRetrying] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = () => {
+    const url = window.location.href.split("?")[0];
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   // Check if this is a freshly completed audit
   const isNew = new URLSearchParams(window.location.search).get("new") === "1";
@@ -111,7 +119,7 @@ export default function Results() {
     );
   }
 
-  if (!audit || (audit.created_by && audit.created_by !== user?.email)) {
+  if (!audit) {
     return (
       <div className="text-center py-32">
         <p className="text-muted-foreground font-medium">Access denied.</p>
@@ -165,7 +173,20 @@ export default function Results() {
               {audit.monthly_budget && <span>${audit.monthly_budget.toLocaleString()}/mo budget</span>}
             </div>
           </div>
-          <ExportPptxButton audit={audit} />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleShare}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-sm font-medium transition-all ${
+                copied
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : "bg-card text-muted-foreground border-border/60 hover:text-foreground hover:border-border"
+              }`}
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+              {copied ? "Link copied!" : "Share"}
+            </button>
+            <ExportPptxButton audit={audit} />
+          </div>
         </div>
       </motion.div>
 
