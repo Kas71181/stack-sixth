@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { motion } from "framer-motion";
-import { Activity, Bell, BellOff, RefreshCw, Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { Activity, Bell, BellOff, RefreshCw, Plus, ChevronDown, ChevronUp, Mail } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 import MonitorCard from "../components/monitoring/MonitorCard";
 import MonitorSetupModal from "../components/monitoring/MonitorSetupModal";
@@ -22,6 +22,13 @@ export default function Monitoring() {
   const [showSetup, setShowSetup] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
   const [generatingId, setGeneratingId] = useState(null);
+  const [savingFreq, setSavingFreq] = useState(false);
+
+  const handleFrequencyChange = async (val) => {
+    setSavingFreq(true);
+    await base44.auth.updateMe({ reminder_frequency: val });
+    setSavingFreq(false);
+  };
 
   const { data: audits = [] } = useQuery({
     queryKey: ["audits-monitor", user?.email],
@@ -76,13 +83,30 @@ export default function Monitoring() {
             <p className="text-sm text-muted-foreground mt-0.5">Periodic AI-powered reports on your software stack health</p>
           </div>
         </div>
-        <button
-          onClick={() => setShowSetup(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-xl hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20"
-        >
-          <Plus className="w-4 h-4" />
-          New Monitor
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-card border border-border/60 rounded-xl px-3 py-2">
+            <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+            <span className="text-xs text-muted-foreground font-medium">Reminders:</span>
+            <select
+              defaultValue={user?.reminder_frequency || "daily"}
+              onChange={(e) => handleFrequencyChange(e.target.value)}
+              disabled={savingFreq}
+              className="text-xs font-semibold bg-transparent border-none outline-none cursor-pointer text-foreground"
+            >
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="never">Never</option>
+            </select>
+          </div>
+          <button
+            onClick={() => setShowSetup(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-xl hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20"
+          >
+            <Plus className="w-4 h-4" />
+            New Monitor
+          </button>
+        </div>
       </motion.div>
 
       {completedAudits.length === 0 ? (

@@ -36,6 +36,19 @@ Deno.serve(async (req) => {
       }
       if (!audit?.created_by) continue;
 
+      // Check user's reminder frequency preference
+      const users = await base44.asServiceRole.entities.User.filter({ email: audit.created_by });
+      const userPrefs = users[0];
+      const frequency = userPrefs?.reminder_frequency || 'daily';
+
+      if (frequency === 'never') continue;
+
+      // For weekly: only send on Mondays (day 1)
+      if (frequency === 'weekly' && now.getDay() !== 1) continue;
+
+      // For monthly: only send on the 1st of the month
+      if (frequency === 'monthly' && now.getDate() !== 1) continue;
+
       // Build email body
       const toolLines = dueTools.map((t) =>
         `• <strong>${t.name}</strong> — renews on <strong>${t.renewal_date}</strong>${t.monthly_cost ? ` ($${t.monthly_cost}/mo)` : ''}`
