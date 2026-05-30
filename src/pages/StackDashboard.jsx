@@ -1,10 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { DollarSign, AlertTriangle, Layers, ShieldCheck, Plus, RefreshCw, Download, TrendingDown } from "lucide-react";
+import { DollarSign, AlertTriangle, Layers, ShieldCheck, Plus, RefreshCw, TrendingDown, Zap } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { Button } from "@/components/ui/button";
+import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 
 const fade = (d = 0) => ({ initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.4, delay: d } });
 
@@ -25,9 +27,39 @@ function ScoreRing({ score }) {
 }
 
 export default function StackDashboard() {
-  const { data: integrations = [] } = useQuery({ queryKey: ["integrations-dash"], queryFn: () => base44.entities.SaasIntegration.list() });
+  const qc = useQueryClient();
+  const [showWizard, setShowWizard] = useState(false);
+  const { data: integrations = [], isLoading } = useQuery({ queryKey: ["integrations-dash"], queryFn: () => base44.entities.SaasIntegration.list() });
   const { data: companies = [] } = useQuery({ queryKey: ["companies-dash"], queryFn: () => base44.entities.Company.list() });
   const { data: auditReports = [] } = useQuery({ queryKey: ["audit-reports-dash"], queryFn: () => base44.entities.AuditReport.list("-generated_date", 5) });
+
+  const handleWizardComplete = async ({ company, tools }) => {
+    if (company.name && companies.length === 0) {
+      await base44.entities.Company.create({
+        name: company.name,
+        industry: company.industry,
+        employee_count: company.employee_count ? Number(company.employee_count) : null,
+        monthly_saas_budget: company.monthly_saas_budget ? Number(company.monthly_saas_budget) : null,
+      });
+    }
+    for (const tool of tools) {
+      const exists = integrations.find((i) => i.tool_name?.toLowerCase() === tool.tool_name?.toLowerCase());
+      if (!exists) {
+        await base44.entities.SaasIntegration.create({
+          tool_name: tool.tool_name,
+          category: tool.category || "Other",
+          monthly_cost: tool.monthly_cost || null,
+          licensed_seats: tool.licensed_seats || null,
+          active_users: tool.active_users || null,
+          connection_status: tool.connection_status || "Connected",
+          last_synced: new Date().toISOString().split("T")[0],
+        });
+      }
+    }
+    qc.invalidateQueries({ queryKey: ["integrations-dash"] });
+    qc.invalidateQueries({ queryKey: ["companies-dash"] });
+    setShowWizard(false);
+  };
 
   const company = companies[0];
   const totalSpend = integrations.reduce((s, i) => s + (i.monthly_cost || 0), 0);
@@ -55,19 +87,34 @@ export default function StackDashboard() {
   }).sort((a, b) => b.wasted - a.wasted).slice(0, 5).filter(t => t.wasted > 0);
 
   const utilColor = (rate) => rate >= 70 ? "bg-emerald-500" : rate >= 40 ? "bg-amber-400" : "bg-red-500";
+  const isEmpty = !isLoading && integrations.length === 0;
 
   return (
     <div className="space-y-6">
       <motion.div {...fade()} className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight">SaaS Intelligence Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{company?.name || "Acme Corp"} · {integrations.length} tools connected</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{company?.name || "Your Company"} · {integrations.length} tools connected</p>
         </div>
         <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => setShowWizard(true)} className="gap-1.5"><Zap className="w-3.5 h-3.5" />Auto-Import</Button>
           <Link to="/stack/audit-report"><Button size="sm" className="gap-1.5"><RefreshCw className="w-3.5 h-3.5" />Run Audit</Button></Link>
-          <Link to="/stack/tool-stack"><Button size="sm" variant="outline" className="gap-1.5"><Plus className="w-3.5 h-3.5" />Add Tool</Button></Link>
         </div>
       </motion.div>
+
+      {/* Empty state — prompt onboarding */}
+      {isEmpty && (
+        <motion.div {...fade(0.05)} className="bg-gradient-to-br from-primary/5 to-accent/20 border border-primary/20 rounded-2xl p-8 text-center">
+          <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Zap className="w-7 h-7 text-primary" />
+          </div>
+          <h2 className="text-lg font-bold mb-1">Connect your SaaS stack</h2>
+          <p className="text-sm text-muted-foreground mb-5 max-w-sm mx-auto">Import your tools automatically via Stripe, Google Workspace, or a CSV upload — no manual entry needed.</p>
+          <Button onClick={() => setShowWizard(true)} className="gap-2">
+            <Zap className="w-4 h-4" /> Start Auto-Import
+          </Button>
+        </motion.div>
+      )}
 
       {/* Stats row */}
       <motion.div {...fade(0.05)} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -153,6 +200,7 @@ export default function StackDashboard() {
           </div>
         </motion.div>
       )}
+      {showWizard && <OnboardingWizard onComplete={handleWizardComplete} onDismiss={() => setShowWizard(false)} />}
     </div>
   );
 }
