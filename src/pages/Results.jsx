@@ -11,6 +11,7 @@ import RecommendationCard from "../components/results/RecommendationCard";
 import ComparisonView from "../components/results/ComparisonView";
 import ProjectedROICalculator from "../components/results/ProjectedROICalculator";
 import ExportPptxButton from "../components/results/ExportPptxButton";
+import DataConfidenceScore from "../components/results/DataConfidenceScore";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -293,6 +294,11 @@ export default function Results() {
           )}
         </motion.div>
       )}
+
+      {/* Data Confidence Score */}
+      <motion.div {...fade(0.03)}>
+        <DataConfidenceScore audit={audit} />
+      </motion.div>
 
       {/* Summary */}
       {result.summary && (

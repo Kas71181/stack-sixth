@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Package } from "lucide-react";
+import { Plus, Trash2, Package, Star } from "lucide-react";
+import CSVUploader from "./CSVUploader";
+import CostValidationWarnings from "./CostValidationWarnings";
 
 const CATEGORY_OPTIONS = [
   "CRM",
@@ -21,7 +23,7 @@ const CATEGORY_OPTIONS = [
 
 export default function StepExistingSoftware({ data, onChange }) {
   const software = data.existing_software || [];
-  const [draft, setDraft] = useState({ name: "", category: "", monthly_cost: "" });
+  const [draft, setDraft] = useState({ name: "", category: "", monthly_cost: "", usage_score: "", last_verified: "" });
 
   const addSoftware = () => {
     if (!draft.name.trim()) return;
@@ -29,9 +31,21 @@ export default function StepExistingSoftware({ data, onChange }) {
       name: draft.name.trim(),
       category: draft.category || "Other",
       monthly_cost: draft.monthly_cost ? parseFloat(draft.monthly_cost) : null,
+      usage_score: draft.usage_score ? parseInt(draft.usage_score) : null,
+      last_verified: draft.last_verified || new Date().toISOString().split("T")[0],
     };
     onChange({ existing_software: [...software, entry] });
-    setDraft({ name: "", category: "", monthly_cost: "" });
+    setDraft({ name: "", category: "", monthly_cost: "", usage_score: "", last_verified: "" });
+  };
+
+  const handleImported = (tools) => {
+    const merged = [...software];
+    tools.forEach((t) => {
+      if (!merged.find((s) => s.name.toLowerCase() === t.name?.toLowerCase())) {
+        merged.push({ name: t.name, category: t.category || "Other", monthly_cost: t.monthly_cost || null, usage_score: null, last_verified: new Date().toISOString().split("T")[0] });
+      }
+    });
+    onChange({ existing_software: merged });
   };
 
   const removeSoftware = (index) => {
@@ -64,9 +78,17 @@ export default function StepExistingSoftware({ data, onChange }) {
                     <p className="text-xs text-muted-foreground">{s.category}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-shrink-0">
                   {s.monthly_cost != null && (
                     <span className="text-sm font-mono font-medium">${s.monthly_cost}/mo</span>
+                  )}
+                  {s.usage_score != null && (
+                    <span className="flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                      <Star className="w-3 h-3" />{s.usage_score}%
+                    </span>
+                  )}
+                  {s.last_verified && (
+                    <span className="text-[10px] text-muted-foreground hidden sm:inline">✓ {s.last_verified}</span>
                   )}
                   <button
                     onClick={() => removeSoftware(i)}
@@ -116,6 +138,28 @@ export default function StepExistingSoftware({ data, onChange }) {
               className="h-10 rounded-lg"
             />
           </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+            <div className="flex items-center gap-2">
+              <Star className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+              <Input
+                placeholder="Usage score (0–100%)"
+                type="number"
+                min={0}
+                max={100}
+                value={draft.usage_score}
+                onChange={(e) => setDraft({ ...draft, usage_score: e.target.value })}
+                className="h-10 rounded-lg"
+              />
+            </div>
+            <Input
+              type="date"
+              title="Last verified date"
+              value={draft.last_verified}
+              onChange={(e) => setDraft({ ...draft, last_verified: e.target.value })}
+              className="h-10 rounded-lg text-sm"
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1.5">Usage score = how actively your team uses this tool (0 = unused, 100 = critical). Last verified = when you last confirmed the cost/usage data.</p>
           <Button
             onClick={addSoftware}
             disabled={!draft.name.trim()}
@@ -127,6 +171,9 @@ export default function StepExistingSoftware({ data, onChange }) {
             Add Tool
           </Button>
         </div>
+
+        <CostValidationWarnings tools={software} />
+        <CSVUploader onToolsExtracted={handleImported} />
       </div>
 
       {data.user_type === "startup" && software.length === 0 && (
