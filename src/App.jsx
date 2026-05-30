@@ -13,15 +13,7 @@ import Results from './pages/Results.jsx';
 import History from './pages/History';
 import ITDashboard from './pages/ITDashboard';
 import Monitoring from './pages/Monitoring';
-import StackLayout from './components/stack/StackLayout';
-import StackDashboard from './pages/StackDashboard';
-import ToolStack from './pages/ToolStack';
-import UsageAnalytics from './pages/UsageAnalytics';
-import AuditReportPage from './pages/AuditReportPage';
-import CategoryExplorer from './pages/CategoryExplorer';
-import IntegrationsPage from './pages/IntegrationsPage';
-import ReportsPage from './pages/ReportsPage';
-import SettingsPage from './pages/SettingsPage';
+
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -58,16 +50,7 @@ const AuthenticatedApp = () => {
         <Route path="/monitoring" element={<Monitoring />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
-      <Route path="/stack" element={<StackLayout />}>
-        <Route index element={<StackDashboard />} />
-        <Route path="tool-stack" element={<ToolStack />} />
-        <Route path="usage" element={<UsageAnalytics />} />
-        <Route path="audit-report" element={<AuditReportPage />} />
-        <Route path="categories" element={<CategoryExplorer />} />
-        <Route path="integrations" element={<IntegrationsPage />} />
-        <Route path="reports" element={<ReportsPage />} />
-        <Route path="settings" element={<SettingsPage />} />
-      </Route>
+
     </Routes>
   );
 };

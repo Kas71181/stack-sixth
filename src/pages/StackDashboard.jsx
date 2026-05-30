@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { DollarSign, AlertTriangle, Layers, ShieldCheck, Plus, RefreshCw, TrendingDown, Zap } from "lucide-react";
+import { DollarSign, AlertTriangle, Layers, ShieldCheck, TrendingDown, Zap } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { Button } from "@/components/ui/button";
 import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
@@ -26,7 +25,7 @@ function ScoreRing({ score }) {
   );
 }
 
-export default function StackDashboard() {
+export default function StackDashboard({ embedded = false }) {
   const qc = useQueryClient();
   const [showWizard, setShowWizard] = useState(false);
   const { data: integrations = [], isLoading } = useQuery({ queryKey: ["integrations-dash"], queryFn: () => base44.entities.SaasIntegration.list() });
@@ -91,16 +90,21 @@ export default function StackDashboard() {
 
   return (
     <div className="space-y-6">
-      <motion.div {...fade()} className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">SaaS Intelligence Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{company?.name || "Your Company"} · {integrations.length} tools connected</p>
-        </div>
-        <div className="flex gap-2">
+      {!embedded && (
+        <motion.div {...fade()} className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight">SaaS Overview</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">{company?.name || "Your Company"} · {integrations.length} tools connected</p>
+          </div>
           <Button size="sm" variant="outline" onClick={() => setShowWizard(true)} className="gap-1.5"><Zap className="w-3.5 h-3.5" />Auto-Import</Button>
-          <Link to="/stack/audit-report"><Button size="sm" className="gap-1.5"><RefreshCw className="w-3.5 h-3.5" />Run Audit</Button></Link>
+        </motion.div>
+      )}
+      {embedded && (
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-sm text-muted-foreground">{company?.name || "Your Company"} · {integrations.length} tools connected</p>
+          <Button size="sm" variant="outline" onClick={() => setShowWizard(true)} className="gap-1.5"><Zap className="w-3.5 h-3.5" />Auto-Import</Button>
         </div>
-      </motion.div>
+      )}
 
       {/* Empty state — prompt onboarding */}
       {isEmpty && (
