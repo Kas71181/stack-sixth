@@ -1,0 +1,117 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { motion } from "framer-motion";
+import { Plus, Search, Layers, RefreshCw, Edit2, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import AddToolModal from "@/components/stack/AddToolModal";
+
+const STATUS_COLORS = {
+  Connected: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  "Manual Upload": "bg-blue-50 text-blue-700 border-blue-200",
+  Pending: "bg-amber-50 text-amber-700 border-amber-200",
+  Failed: "bg-red-50 text-red-700 border-red-200",
+};
+
+const CATEGORIES = ["All", "Communication", "Project Management", "CRM & Sales", "Productivity & Docs", "Analytics & BI", "Marketing", "Customer Support", "Identity & Security", "Dev Tools", "Finance & HR"];
+
+export default function ToolStack() {
+  const qc = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [catFilter, setCatFilter] = useState("All");
+  const [showAdd, setShowAdd] = useState(false);
+  const [sortBy, setSortBy] = useState("cost");
+
+  const { data: integrations = [], isLoading } = useQuery({
+    queryKey: ["integrations"],
+    queryFn: () => base44.entities.SaasIntegration.list(),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.SaasIntegration.delete(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["integrations"] }),
+  });
+
+  let filtered = integrations.filter((i) => {
+    const matchSearch = i.tool_name.toLowerCase().includes(search.toLowerCase());
+    const matchCat = catFilter === "All" || i.category === catFilter;
+    return matchSearch && matchCat;
+  });
+
+  if (sortBy === "cost") filtered = [...filtered].sort((a, b) => (b.monthly_cost || 0) - (a.monthly_cost || 0));
+  else if (sortBy === "util") {
+    filtered = [...filtered].sort((a, b) => {
+      const rateA = a.licensed_seats > 0 ? (a.active_users || 0) / a.licensed_seats : 0;
+      const rateB = b.licensed_seats > 0 ? (b.active_users || 0) / b.licensed_seats : 0;
+      return rateA - rateB;
+    });
+  } else filtered = [...filtered].sort((a, b) => a.tool_name.localeCompare(b.tool_name));
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-extrabold tracking-tight">Tool Stack</h1>
+        <Button onClick={() => setShowAdd(true)} className="gap-1.5"><Plus className="w-4 h-4" />Add Tool</Button>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-card border border-border/60 rounded-2xl p-4 flex flex-wrap gap-3 items-center">
+        <div className="relative flex-1 min-w-[180px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tools..." className="pl-9 h-9" />
+        </div>
+        <select value={catFilter} onChange={(e) => setCatFilter(e.target.value)} className="h-9 rounded-lg border border-input bg-background px-3 text-sm">
+          {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+        </select>
+        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="h-9 rounded-lg border border-input bg-background px-3 text-sm">
+          <option value="cost">Sort: Cost</option>
+          <option value="util">Sort: Utilization</option>
+          <option value="name">Sort: Name</option>
+        </select>
+      </div>
+
+      {isLoading ? (
+        <div className="flex justify-center py-16"><div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin" /></div>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((tool, idx) => {
+            const util = tool.licensed_seats > 0 ? Math.round((tool.active_users / tool.licensed_seats) * 100) : 0;
+            const inactive = (tool.licensed_seats || 0) - (tool.active_users || 0);
+            const utilColor = util >= 70 ? "bg-emerald-500" : util >= 40 ? "bg-amber-400" : "bg-red-500";
+            return (
+              <motion.div key={tool.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.02 }}
+                className="bg-card border border-border/60 rounded-xl px-5 py-4 flex flex-wrap items-center gap-4">
+                <div className="flex-1 min-w-[160px]">
+                  <p className="font-semibold text-sm">{tool.tool_name}</p>
+                  <Badge variant="outline" className="text-[10px] mt-0.5">{tool.category}</Badge>
+                </div>
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${STATUS_COLORS[tool.connection_status] || ""}`}>{tool.connection_status}</span>
+                <div className="text-sm font-mono font-medium w-20 text-right">${(tool.monthly_cost || 0).toLocaleString()}/mo</div>
+                <div className="flex items-center gap-2 min-w-[140px]">
+                  <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">{tool.active_users}/{tool.licensed_seats}</span>
+                  <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden min-w-[60px]">
+                    <div className={`h-full rounded-full ${utilColor}`} style={{ width: `${util}%` }} />
+                  </div>
+                  <span className="text-xs font-semibold w-8">{util}%</span>
+                </div>
+                {tool.last_synced && <span className="text-[10px] text-muted-foreground hidden md:block">{tool.last_synced}</span>}
+                {inactive > 0 && <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">{inactive} idle</span>}
+              </motion.div>
+            );
+          })}
+          {filtered.length === 0 && (
+            <div className="text-center py-16 text-muted-foreground">
+              <Layers className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="font-medium">No tools found</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {showAdd && <AddToolModal onClose={() => setShowAdd(false)} />}
+    </div>
+  );
+}

@@ -1,0 +1,42 @@
+{
+  "name": "Company",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Company Name"
+    },
+    "industry": {
+      "type": "string",
+      "enum": [
+        "SaaS",
+        "Agency",
+        "E-commerce",
+        "Healthcare",
+        "Finance",
+        "Other"
+      ],
+      "title": "Industry"
+    },
+    "employee_count": {
+      "type": "number",
+      "title": "Employee Count"
+    },
+    "monthly_saas_budget": {
+      "type": "number",
+      "title": "Monthly SaaS Budget"
+    },
+    "audit_score": {
+      "type": "number",
+      "title": "Audit Score (0-100)"
+    },
+    "last_audit_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Last Audit Date"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

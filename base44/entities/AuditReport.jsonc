@@ -1,0 +1,60 @@
+{
+  "name": "AuditReport",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company ID"
+    },
+    "company_name": {
+      "type": "string",
+      "title": "Company Name"
+    },
+    "generated_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Generated Date"
+    },
+    "total_monthly_spend": {
+      "type": "number",
+      "title": "Total Monthly Spend"
+    },
+    "estimated_monthly_waste": {
+      "type": "number",
+      "title": "Estimated Monthly Waste"
+    },
+    "inactive_seat_count": {
+      "type": "number",
+      "title": "Inactive Seat Count"
+    },
+    "redundant_tool_count": {
+      "type": "number",
+      "title": "Redundant Tool Count"
+    },
+    "recommendations_json": {
+      "type": "string",
+      "title": "Recommendations (JSON)"
+    },
+    "audit_score": {
+      "type": "number",
+      "title": "Audit Score (0-100)"
+    },
+    "executive_summary": {
+      "type": "string",
+      "title": "Executive Summary"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Draft",
+        "Final",
+        "Shared"
+      ],
+      "default": "Draft",
+      "title": "Status"
+    }
+  },
+  "required": [
+    "company_id"
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "name": "Recommendation",
+  "type": "object",
+  "properties": {
+    "audit_id": {
+      "type": "string",
+      "title": "Audit ID"
+    },
+    "company_id": {
+      "type": "string",
+      "title": "Company ID"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Remove Tool",
+        "Downgrade Plan",
+        "Reclaim Seats",
+        "Consolidate Tools",
+        "Negotiate Contract",
+        "Add Missing Tool"
+      ],
+      "title": "Category"
+    },
+    "tool_name": {
+      "type": "string",
+      "title": "Tool Name"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "estimated_monthly_savings": {
+      "type": "number",
+      "title": "Est. Monthly Savings ($)"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "High",
+        "Medium",
+        "Low"
+      ],
+      "title": "Priority"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Open",
+        "In Progress",
+        "Completed",
+        "Dismissed"
+      ],
+      "default": "Open",
+      "title": "Status"
+    }
+  },
+  "required": [
+    "tool_name",
+    "category"
+  ]
+}

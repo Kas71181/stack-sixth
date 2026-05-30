@@ -1,0 +1,62 @@
+{
+  "name": "UserActivity",
+  "type": "object",
+  "properties": {
+    "integration_id": {
+      "type": "string",
+      "title": "Integration ID"
+    },
+    "company_id": {
+      "type": "string",
+      "title": "Company ID"
+    },
+    "tool_name": {
+      "type": "string",
+      "title": "Tool Name"
+    },
+    "user_email": {
+      "type": "string",
+      "title": "User Email"
+    },
+    "user_name": {
+      "type": "string",
+      "title": "User Name"
+    },
+    "last_active_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Last Active Date"
+    },
+    "days_active_last_30": {
+      "type": "number",
+      "title": "Days Active (Last 30)"
+    },
+    "activity_score": {
+      "type": "number",
+      "title": "Activity Score (0-100)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Active",
+        "Inactive",
+        "Never Logged In",
+        "Dormant"
+      ],
+      "title": "Status"
+    },
+    "license_cost_per_month": {
+      "type": "number",
+      "title": "License Cost/Month"
+    },
+    "wasted_cost_flag": {
+      "type": "boolean",
+      "title": "Wasted Cost Flag",
+      "default": false
+    }
+  },
+  "required": [
+    "tool_name",
+    "user_email"
+  ]
+}

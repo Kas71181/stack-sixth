@@ -1,0 +1,66 @@
+{
+  "name": "SaasIntegration",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company ID"
+    },
+    "tool_name": {
+      "type": "string",
+      "title": "Tool Name"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Communication",
+        "Project Management",
+        "CRM & Sales",
+        "Productivity & Docs",
+        "Analytics & BI",
+        "Marketing",
+        "Customer Support",
+        "Identity & Security",
+        "Dev Tools",
+        "Finance & HR"
+      ],
+      "title": "Category"
+    },
+    "connection_status": {
+      "type": "string",
+      "enum": [
+        "Connected",
+        "Manual Upload",
+        "Pending",
+        "Failed"
+      ],
+      "default": "Pending",
+      "title": "Connection Status"
+    },
+    "monthly_cost": {
+      "type": "number",
+      "title": "Monthly Cost ($)"
+    },
+    "licensed_seats": {
+      "type": "number",
+      "title": "Licensed Seats"
+    },
+    "active_users": {
+      "type": "number",
+      "title": "Active Users"
+    },
+    "last_synced": {
+      "type": "string",
+      "format": "date",
+      "title": "Last Synced"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "tool_name",
+    "category"
+  ]
+}
