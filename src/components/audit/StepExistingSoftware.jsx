@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Package, Star } from "lucide-react";
 import CSVUploader from "./CSVUploader";
 import CostValidationWarnings from "./CostValidationWarnings";
+import StripeBillingPanel from "@/components/stripe/StripeBillingPanel";
 
 const CATEGORY_OPTIONS = [
   "CRM",
@@ -172,6 +173,7 @@ export default function StepExistingSoftware({ data, onChange }) {
           </Button>
         </div>
 
+        <StripeBillingPanel onImport={handleImported} />
         <CostValidationWarnings tools={software} />
         <CSVUploader onToolsExtracted={handleImported} />
       </div>

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, BarChart3, Search, TrendingDown, RefreshCw, AlertCircle } from "lucide-react";
+import StripeBillingPanel from "@/components/stripe/StripeBillingPanel";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
@@ -93,6 +94,11 @@ export default function Dashboard() {
             </Button>
           </Link>
         </div>
+      </motion.section>
+
+      {/* Stripe Live Billing Panel */}
+      <motion.section {...fade(0.1)}>
+        <StripeBillingPanel onImport={() => {}} />
       </motion.section>
 
       {/* Stats */}
