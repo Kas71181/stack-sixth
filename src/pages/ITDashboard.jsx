@@ -10,6 +10,7 @@ import DecisionPanel from "../components/itdashboard/DecisionPanel";
 import ITSummaryStats from "../components/itdashboard/ITSummaryStats";
 import ExportToSheetsButton from "../components/itdashboard/ExportToSheetsButton";
 import SpendTrendChart from "../components/itdashboard/SpendTrendChart";
+import ToolComparisonPanel from "../components/itdashboard/ToolComparisonPanel";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -139,6 +140,13 @@ export default function ITDashboard() {
           tools={allTools}
         />
       </motion.div>
+
+      {/* Tool Comparison */}
+      {allTools.length >= 2 && (
+        <motion.div {...fade(0.12)}>
+          <ToolComparisonPanel tools={selectedAudit ? allTools.filter((t) => t._auditId === selectedAudit) : allTools} />
+        </motion.div>
+      )}
 
       {/* Audit filter */}
       <motion.div {...fade(0.1)} className="bg-card border border-border/60 rounded-2xl px-5 py-4">
