@@ -6,6 +6,7 @@ import { Plus, Trash2, Package, Star } from "lucide-react";
 import CSVUploader from "./CSVUploader";
 import CostValidationWarnings from "./CostValidationWarnings";
 import StripeBillingPanel from "@/components/stripe/StripeBillingPanel";
+import WorkspaceAdminPanel from "@/components/workspace/WorkspaceAdminPanel";
 
 const CATEGORY_OPTIONS = [
   "CRM",
@@ -174,6 +175,7 @@ export default function StepExistingSoftware({ data, onChange }) {
         </div>
 
         <StripeBillingPanel onImport={handleImported} />
+        <WorkspaceAdminPanel onImport={(wsInfo) => handleImported([wsInfo])} />
         <CostValidationWarnings tools={software} />
         <CSVUploader onToolsExtracted={handleImported} />
       </div>

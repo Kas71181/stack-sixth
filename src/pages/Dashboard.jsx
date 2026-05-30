@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, BarChart3, Search, TrendingDown, RefreshCw, AlertCircle } from "lucide-react";
 import StripeBillingPanel from "@/components/stripe/StripeBillingPanel";
+import WorkspaceAdminPanel from "@/components/workspace/WorkspaceAdminPanel";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
@@ -96,9 +97,10 @@ export default function Dashboard() {
         </div>
       </motion.section>
 
-      {/* Stripe Live Billing Panel */}
-      <motion.section {...fade(0.1)}>
+      {/* Billing & Workspace Panels */}
+      <motion.section {...fade(0.1)} className="space-y-3">
         <StripeBillingPanel onImport={() => {}} />
+        <WorkspaceAdminPanel onImport={() => {}} />
       </motion.section>
 
       {/* Stats */}
