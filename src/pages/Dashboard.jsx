@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/AuthContext";
 import SpendReductionChart from "@/components/dashboard/SpendReductionChart";
 import SpendByCategoryChart from "@/components/dashboard/SpendByCategoryChart";
+import MonthlySpendTrendChart from "@/components/dashboard/MonthlySpendTrendChart";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -128,6 +129,13 @@ export default function Dashboard() {
           </div>
         ))}
       </motion.section>
+
+      {/* Monthly Spend Trend */}
+      {completedAudits.length > 0 && (
+        <motion.section {...fade(0.28)}>
+          <MonthlySpendTrendChart audits={completedAudits} />
+        </motion.section>
+      )}
 
       {/* Spend by Category */}
       {completedAudits.length > 0 && (
