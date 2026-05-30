@@ -9,6 +9,7 @@ import SoftwareEvaluationTable from "../components/itdashboard/SoftwareEvaluatio
 import DecisionPanel from "../components/itdashboard/DecisionPanel";
 import ITSummaryStats from "../components/itdashboard/ITSummaryStats";
 import ExportToSheetsButton from "../components/itdashboard/ExportToSheetsButton";
+import SpendTrendChart from "../components/itdashboard/SpendTrendChart";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -123,8 +124,13 @@ export default function ITDashboard() {
         </motion.div>
       )}
 
-      {/* Stats */}
+      {/* Spend Trend Chart */}
       <motion.div {...fade(0.05)}>
+        <SpendTrendChart audits={completedAudits} />
+      </motion.div>
+
+      {/* Stats */}
+      <motion.div {...fade(0.08)}>
         <ITSummaryStats
           total={allTools.length}
           pending={pending.length}
