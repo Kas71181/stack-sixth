@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import { motion } from "framer-motion";
 import { Plus, Search, Layers, Trash2, Pencil, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ const CATEGORIES = ["All", "Communication", "Project Management", "CRM & Sales",
 
 export default function ToolStack() {
   const qc = useQueryClient();
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("All");
   const [showAdd, setShowAdd] = useState(false);
@@ -26,8 +28,9 @@ export default function ToolStack() {
   const [sortBy, setSortBy] = useState("cost");
 
   const { data: integrations = [], isLoading } = useQuery({
-    queryKey: ["integrations"],
-    queryFn: () => base44.entities.SaasIntegration.list(),
+    queryKey: ["integrations", user?.email],
+    queryFn: () => base44.entities.SaasIntegration.filter({ created_by: user?.email }),
+    enabled: !!user?.email,
   });
 
   const deleteMutation = useMutation({
