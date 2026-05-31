@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
-import { Plus, Search, Layers, RefreshCw, Edit2, Users } from "lucide-react";
+import { Plus, Search, Layers, Trash2, Pencil, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,7 @@ export default function ToolStack() {
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("All");
   const [showAdd, setShowAdd] = useState(false);
+  const [editTool, setEditTool] = useState(null);
   const [sortBy, setSortBy] = useState("cost");
 
   const { data: integrations = [], isLoading } = useQuery({
@@ -53,7 +54,9 @@ export default function ToolStack() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-extrabold tracking-tight">Tool Stack</h1>
-        <Button onClick={() => setShowAdd(true)} className="gap-1.5"><Plus className="w-4 h-4" />Add Tool</Button>
+        <Button onClick={() => { setEditTool(null); setShowAdd(true); }} className="gap-1.5">
+          <Plus className="w-4 h-4" />Add Tool
+        </Button>
       </div>
 
       {/* Filters */}
@@ -74,6 +77,21 @@ export default function ToolStack() {
 
       {isLoading ? (
         <div className="flex justify-center py-16"><div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin" /></div>
+      ) : integrations.length === 0 ? (
+        /* Empty state — no tools at all */
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-br from-primary/5 to-accent/20 border border-primary/20 rounded-2xl p-10 text-center">
+          <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Layers className="w-7 h-7 text-primary" />
+          </div>
+          <h2 className="text-lg font-bold mb-1">No tools added yet</h2>
+          <p className="text-sm text-muted-foreground mb-5 max-w-sm mx-auto">
+            Manually add any software your scan didn't pick up — enter the name, cost, and seat info to get full visibility.
+          </p>
+          <Button onClick={() => { setEditTool(null); setShowAdd(true); }} className="gap-2">
+            <Plus className="w-4 h-4" /> Add Your First Tool
+          </Button>
+        </motion.div>
       ) : (
         <div className="space-y-2">
           {filtered.map((tool, idx) => {
@@ -99,19 +117,41 @@ export default function ToolStack() {
                 </div>
                 {tool.last_synced && <span className="text-[10px] text-muted-foreground hidden md:block">{tool.last_synced}</span>}
                 {inactive > 0 && <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">{inactive} idle</span>}
+                {/* Actions */}
+                <div className="flex items-center gap-1 ml-auto">
+                  <button
+                    onClick={() => { setEditTool(tool); setShowAdd(true); }}
+                    className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    title="Edit"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => { if (confirm(`Remove ${tool.tool_name}?`)) deleteMutation.mutate(tool.id); }}
+                    className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </motion.div>
             );
           })}
-          {filtered.length === 0 && (
+          {filtered.length === 0 && integrations.length > 0 && (
             <div className="text-center py-16 text-muted-foreground">
               <Layers className="w-10 h-10 mx-auto mb-3 opacity-30" />
-              <p className="font-medium">No tools found</p>
+              <p className="font-medium">No tools match your filters</p>
             </div>
           )}
         </div>
       )}
 
-      {showAdd && <AddToolModal onClose={() => setShowAdd(false)} />}
+      {showAdd && (
+        <AddToolModal
+          tool={editTool}
+          onClose={() => { setShowAdd(false); setEditTool(null); }}
+        />
+      )}
     </div>
   );
 }
