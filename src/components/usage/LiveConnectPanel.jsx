@@ -8,7 +8,7 @@ import { toast } from "sonner";
 const CONNECTORS = [
   {
     id: "slack",
-    connectorId: "6a1daf4c38b1c3730bebbd18",
+    connectorId: "6a1dba44349cdfe5f00d8fb7",
     functionName: "getSlackActivity",
     label: "Slack",
     description: "Real member list & activity signals",
@@ -18,7 +18,7 @@ const CONNECTORS = [
   },
   {
     id: "github",
-    connectorId: "6a1db3c9aaf496e3cd5d7a33",
+    connectorId: "6a1db9e6a90dd35761465e22",
     functionName: "getGitHubActivity",
     label: "GitHub",
     description: "Org members & commit activity",
@@ -28,7 +28,7 @@ const CONNECTORS = [
   },
   {
     id: "notion",
-    connectorId: "6a1db1a497d3b86fdf5003d4",
+    connectorId: "6a1db8b6d0e9930c01976399",
     functionName: "getNotionActivity",
     label: "Notion",
     description: "Workspace members & page edits",

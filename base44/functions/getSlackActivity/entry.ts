@@ -7,7 +7,7 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     // Slack Usage Audit connector id
-    const CONNECTOR_ID = '6a1daf4c38b1c3730bebbd18';
+    const CONNECTOR_ID = '6a1dba44349cdfe5f00d8fb7';
     const { accessToken } = await base44.asServiceRole.connectors.getCurrentAppUserConnection(CONNECTOR_ID);
 
     // 1. Get all workspace members

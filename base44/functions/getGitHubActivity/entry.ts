@@ -6,7 +6,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const CONNECTOR_ID = '6a1db3c9aaf496e3cd5d7a33';
+    const CONNECTOR_ID = '6a1db9e6a90dd35761465e22';
     const { accessToken } = await base44.asServiceRole.connectors.getCurrentAppUserConnection(CONNECTOR_ID);
 
     const headers = {
