@@ -12,9 +12,7 @@ const CONNECTORS = [
     functionName: "getSlackActivity",
     label: "Slack",
     description: "Real member list & activity signals",
-    color: "bg-[#4A154B]",
-    textColor: "text-white",
-    icon: "💬",
+    logo: "https://cdn.brandfetch.io/idYORNMbzN/w/400/h/400/theme/dark/icon.png?c=1dxbfHSJFAPEyhd6om",
   },
   {
     id: "github",
@@ -22,9 +20,7 @@ const CONNECTORS = [
     functionName: "getGitHubActivity",
     label: "GitHub",
     description: "Org members & commit activity",
-    color: "bg-[#24292F]",
-    textColor: "text-white",
-    icon: "🐙",
+    logo: "https://cdn.brandfetch.io/idZAyF9EM1/w/400/h/400/theme/dark/icon.png?c=1dxbfHSJFAPEyhd6om",
   },
   {
     id: "notion",
@@ -32,9 +28,7 @@ const CONNECTORS = [
     functionName: "getNotionActivity",
     label: "Notion",
     description: "Workspace members & page edits",
-    color: "bg-[#000000]",
-    textColor: "text-white",
-    icon: "📄",
+    logo: "https://cdn.brandfetch.io/idgietL1HT/w/400/h/400/theme/dark/icon.png?c=1dxbfHSJFAPEyhd6om",
   },
 ];
 
@@ -117,8 +111,8 @@ function ConnectorCard({ connector, onSynced }) {
     <div className="bg-card border border-border/60 rounded-2xl p-5 flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-xl ${connector.color} flex items-center justify-center text-lg`}>
-          {connector.icon}
+        <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center overflow-hidden">
+          <img src={connector.logo} alt={connector.label} className="w-8 h-8 object-contain" />
         </div>
         <div className="flex-1">
           <p className="font-bold text-sm">{connector.label}</p>
