@@ -12,7 +12,7 @@ const CONNECTORS = [
     functionName: "getSlackActivity",
     label: "Slack",
     description: "Real member list & activity signals",
-    logo: "https://cdn.brandfetch.io/idYORNMbzN/w/400/h/400/theme/dark/icon.png?c=1dxbfHSJFAPEyhd6om",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Slack_icon_2019.svg/2048px-Slack_icon_2019.svg.png",
   },
   {
     id: "github",
@@ -20,7 +20,7 @@ const CONNECTORS = [
     functionName: "getGitHubActivity",
     label: "GitHub",
     description: "Org members & commit activity",
-    logo: "https://cdn.brandfetch.io/idZAyF9EM1/w/400/h/400/theme/dark/icon.png?c=1dxbfHSJFAPEyhd6om",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg",
   },
   {
     id: "notion",
@@ -28,7 +28,7 @@ const CONNECTORS = [
     functionName: "getNotionActivity",
     label: "Notion",
     description: "Workspace members & page edits",
-    logo: "https://cdn.brandfetch.io/idgietL1HT/w/400/h/400/theme/dark/icon.png?c=1dxbfHSJFAPEyhd6om",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png",
   },
 ];
 
