@@ -6,9 +6,18 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const clientId = Deno.env.get("SALESFORCE_CLIENT_ID");
-    const clientSecret = Deno.env.get("SALESFORCE_CLIENT_SECRET");
-    const instanceUrl = Deno.env.get("SALESFORCE_INSTANCE_URL");
+    let clientId = Deno.env.get("SALESFORCE_CLIENT_ID");
+    let clientSecret = Deno.env.get("SALESFORCE_CLIENT_SECRET");
+    let instanceUrl = Deno.env.get("SALESFORCE_INSTANCE_URL");
+
+    if (!clientId || !clientSecret || !instanceUrl) {
+      const stored = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'salesforce' });
+      if (stored[0]) {
+        clientId = stored[0].api_key || clientId;
+        clientSecret = stored[0].extra_fields?.client_secret || clientSecret;
+        instanceUrl = stored[0].extra_fields?.instance_url || instanceUrl;
+      }
+    }
 
     if (!clientId || !clientSecret || !instanceUrl) {
       return Response.json({ success: false, not_configured: true, error: 'Salesforce credentials not configured' }, { status: 200 });

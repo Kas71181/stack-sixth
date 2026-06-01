@@ -6,7 +6,11 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const apiKey = Deno.env.get("ZOOM_API_KEY");
+    let apiKey = Deno.env.get("ZOOM_API_KEY");
+    if (!apiKey) {
+      const stored = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'zoom' });
+      apiKey = stored[0]?.api_key || null;
+    }
     if (!apiKey) return Response.json({ success: false, not_configured: true, error: 'ZOOM_API_KEY not configured' }, { status: 200 });
 
     // Fetch users from Zoom
