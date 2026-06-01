@@ -7,7 +7,7 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const apiKey = Deno.env.get("ZOOM_API_KEY");
-    if (!apiKey) return Response.json({ error: 'ZOOM_API_KEY not configured' }, { status: 400 });
+    if (!apiKey) return Response.json({ success: false, not_configured: true, error: 'ZOOM_API_KEY not configured' }, { status: 200 });
 
     // Fetch users from Zoom
     const usersRes = await fetch('https://api.zoom.us/v2/users?status=active&page_size=300', {

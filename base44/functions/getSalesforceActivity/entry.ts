@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
     const instanceUrl = Deno.env.get("SALESFORCE_INSTANCE_URL");
 
     if (!clientId || !clientSecret || !instanceUrl) {
-      return Response.json({ error: 'Salesforce credentials not configured' }, { status: 400 });
+      return Response.json({ success: false, not_configured: true, error: 'Salesforce credentials not configured' }, { status: 200 });
     }
 
     // Get access token via client_credentials flow

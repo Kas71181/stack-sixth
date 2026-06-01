@@ -290,6 +290,8 @@ function ApiKeyConnectorCard({ connector, onSynced }) {
         setStats({ total: res.data.total, created: res.data.created, updated: res.data.updated });
         toast.success(`${connector.label}: synced ${res.data.total} users`);
         onSynced();
+      } else if (res.data?.not_configured) {
+        setStatus("idle"); // just stay in idle, the setup banner is already visible
       } else {
         setErrorMsg(res.data?.error || "Sync failed");
         setStatus("error");

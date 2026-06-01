@@ -7,7 +7,7 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const apiKey = Deno.env.get("APOLLO_API_KEY");
-    if (!apiKey) return Response.json({ error: 'APOLLO_API_KEY not configured' }, { status: 400 });
+    if (!apiKey) return Response.json({ success: false, not_configured: true, error: 'APOLLO_API_KEY not configured' }, { status: 200 });
 
     // Fetch users from Apollo.io
     const usersRes = await fetch('https://api.apollo.io/v1/users/search', {
