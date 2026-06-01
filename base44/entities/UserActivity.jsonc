@@ -53,6 +53,16 @@
       "type": "boolean",
       "title": "Wasted Cost Flag",
       "default": false
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "live",
+        "estimated",
+        "manual"
+      ],
+      "default": "estimated",
+      "title": "Data Source"
     }
   },
   "required": [

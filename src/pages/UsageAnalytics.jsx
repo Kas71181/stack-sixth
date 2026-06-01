@@ -7,6 +7,7 @@ import { AlertTriangle, Download, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import LiveConnectPanel from "@/components/usage/LiveConnectPanel";
 
 const STATUS_STYLES = {
   Active: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -113,6 +114,9 @@ export default function UsageAnalytics() {
         </div>
       </div>
 
+      {/* Live Connectors */}
+      <LiveConnectPanel onSynced={() => qc.invalidateQueries({ queryKey: ["user-activity", user?.id] })} />
+
       {/* Waste callout */}
       {wastedUsers.length > 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -156,6 +160,7 @@ export default function UsageAnalytics() {
                 <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Score</th>
                 <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Seat Cost</th>
                 <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Status</th>
+                <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Source</th>
               </tr>
             </thead>
             <tbody>
@@ -184,7 +189,13 @@ export default function UsageAnalytics() {
                     </td>
                     <td className="px-4 py-3 text-xs font-mono">{u.license_cost_per_month ? `$${u.license_cost_per_month}` : "—"}</td>
                     <td className="px-4 py-3">
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${STATUS_STYLES[u.status] || "bg-muted text-muted-foreground"}`}>{u.status}</span>
+                     <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${STATUS_STYLES[u.status] || "bg-muted text-muted-foreground"}`}>{u.status}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                     {u.source === 'live'
+                       ? <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">● Live</span>
+                       : <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border">Estimated</span>
+                     }
                     </td>
                   </tr>
                 ))
