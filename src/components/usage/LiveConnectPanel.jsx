@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Loader2, Plug, RefreshCw, AlertCircle, Zap } from "lucide-react";
+import { CheckCircle2, Loader2, Plug, RefreshCw, AlertCircle, Zap, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 const CONNECTORS = [
@@ -13,6 +12,9 @@ const CONNECTORS = [
     label: "Slack",
     description: "Real member list & activity signals",
     logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Slack_icon_2019.svg/2048px-Slack_icon_2019.svg.png",
+    setupUrl: "https://api.slack.com/apps",
+    setupLabel: "Create Slack App →",
+    scopes: "users:read, users:read.email, channels:read, team:read",
   },
   {
     id: "github",
@@ -21,6 +23,9 @@ const CONNECTORS = [
     label: "GitHub",
     description: "Org members & commit activity",
     logo: "https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg",
+    setupUrl: "https://github.com/settings/developers",
+    setupLabel: "Create GitHub OAuth App →",
+    scopes: "read:user, user:email, read:org",
   },
   {
     id: "notion",
@@ -29,15 +34,17 @@ const CONNECTORS = [
     label: "Notion",
     description: "Workspace members & page edits",
     logo: "https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png",
+    setupUrl: "https://www.notion.so/my-integrations",
+    setupLabel: "Create Notion Integration →",
+    scopes: "read_content, read_users",
   },
 ];
 
 function ConnectorCard({ connector, onSynced }) {
-  const [status, setStatus] = useState("idle"); // idle | connecting | connected | syncing | done | error
+  const [status, setStatus] = useState("idle"); // idle | connecting | connected | syncing | done | error | needs_setup
   const [stats, setStats] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Check if already connected by attempting to call the function
   useEffect(() => {
     checkConnection();
   }, []);
@@ -50,8 +57,15 @@ function ConnectorCard({ connector, onSynced }) {
         setStats({ total: res.data.total, created: res.data.created, updated: res.data.updated });
         onSynced();
       }
-    } catch {
-      setStatus("idle");
+    } catch (err) {
+      const msg = err?.message || "";
+      if (msg.includes("No active connection") || msg.includes("404")) {
+        setStatus("idle");
+      } else if (msg.includes("credentials") || msg.includes("client_id") || msg.includes("OAuth")) {
+        setStatus("needs_setup");
+      } else {
+        setStatus("idle");
+      }
     }
   };
 
@@ -77,14 +91,24 @@ function ConnectorCard({ connector, onSynced }) {
               setStatus("error");
             }
           } catch (err) {
-            setErrorMsg(err.message || "Sync failed");
-            setStatus("error");
+            const msg = err?.message || "Sync failed";
+            if (msg.includes("credentials") || msg.includes("client_id")) {
+              setStatus("needs_setup");
+            } else {
+              setErrorMsg(msg);
+              setStatus("error");
+            }
           }
         }
       }, 500);
     } catch (err) {
-      setErrorMsg(err.message);
-      setStatus("error");
+      const msg = err?.message || "";
+      if (msg.includes("credentials") || msg.includes("client_id") || msg.includes("not configured")) {
+        setStatus("needs_setup");
+      } else {
+        setErrorMsg(msg);
+        setStatus("error");
+      }
     }
   };
 
@@ -111,15 +135,15 @@ function ConnectorCard({ connector, onSynced }) {
     <div className="bg-card border border-border/60 rounded-2xl p-5 flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center overflow-hidden">
-          <img src={connector.logo} alt={connector.label} className="w-8 h-8 object-contain" />
+        <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+          <img src={connector.logo} alt={connector.label} className="w-7 h-7 object-contain" />
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <p className="font-bold text-sm">{connector.label}</p>
-          <p className="text-xs text-muted-foreground">{connector.description}</p>
+          <p className="text-xs text-muted-foreground truncate">{connector.description}</p>
         </div>
         {status === "done" && (
-          <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+          <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex-shrink-0">
             <CheckCircle2 className="w-3 h-3" /> Live
           </span>
         )}
@@ -143,6 +167,28 @@ function ConnectorCard({ connector, onSynced }) {
         </div>
       )}
 
+      {/* Needs Setup */}
+      {status === "needs_setup" && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-2">
+          <p className="text-xs font-semibold text-amber-800">OAuth credentials required</p>
+          <p className="text-[11px] text-amber-700 leading-relaxed">
+            Add your <strong>{connector.label}</strong> OAuth Client ID & Secret in the Base44 Dashboard → Connectors.
+          </p>
+          <div className="text-[11px] text-amber-700">
+            <span className="font-medium">Scopes needed:</span>{" "}
+            <code className="bg-amber-100 px-1 rounded text-[10px]">{connector.scopes}</code>
+          </div>
+          <a
+            href={connector.setupUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-900 underline underline-offset-2 hover:text-amber-700"
+          >
+            {connector.setupLabel} <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
+      )}
+
       {/* Error */}
       {status === "error" && (
         <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
@@ -157,6 +203,12 @@ function ConnectorCard({ connector, onSynced }) {
           <Button size="sm" className="w-full gap-2" onClick={handleConnect}>
             <Plug className="w-3.5 h-3.5" />
             Connect {connector.label}
+          </Button>
+        )}
+        {status === "needs_setup" && (
+          <Button size="sm" variant="outline" className="w-full gap-2 text-amber-700 border-amber-300 hover:bg-amber-50" onClick={handleConnect}>
+            <Plug className="w-3.5 h-3.5" />
+            Try Connect Again
           </Button>
         )}
         {status === "connecting" && (
@@ -185,13 +237,13 @@ function ConnectorCard({ connector, onSynced }) {
 export default function LiveConnectPanel({ onSynced }) {
   return (
     <div className="bg-gradient-to-br from-primary/5 to-blue-50 border border-primary/20 rounded-2xl p-5">
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-1">
         <Zap className="w-4 h-4 text-primary" />
         <h2 className="font-bold text-sm">Live Data Connectors</h2>
-        <span className="text-[10px] bg-primary text-white font-semibold px-2 py-0.5 rounded-full ml-1">NEW</span>
+        <span className="text-[10px] bg-primary text-white font-semibold px-2 py-0.5 rounded-full ml-1">BETA</span>
       </div>
       <p className="text-xs text-muted-foreground mb-4">
-        Connect your tools via OAuth to pull <strong>real per-user activity data</strong> — actual names, emails, last active dates, not estimates.
+        Connect your tools via OAuth to pull <strong>real per-user activity data</strong>. Each user connects their own account — no shared credentials.
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {CONNECTORS.map((c) => (
