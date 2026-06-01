@@ -28,9 +28,9 @@ export default function ToolStack() {
   const [sortBy, setSortBy] = useState("cost");
 
   const { data: integrations = [], isLoading } = useQuery({
-    queryKey: ["integrations", user?.email],
-    queryFn: () => base44.entities.SaasIntegration.filter({ created_by: user?.email }),
-    enabled: !!user?.email,
+    queryKey: ["integrations", user?.id],
+    queryFn: () => base44.entities.SaasIntegration.filter({ created_by_id: user?.id }),
+    enabled: !!user?.id,
   });
 
   const deleteMutation = useMutation({

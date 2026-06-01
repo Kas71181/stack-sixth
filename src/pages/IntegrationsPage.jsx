@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
-import { Plus, CheckCircle2, Clock, Zap } from "lucide-react";
+import { CheckCircle2, Clock, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ConnectToolModal from "@/components/integrations/ConnectToolModal";
 import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
+import { useAuth } from "@/lib/AuthContext";
+import { useWizardImport } from "@/hooks/useWizardImport";
 
 const TOOL_LIBRARY = {
   "Communication": ["Slack", "Microsoft Teams", "Zoom", "Google Meet", "Webex"],
@@ -21,31 +23,22 @@ const TOOL_LIBRARY = {
 };
 
 export default function IntegrationsPage() {
-  const qc = useQueryClient();
+  const { user } = useAuth();
   const [selectedTool, setSelectedTool] = useState(null);
   const [catFilter, setCatFilter] = useState("All");
   const [showWizard, setShowWizard] = useState(false);
 
-  const handleWizardComplete = async ({ company, tools }) => {
-    for (const tool of tools) {
-      const existing = integrations.find((i) => i.tool_name?.toLowerCase() === tool.tool_name?.toLowerCase());
-      if (!existing) {
-        await base44.entities.SaasIntegration.create({
-          tool_name: tool.tool_name,
-          category: tool.category || "Other",
-          monthly_cost: tool.monthly_cost || null,
-          licensed_seats: tool.licensed_seats || null,
-          active_users: tool.active_users || null,
-          connection_status: tool.connection_status || "Connected",
-          last_synced: new Date().toISOString().split("T")[0],
-        });
-      }
-    }
-    qc.invalidateQueries({ queryKey: ["integrations"] });
+  const { data: integrations = [] } = useQuery({
+    queryKey: ["integrations", user?.id],
+    queryFn: () => base44.entities.SaasIntegration.filter({ created_by_id: user?.id }),
+    enabled: !!user?.id,
+  });
+
+  const { handleWizardComplete: _handleWizardComplete } = useWizardImport({ integrations });
+  const handleWizardComplete = async (data) => {
+    await _handleWizardComplete(data);
     setShowWizard(false);
   };
-
-  const { data: integrations = [] } = useQuery({ queryKey: ["integrations"], queryFn: () => base44.entities.SaasIntegration.list() });
   const connectedSet = new Set(integrations.map((i) => i.tool_name));
 
   const categories = catFilter === "All" ? Object.keys(TOOL_LIBRARY) : [catFilter];

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import { motion } from "framer-motion";
 import { AlertTriangle, Download, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ const STATUS_STYLES = {
 
 export default function UsageAnalytics() {
   const qc = useQueryClient();
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [toolFilter, setToolFilter] = useState("All");
@@ -26,8 +28,9 @@ export default function UsageAnalytics() {
   });
 
   const { data: integrations = [] } = useQuery({
-    queryKey: ["integrations"],
-    queryFn: () => base44.entities.SaasIntegration.list(),
+    queryKey: ["integrations", user?.id],
+    queryFn: () => base44.entities.SaasIntegration.filter({ created_by_id: user?.id }),
+    enabled: !!user?.id,
   });
 
   const updateMutation = useMutation({

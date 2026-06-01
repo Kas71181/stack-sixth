@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { DollarSign, AlertTriangle, Layers, ShieldCheck, TrendingDown, Zap } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { Button } from "@/components/ui/button";
 import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
+import { useAuth } from "@/lib/AuthContext";
+import { useWizardImport } from "@/hooks/useWizardImport";
 
 const fade = (d = 0) => ({ initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.4, delay: d } });
 
@@ -26,37 +28,19 @@ function ScoreRing({ score }) {
 }
 
 export default function StackDashboard({ embedded = false }) {
-  const qc = useQueryClient();
+  const { user } = useAuth();
   const [showWizard, setShowWizard] = useState(false);
-  const { data: integrations = [], isLoading } = useQuery({ queryKey: ["integrations-dash"], queryFn: () => base44.entities.SaasIntegration.list() });
-  const { data: companies = [] } = useQuery({ queryKey: ["companies-dash"], queryFn: () => base44.entities.Company.list() });
-  const { data: auditReports = [] } = useQuery({ queryKey: ["audit-reports-dash"], queryFn: () => base44.entities.AuditReport.list("-generated_date", 5) });
+  const { data: integrations = [], isLoading } = useQuery({
+    queryKey: ["integrations", user?.id],
+    queryFn: () => base44.entities.SaasIntegration.filter({ created_by_id: user?.id }),
+    enabled: !!user?.id,
+  });
+  const { data: companies = [] } = useQuery({ queryKey: ["companies"], queryFn: () => base44.entities.Company.list() });
+  const { data: auditReports = [] } = useQuery({ queryKey: ["audit-reports"], queryFn: () => base44.entities.AuditReport.list("-generated_date", 5) });
 
-  const handleWizardComplete = async ({ company, tools }) => {
-    if (company.name && companies.length === 0) {
-      await base44.entities.Company.create({
-        name: company.name,
-        industry: company.industry,
-        employee_count: company.employee_count ? Number(company.employee_count) : null,
-        monthly_saas_budget: company.monthly_saas_budget ? Number(company.monthly_saas_budget) : null,
-      });
-    }
-    for (const tool of tools) {
-      const exists = integrations.find((i) => i.tool_name?.toLowerCase() === tool.tool_name?.toLowerCase());
-      if (!exists) {
-        await base44.entities.SaasIntegration.create({
-          tool_name: tool.tool_name,
-          category: tool.category || "Other",
-          monthly_cost: tool.monthly_cost || null,
-          licensed_seats: tool.licensed_seats || null,
-          active_users: tool.active_users || null,
-          connection_status: tool.connection_status || "Connected",
-          last_synced: new Date().toISOString().split("T")[0],
-        });
-      }
-    }
-    qc.invalidateQueries({ queryKey: ["integrations-dash"] });
-    qc.invalidateQueries({ queryKey: ["companies-dash"] });
+  const { handleWizardComplete: _handleWizardComplete } = useWizardImport({ integrations, companies });
+  const handleWizardComplete = async (data) => {
+    await _handleWizardComplete(data);
     setShowWizard(false);
   };
 

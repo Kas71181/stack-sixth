@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import { motion } from "framer-motion";
 import { RefreshCw, AlertTriangle, TrendingDown, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,10 +23,15 @@ Return ONLY valid JSON, no markdown.`;
 
 export default function AuditReportPage() {
   const qc = useQueryClient();
+  const { user } = useAuth();
   const [running, setRunning] = useState(false);
 
   const { data: reports = [] } = useQuery({ queryKey: ["audit-reports"], queryFn: () => base44.entities.AuditReport.list("-generated_date", 10) });
-  const { data: integrations = [] } = useQuery({ queryKey: ["integrations"], queryFn: () => base44.entities.SaasIntegration.list() });
+  const { data: integrations = [] } = useQuery({
+    queryKey: ["integrations", user?.id],
+    queryFn: () => base44.entities.SaasIntegration.filter({ created_by_id: user?.id }),
+    enabled: !!user?.id,
+  });
   const { data: companies = [] } = useQuery({ queryKey: ["companies"], queryFn: () => base44.entities.Company.list() });
 
   const latestReport = reports[0];
