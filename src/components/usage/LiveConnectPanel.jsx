@@ -309,8 +309,9 @@ function ApiKeyConnectorCard({ connector, onSynced }) {
     setStatus("saving");
     setErrorMsg("");
     try {
+      let saveRes;
       if (connector.multiSecret) {
-        await base44.functions.invoke("saveApiCredential", {
+        saveRes = await base44.functions.invoke("saveApiCredential", {
           service: connector.id,
           api_key: fields.client_id || "",
           extra_fields: {
@@ -319,13 +320,30 @@ function ApiKeyConnectorCard({ connector, onSynced }) {
           },
         });
       } else {
-        await base44.functions.invoke("saveApiCredential", {
+        saveRes = await base44.functions.invoke("saveApiCredential", {
           service: connector.id,
           api_key: fields.api_key || "",
         });
       }
+      if (!saveRes.data?.success) {
+        setErrorMsg(saveRes.data?.error || "Failed to save credentials");
+        setStatus("error");
+        return;
+      }
       setShowForm(false);
-      await handleSync();
+      // Now sync
+      setStatus("syncing");
+      const res = await base44.functions.invoke(connector.functionName, {});
+      if (res.data?.success) {
+        setStatus("done");
+        setStats({ total: res.data.total, created: res.data.created, updated: res.data.updated });
+        toast.success(`${connector.label}: synced ${res.data.total} users`);
+        onSynced();
+      } else {
+        setErrorMsg(res.data?.error || "Sync failed — check your credentials");
+        setStatus("error");
+        setShowForm(true);
+      }
     } catch (err) {
       setErrorMsg(err?.message || "Failed to save credentials");
       setStatus("error");

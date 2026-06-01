@@ -8,7 +8,7 @@ Deno.serve(async (req) => {
 
     let apiKey = Deno.env.get("ZOOM_API_KEY");
     if (!apiKey) {
-      const stored = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'zoom' });
+      const stored = await base44.entities.ApiCredential.filter({ service: 'zoom' });
       apiKey = stored[0]?.api_key || null;
     }
     if (!apiKey) return Response.json({ success: false, not_configured: true, error: 'ZOOM_API_KEY not configured' }, { status: 200 });

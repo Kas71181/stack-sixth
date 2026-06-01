@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
     let instanceUrl = Deno.env.get("SALESFORCE_INSTANCE_URL");
 
     if (!clientId || !clientSecret || !instanceUrl) {
-      const stored = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'salesforce' });
+      const stored = await base44.entities.ApiCredential.filter({ service: 'salesforce' });
       if (stored[0]) {
         clientId = stored[0].api_key || clientId;
         clientSecret = stored[0].extra_fields?.client_secret || clientSecret;

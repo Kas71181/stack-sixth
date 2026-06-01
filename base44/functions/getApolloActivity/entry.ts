@@ -8,7 +8,7 @@ Deno.serve(async (req) => {
 
     let apiKey = Deno.env.get("APOLLO_API_KEY");
     if (!apiKey) {
-      const stored = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'apollo' });
+      const stored = await base44.entities.ApiCredential.filter({ service: 'apollo' });
       apiKey = stored[0]?.api_key || null;
     }
     if (!apiKey) return Response.json({ success: false, not_configured: true, error: 'APOLLO_API_KEY not configured' }, { status: 200 });
