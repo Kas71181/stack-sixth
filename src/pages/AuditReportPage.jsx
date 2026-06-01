@@ -26,13 +26,21 @@ export default function AuditReportPage() {
   const { user } = useAuth();
   const [running, setRunning] = useState(false);
 
-  const { data: reports = [] } = useQuery({ queryKey: ["audit-reports"], queryFn: () => base44.entities.AuditReport.list("-generated_date", 10) });
+  const { data: reports = [] } = useQuery({
+    queryKey: ["audit-reports", user?.id],
+    queryFn: () => base44.entities.AuditReport.filter({ created_by_id: user?.id }, "-generated_date", 10),
+    enabled: !!user?.id,
+  });
   const { data: integrations = [] } = useQuery({
     queryKey: ["integrations", user?.id],
     queryFn: () => base44.entities.SaasIntegration.filter({ created_by_id: user?.id }),
     enabled: !!user?.id,
   });
-  const { data: companies = [] } = useQuery({ queryKey: ["companies"], queryFn: () => base44.entities.Company.list() });
+  const { data: companies = [] } = useQuery({
+    queryKey: ["companies", user?.id],
+    queryFn: () => base44.entities.Company.filter({ created_by_id: user?.id }),
+    enabled: !!user?.id,
+  });
 
   const latestReport = reports[0];
   const company = companies[0];

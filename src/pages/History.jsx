@@ -13,9 +13,9 @@ export default function History() {
   const [confirmDelete, setConfirmDelete] = useState(null);
 
   const { data: audits, isLoading } = useQuery({
-    queryKey: ["audits-all", user?.email],
-    queryFn: () => base44.entities.SoftwareAudit.filter({ created_by: user?.email }, "-created_date", 50),
-    enabled: !!user?.email,
+    queryKey: ["audits-all", user?.id],
+    queryFn: () => base44.entities.SoftwareAudit.filter({ created_by_id: user?.id }, "-created_date", 50),
+    enabled: !!user?.id,
   });
 
   const deleteMutation = useMutation({

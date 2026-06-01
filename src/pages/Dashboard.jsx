@@ -38,9 +38,9 @@ const features = [
 export default function Dashboard() {
   const { user } = useAuth();
   const { data: audits, isError: auditsError } = useQuery({
-    queryKey: ["audits-summary", user?.email],
-    queryFn: () => base44.entities.SoftwareAudit.filter({ created_by: user?.email }, "-created_date", 50),
-    enabled: !!user?.email,
+    queryKey: ["audits-summary", user?.id],
+    queryFn: () => base44.entities.SoftwareAudit.filter({ created_by_id: user?.id }, "-created_date", 50),
+    enabled: !!user?.id,
   });
 
   const completedAudits = audits?.filter((a) => a.status === "completed") || [];

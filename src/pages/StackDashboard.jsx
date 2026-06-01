@@ -35,8 +35,16 @@ export default function StackDashboard({ embedded = false }) {
     queryFn: () => base44.entities.SaasIntegration.filter({ created_by_id: user?.id }),
     enabled: !!user?.id,
   });
-  const { data: companies = [] } = useQuery({ queryKey: ["companies"], queryFn: () => base44.entities.Company.list() });
-  const { data: auditReports = [] } = useQuery({ queryKey: ["audit-reports"], queryFn: () => base44.entities.AuditReport.list("-generated_date", 5) });
+  const { data: companies = [] } = useQuery({
+    queryKey: ["companies", user?.id],
+    queryFn: () => base44.entities.Company.filter({ created_by_id: user?.id }),
+    enabled: !!user?.id,
+  });
+  const { data: auditReports = [] } = useQuery({
+    queryKey: ["audit-reports", user?.id],
+    queryFn: () => base44.entities.AuditReport.filter({ created_by_id: user?.id }, "-generated_date", 5),
+    enabled: !!user?.id,
+  });
 
   const { handleWizardComplete: _handleWizardComplete } = useWizardImport({ integrations, companies });
   const handleWizardComplete = async (data) => {
