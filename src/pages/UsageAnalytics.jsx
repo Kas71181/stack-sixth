@@ -3,9 +3,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { motion } from "framer-motion";
-import { AlertTriangle, Download, Filter } from "lucide-react";
+import { AlertTriangle, Download, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 const STATUS_STYLES = {
   Active: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -38,6 +39,44 @@ export default function UsageAnalytics() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["user-activity"] }),
   });
 
+  const [syncing, setSyncing] = useState(false);
+  const handleSyncFromStack = async () => {
+    if (!integrations.length) return toast.error("No tools found in your stack.");
+    setSyncing(true);
+    try {
+      const existingToolNames = new Set(users.map((u) => u.tool_name));
+      const toCreate = integrations
+        .filter((i) => !existingToolNames.has(i.tool_name))
+        .map((i) => {
+          const costPerSeat = i.licensed_seats > 0 ? (i.monthly_cost || 0) / i.licensed_seats : 0;
+          const utilRate = i.licensed_seats > 0 ? (i.active_users || 0) / i.licensed_seats : 0;
+          const activityScore = Math.round(utilRate * 100);
+          const status = activityScore >= 70 ? "Active" : activityScore >= 30 ? "Dormant" : "Inactive";
+          return {
+            integration_id: i.id,
+            company_id: i.company_id || "",
+            tool_name: i.tool_name,
+            user_email: "aggregate@placeholder",
+            user_name: `${i.tool_name} (aggregate)`,
+            days_active_last_30: Math.round(utilRate * 22),
+            activity_score: activityScore,
+            status,
+            license_cost_per_month: Math.round(costPerSeat * 100) / 100,
+            wasted_cost_flag: activityScore < 40,
+          };
+        });
+      if (!toCreate.length) {
+        toast.info("All tools already have activity entries.");
+      } else {
+        await base44.entities.UserActivity.bulkCreate(toCreate);
+        await qc.invalidateQueries({ queryKey: ["user-activity"] });
+        toast.success(`Synced ${toCreate.length} tool(s) from your stack.`);
+      }
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const toolNames = ["All", ...Array.from(new Set(users.map((u) => u.tool_name)))];
   const filtered = users.filter((u) => {
     const matchSearch = u.user_name?.toLowerCase().includes(search.toLowerCase()) || u.user_email?.toLowerCase().includes(search.toLowerCase());
@@ -64,7 +103,13 @@ export default function UsageAnalytics() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-extrabold tracking-tight">Usage Analytics</h1>
-        <Button variant="outline" size="sm" className="gap-1.5"><Download className="w-3.5 h-3.5" />Export CSV</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleSyncFromStack} disabled={syncing}>
+            <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
+            {syncing ? "Syncing..." : "Sync from Stack"}
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5"><Download className="w-3.5 h-3.5" />Export CSV</Button>
+        </div>
       </div>
 
       {/* Waste callout */}
@@ -116,7 +161,7 @@ export default function UsageAnalytics() {
               {isLoading ? (
                 <tr><td colSpan="8" className="text-center py-12 text-muted-foreground">Loading...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan="8" className="text-center py-12 text-muted-foreground">No users found. Upload CSV data via the Tool Stack page.</td></tr>
+                <tr><td colSpan="8" className="text-center py-12 text-muted-foreground">No data yet — click <strong>Sync from Stack</strong> to auto-populate from your tools.</td></tr>
               ) : (
                 filtered.map((u, i) => (
                   <tr key={u.id} className={`border-b border-border/40 hover:bg-muted/20 ${i % 2 === 0 ? "" : "bg-muted/10"}`}>
