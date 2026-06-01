@@ -24,8 +24,9 @@ export default function UsageAnalytics() {
   const [selected, setSelected] = useState([]);
 
   const { data: users = [], isLoading } = useQuery({
-    queryKey: ["user-activity"],
-    queryFn: () => base44.entities.UserActivity.list(),
+    queryKey: ["user-activity", user?.id],
+    queryFn: () => base44.entities.UserActivity.filter({ created_by_id: user?.id }),
+    enabled: !!user?.id,
   });
 
   const { data: integrations = [] } = useQuery({
@@ -36,7 +37,7 @@ export default function UsageAnalytics() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.UserActivity.update(id, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["user-activity"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["user-activity", user?.id] }),
   });
 
   const [syncing, setSyncing] = useState(false);
@@ -69,7 +70,7 @@ export default function UsageAnalytics() {
         toast.info("All tools already have activity entries.");
       } else {
         await base44.entities.UserActivity.bulkCreate(toCreate);
-        await qc.invalidateQueries({ queryKey: ["user-activity"] });
+        await qc.invalidateQueries({ queryKey: ["user-activity", user?.id] });
         toast.success(`Synced ${toCreate.length} tool(s) from your stack.`);
       }
     } finally {

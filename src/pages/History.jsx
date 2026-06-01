@@ -21,7 +21,7 @@ export default function History() {
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.SoftwareAudit.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["audits-all"] });
+      queryClient.invalidateQueries({ queryKey: ["audits-all", user?.id] });
       setConfirmDelete(null);
     },
     onError: () => setConfirmDelete(null),

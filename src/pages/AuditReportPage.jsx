@@ -99,8 +99,8 @@ export default function AuditReportPage() {
 
     const totalSpend = integrations.reduce((s, i) => s + (i.monthly_cost || 0), 0);
     const report = await createReport.mutateAsync({
-      company_id: company?.id || "demo",
-      company_name: company?.name || "Acme Corp",
+      company_id: company?.id || user?.id || "unknown",
+      company_name: company?.name || "My Company",
       generated_date: new Date().toISOString().split("T")[0],
       total_monthly_spend: totalSpend,
       estimated_monthly_waste: result.total_monthly_waste || 0,
@@ -112,7 +112,7 @@ export default function AuditReportPage() {
     });
 
     for (const rec of (result.recommendations || [])) {
-      await createRec.mutateAsync({ ...rec, audit_id: report.id, company_id: company?.id || "demo", status: "Open" });
+      await createRec.mutateAsync({ ...rec, audit_id: report.id, company_id: company?.id || user?.id || "unknown", status: "Open" });
     }
 
     if (company?.id) {
