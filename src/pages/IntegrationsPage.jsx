@@ -12,7 +12,7 @@ import { useWizardImport } from "@/hooks/useWizardImport";
 const TOOL_LIBRARY = {
   "Communication": ["Slack", "Microsoft Teams", "Zoom", "Google Meet", "Webex"],
   "Project Management": ["Jira", "Asana", "Monday.com", "Linear", "Notion", "ClickUp", "Trello"],
-  "CRM & Sales": ["Salesforce", "HubSpot", "Pipedrive", "Zoho CRM"],
+  "CRM & Sales": ["Salesforce", "HubSpot", "Apollo.io", "Pipedrive", "Zoho CRM"],
   "Productivity & Docs": ["Google Workspace", "Microsoft 365"],
   "Analytics & BI": ["Looker", "Tableau", "Mixpanel", "Amplitude", "Google Analytics", "Metabase"],
   "Marketing": ["HubSpot Marketing", "Mailchimp", "Klaviyo", "Marketo", "Semrush", "Buffer"],
