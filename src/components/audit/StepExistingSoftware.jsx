@@ -7,6 +7,7 @@ import CSVUploader from "./CSVUploader";
 import CostValidationWarnings from "./CostValidationWarnings";
 import StripeBillingPanel from "@/components/stripe/StripeBillingPanel";
 import WorkspaceAdminPanel from "@/components/workspace/WorkspaceAdminPanel";
+import LiveConnectPanel from "@/components/usage/LiveConnectPanel";
 
 const CATEGORY_OPTIONS = [
   "CRM",
@@ -176,6 +177,7 @@ export default function StepExistingSoftware({ data, onChange }) {
 
         <StripeBillingPanel onImport={handleImported} />
         <WorkspaceAdminPanel onImport={(wsInfo) => handleImported([wsInfo])} />
+        <LiveConnectPanel onSynced={() => {}} />
         <CostValidationWarnings tools={software} />
         <CSVUploader onToolsExtracted={handleImported} />
       </div>

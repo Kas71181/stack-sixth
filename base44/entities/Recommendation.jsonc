@@ -53,6 +53,19 @@
       ],
       "default": "Open",
       "title": "Status"
+    },
+    "assignee": {
+      "type": "string",
+      "title": "Assignee"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Due Date"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
     }
   },
   "required": [

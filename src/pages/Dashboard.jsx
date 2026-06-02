@@ -9,6 +9,7 @@ import ActionCenter from "@/components/dashboard/ActionCenter";
 import SpendSummaryBar from "@/components/dashboard/SpendSummaryBar";
 import SpendByCategoryChart from "@/components/dashboard/SpendByCategoryChart";
 import MonthlySpendTrendChart from "@/components/dashboard/MonthlySpendTrendChart";
+import QuickScan from "@/components/dashboard/QuickScan";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -79,6 +80,11 @@ export default function Dashboard() {
                 Optimize Existing Stack
               </Button>
             </Link>
+          </div>
+
+          {/* Quick Scan */}
+          <div className="text-left mb-6">
+            <QuickScan />
           </div>
 
           {/* Value props */}

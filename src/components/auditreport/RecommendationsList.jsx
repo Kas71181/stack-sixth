@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { TrendingDown } from "lucide-react";
+import RecommendationActions from "./RecommendationActions";
 
 const CAT_COLORS = {
   "Remove Tool": "bg-red-50 text-red-700 border-red-200",
@@ -53,10 +54,13 @@ export default function RecommendationsList({ auditId }) {
               <span className="text-sm font-bold text-emerald-600 font-mono">${rec.estimated_monthly_savings || 0}/mo</span>
             </div>
             <p className="text-sm text-muted-foreground mb-3">{rec.description}</p>
-            <select value={rec.status} onChange={(e) => updateMutation.mutate({ id: rec.id, status: e.target.value })}
-              className="h-8 rounded-lg border border-input bg-background px-3 text-xs">
-              {["Open", "In Progress", "Completed", "Dismissed"].map((s) => <option key={s}>{s}</option>)}
-            </select>
+            <div className="flex items-center gap-3 flex-wrap">
+              <select value={rec.status} onChange={(e) => updateMutation.mutate({ id: rec.id, status: e.target.value })}
+                className="h-8 rounded-lg border border-input bg-background px-3 text-xs">
+                {["Open", "In Progress", "Completed", "Dismissed"].map((s) => <option key={s}>{s}</option>)}
+              </select>
+            </div>
+            <RecommendationActions rec={rec} auditId={auditId} />
           </div>
         ))}
       </div>

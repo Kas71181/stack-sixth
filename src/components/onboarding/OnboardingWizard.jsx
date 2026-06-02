@@ -2,13 +2,13 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, ArrowRight, ArrowLeft, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import StepConnectFirst from "./StepConnectFirst";
 import StepCompanySetup from "./StepCompanySetup";
-import StepConnectSources from "./StepConnectSources";
 import StepReviewImport from "./StepReviewImport";
 
 const STEPS = [
+  { id: "connect", label: "Connect Tools" },
   { id: "company", label: "Company" },
-  { id: "connect", label: "Connect Sources" },
   { id: "review", label: "Review & Import" },
 ];
 
@@ -16,6 +16,7 @@ export default function OnboardingWizard({ onComplete, onDismiss }) {
   const [step, setStep] = useState(0);
   const [company, setCompany] = useState({ name: "", industry: "SaaS", employee_count: "", monthly_saas_budget: "" });
   const [importedTools, setImportedTools] = useState([]);
+  const [toolsFound, setToolsFound] = useState({});
 
   const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
   const back = () => setStep((s) => Math.max(s - 1, 0));
@@ -60,13 +61,13 @@ export default function OnboardingWizard({ onComplete, onDismiss }) {
         <div className="px-6 py-5 min-h-[340px]">
           <AnimatePresence mode="wait">
             {step === 0 && (
-              <motion.div key="company" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <StepCompanySetup data={company} onChange={setCompany} />
+              <motion.div key="connect" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <StepConnectFirst onToolsFound={setToolsFound} toolsFound={toolsFound} />
               </motion.div>
             )}
             {step === 1 && (
-              <motion.div key="connect" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <StepConnectSources company={company} onToolsImported={setImportedTools} existingTools={importedTools} />
+              <motion.div key="company" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <StepCompanySetup data={company} onChange={setCompany} />
               </motion.div>
             )}
             {step === 2 && (
@@ -92,7 +93,7 @@ export default function OnboardingWizard({ onComplete, onDismiss }) {
           </div>
           <div>
             {step < STEPS.length - 1 ? (
-              <Button size="sm" onClick={next} disabled={step === 0 && !company.name.trim()} className="gap-1.5">
+              <Button size="sm" onClick={next} disabled={step === 1 && !company.name.trim()} className="gap-1.5">
                 Continue <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             ) : (
