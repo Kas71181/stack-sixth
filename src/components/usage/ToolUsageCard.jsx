@@ -1,4 +1,6 @@
-import { TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, DollarSign } from "lucide-react";
+import { useState } from "react";
+import { AlertTriangle, CheckCircle2, DollarSign, Users } from "lucide-react";
+import UserActivityDrilldown from "./UserActivityDrilldown";
 
 function HealthGauge({ score }) {
   const color = score >= 70 ? "#16a34a" : score >= 40 ? "#d97706" : "#dc2626";
@@ -30,6 +32,7 @@ const STATUS_META = {
 };
 
 export default function ToolUsageCard({ tool }) {
+  const [showDrilldown, setShowDrilldown] = useState(false);
   const score = tool.activity_score ?? 0;
   const meta = STATUS_META[tool.status] || STATUS_META.Dormant;
   const StatusIcon = meta.Icon;
@@ -43,7 +46,11 @@ export default function ToolUsageCard({ tool }) {
     : null;
 
   return (
-    <div className="bg-card border border-border/60 rounded-2xl p-4 flex gap-4 items-start hover:shadow-md transition-shadow">
+    <>
+    <div
+      className="bg-card border border-border/60 rounded-2xl p-4 flex gap-4 items-start hover:shadow-md transition-shadow cursor-pointer"
+      onClick={() => setShowDrilldown(true)}
+    >
       {/* Gauge */}
       <HealthGauge score={score} />
 
@@ -104,7 +111,16 @@ export default function ToolUsageCard({ tool }) {
             <span>~${Math.round(wastedCost)}/mo potentially wasted</span>
           </div>
         )}
+
+        <div className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground">
+          <Users className="w-3 h-3" />
+          <span>Click to see per-user activity</span>
+        </div>
       </div>
     </div>
+    {showDrilldown && (
+      <UserActivityDrilldown toolName={tool.tool_name} onClose={() => setShowDrilldown(false)} />
+    )}
+    </>
   );
 }
