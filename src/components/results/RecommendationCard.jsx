@@ -1,8 +1,9 @@
-import { ChevronDown, ArrowRight, Link2, Star, Clock, AlertTriangle, CheckCircle2, ShoppingCart, Check, ExternalLink } from "lucide-react";
+import { ChevronDown, ArrowRight, Link2, Star, Clock, AlertTriangle, CheckCircle2, ShoppingCart, Check, ExternalLink, ShieldCheck, SendHorizonal } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/components/cart/CartContext";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { useAuth } from "@/lib/AuthContext";
 
 function ToolLogo({ name, index }) {
   const [imgError, setImgError] = useState(false);
@@ -42,11 +43,20 @@ const RISK_ICONS = {
   unknown: { icon: Clock, color: "text-muted-foreground" },
 };
 
+const APPROVAL_STATUS = {
+  none: null,
+  pending: "pending",
+  approved: "approved",
+};
+
 export default function RecommendationCard({ rec, index, auditName = "" }) {
   const [expanded, setExpanded] = useState(false);
   const { addItem, items } = useCart();
   const { getUrl } = useAffiliateLinks();
   const [buyUrl, setBuyUrl] = useState(null);
+  const [approvalStatus, setApprovalStatus] = useState(APPROVAL_STATUS.none);
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const inCart = items.some((i) => i.name === rec.name);
 
   useEffect(() => {
@@ -170,6 +180,49 @@ export default function RecommendationCard({ rec, index, auditName = "" }) {
               {rec.estimated_savings_opportunity != null && (
                 <span className="font-medium text-primary">
                   Save ~${rec.estimated_savings_opportunity}/mo
+                </span>
+              )}
+            </div>
+
+            {/* Approval workflow */}
+            <div className="mt-3 pt-3 border-t border-border/40 flex items-center gap-3 flex-wrap">
+              {approvalStatus === APPROVAL_STATUS.none && (
+                <button
+                  onClick={() => setApprovalStatus(APPROVAL_STATUS.pending)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-xs font-semibold hover:bg-amber-100 transition-colors"
+                >
+                  <SendHorizonal className="w-3.5 h-3.5" />
+                  Submit for Approval
+                </button>
+              )}
+              {approvalStatus === APPROVAL_STATUS.pending && !isAdmin && (
+                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-xs font-semibold">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  Awaiting admin approval
+                </span>
+              )}
+              {approvalStatus === APPROVAL_STATUS.pending && isAdmin && (
+                <>
+                  <span className="flex items-center gap-1.5 text-xs text-amber-700 font-medium">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Pending your approval
+                  </span>
+                  <button
+                    onClick={() => setApprovalStatus(APPROVAL_STATUS.approved)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Approve
+                  </button>
+                  <button
+                    onClick={() => setApprovalStatus(APPROVAL_STATUS.none)}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Reject
+                  </button>
+                </>
+              )}
+              {approvalStatus === APPROVAL_STATUS.approved && (
+                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Approved
                 </span>
               )}
             </div>
