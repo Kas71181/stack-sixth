@@ -4,7 +4,6 @@ import { useCart } from "@/components/cart/CartContext";
 import CartDrawer from "@/components/cart/CartDrawer";
 import AssistantChat from "@/components/assistant/AssistantChat";
 import { useAuth } from "@/lib/AuthContext";
-import { base44 } from "@/api/base44Client";
 
 const navItems = [
   { path: "/", label: "Dashboard", icon: Home },
@@ -17,7 +16,7 @@ const navItems = [
 export default function Layout() {
   const location = useLocation();
   const { items, setIsOpen } = useCart();
-  const { user, logout } = useAuth();
+  const { user, logout, navigateToLogin } = useAuth();
 
   return (
     <div className="min-h-screen bg-background">
@@ -70,7 +69,7 @@ export default function Layout() {
                   </span>
                 )}
                 <button
-                  onClick={() => user ? logout() : base44.auth.redirectToLogin()}
+                  onClick={() => user ? logout() : navigateToLogin()}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
                 >
                   {user ? <LogOut className="w-4 h-4" /> : <User className="w-4 h-4" />}
