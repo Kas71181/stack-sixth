@@ -48,6 +48,7 @@
       "enum": [
         "Open",
         "In Progress",
+        "Pending Approval",
         "Completed",
         "Dismissed"
       ],

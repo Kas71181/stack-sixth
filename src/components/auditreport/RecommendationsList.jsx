@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { TrendingDown } from "lucide-react";
+import { TrendingDown, ShieldCheck } from "lucide-react";
 import RecommendationActions from "./RecommendationActions";
+import { useAuth } from "@/lib/AuthContext";
 
 const CAT_COLORS = {
   "Remove Tool": "bg-red-50 text-red-700 border-red-200",
@@ -18,7 +19,20 @@ const PRIORITY_COLORS = {
   Low: "bg-muted text-muted-foreground",
 };
 
+const STATUS_OPTIONS_USER = ["Open", "In Progress", "Pending Approval", "Dismissed"];
+const STATUS_OPTIONS_ADMIN = ["Open", "In Progress", "Pending Approval", "Completed", "Dismissed"];
+
+const STATUS_STYLES = {
+  "Open": "text-slate-600",
+  "In Progress": "text-blue-600",
+  "Pending Approval": "text-amber-600 font-semibold",
+  "Completed": "text-emerald-600",
+  "Dismissed": "text-muted-foreground",
+};
+
 export default function RecommendationsList({ auditId }) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const qc = useQueryClient();
   const { data: recs = [] } = useQuery({
     queryKey: ["recommendations", auditId],
@@ -55,10 +69,28 @@ export default function RecommendationsList({ auditId }) {
             </div>
             <p className="text-sm text-muted-foreground mb-3">{rec.description}</p>
             <div className="flex items-center gap-3 flex-wrap">
-              <select value={rec.status} onChange={(e) => updateMutation.mutate({ id: rec.id, status: e.target.value })}
-                className="h-8 rounded-lg border border-input bg-background px-3 text-xs">
-                {["Open", "In Progress", "Completed", "Dismissed"].map((s) => <option key={s}>{s}</option>)}
+              <select
+                value={rec.status}
+                onChange={(e) => updateMutation.mutate({ id: rec.id, status: e.target.value })}
+                className={`h-8 rounded-lg border border-input bg-background px-3 text-xs ${STATUS_STYLES[rec.status] || ""}`}
+              >
+                {(isAdmin ? STATUS_OPTIONS_ADMIN : STATUS_OPTIONS_USER).map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
               </select>
+              {rec.status === "Pending Approval" && isAdmin && (
+                <button
+                  onClick={() => updateMutation.mutate({ id: rec.id, status: "Completed" })}
+                  className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" /> Approve & Complete
+                </button>
+              )}
+              {rec.status === "Pending Approval" && !isAdmin && (
+                <span className="flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg font-medium">
+                  <ShieldCheck className="w-3.5 h-3.5" /> Awaiting admin approval
+                </span>
+              )}
             </div>
             <RecommendationActions rec={rec} auditId={auditId} />
           </div>
