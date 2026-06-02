@@ -4,6 +4,7 @@ import { useCart } from "@/components/cart/CartContext";
 import CartDrawer from "@/components/cart/CartDrawer";
 import AssistantChat from "@/components/assistant/AssistantChat";
 import { useAuth } from "@/lib/AuthContext";
+import { base44 } from "@/api/base44Client";
 
 const navItems = [
   { path: "/", label: "Dashboard", icon: Home },
@@ -61,21 +62,21 @@ export default function Layout() {
                   </span>
                 )}
               </button>
-              {user && (
-                <div className="flex items-center gap-1 ml-1 pl-2 border-l border-border/60">
+              <div className="flex items-center gap-1 ml-1 pl-2 border-l border-border/60">
+                {user && (
                   <span className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground px-2">
                     <User className="w-3.5 h-3.5" />
                     {user.full_name || user.email}
                   </span>
-                  <button
-                    onClick={() => logout()}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span className="hidden sm:inline">Logout</span>
-                  </button>
-                </div>
-              )}
+                )}
+                <button
+                  onClick={() => user ? logout() : base44.auth.redirectToLogin()}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
+                >
+                  {user ? <LogOut className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                  <span className="hidden sm:inline">{user ? "Logout" : "Login"}</span>
+                </button>
+              </div>
             </nav>
           </div>
         </div>
