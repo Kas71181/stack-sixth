@@ -9,7 +9,7 @@ const navItems = [
   { path: "/", label: "Dashboard", icon: Home },
   { path: "/audit", label: "New Audit", icon: BarChart3 },
   { path: "/history", label: "History", icon: History },
-  { path: "/it-dashboard", label: "IT Manager", icon: Monitor },
+  { path: "/it-dashboard", label: "IT Manager", icon: Monitor, adminOnly: true },
   { path: "/monitoring", label: "Monitor", icon: Activity },
 ];
 
@@ -32,7 +32,7 @@ export default function Layout() {
               />
             </Link>
             <nav className="flex items-center gap-1">
-              {navItems.map(({ path, label, icon: Icon }) => {
+              {navItems.filter(({ adminOnly }) => !adminOnly || user?.role === "admin").map(({ path, label, icon: Icon }) => {
                 const isActive = location.pathname === path;
                 return (
                   <Link
