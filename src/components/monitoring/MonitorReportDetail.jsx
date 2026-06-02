@@ -1,4 +1,4 @@
-import { X, AlertTriangle, CheckCircle2, Clock, TrendingUp, DollarSign, Activity, RotateCcw, Flag, CalendarClock } from "lucide-react";
+import { X, AlertTriangle, CheckCircle2, Clock, TrendingUp, DollarSign, Activity, RotateCcw, Flag, CalendarClock, Gauge } from "lucide-react";
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -63,11 +63,22 @@ export default function MonitorReportDetail({ report, onClose }) {
 
       <div className="p-6 space-y-6">
         {/* Summary stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <StatTile label="Estimated Spend" value={`${formatCurrency(report.total_spend)}/mo`} icon={DollarSign} />
-          <StatTile label="Flagged Tools" value={report.flagged_tools ?? 0} icon={AlertTriangle} highlight={report.flagged_tools > 0} />
-          <StatTile label="Savings Available" value={`${formatCurrency(report.savings_identified)}/mo`} icon={TrendingUp} green />
-        </div>
+        {(() => {
+          const toolsWithScore = report.tools_snapshot?.filter((t) => t.usage_score != null) || [];
+          const avgUtil = toolsWithScore.length
+            ? Math.round(toolsWithScore.reduce((s, t) => s + t.usage_score, 0) / toolsWithScore.length)
+            : null;
+          return (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <StatTile label="Estimated Spend" value={`${formatCurrency(report.total_spend)}/mo`} icon={DollarSign} />
+              <StatTile label="Flagged Tools" value={report.flagged_tools ?? 0} icon={AlertTriangle} highlight={report.flagged_tools > 0} />
+              <StatTile label="Savings Available" value={`${formatCurrency(report.savings_identified)}/mo`} icon={TrendingUp} green />
+              {avgUtil !== null && (
+                <StatTile label="Avg Utilization" value={`${avgUtil}%`} icon={Gauge} green={avgUtil >= 70} highlight={avgUtil < 40} />
+              )}
+            </div>
+          );
+        })()}
 
         {/* Summary text */}
         {report.report_summary && (
@@ -124,14 +135,17 @@ export default function MonitorReportDetail({ report, onClose }) {
                         <p className="text-xs font-mono font-medium">{formatCurrency(tool.monthly_cost)}/mo</p>
                       )}
                       {tool.usage_score != null && (
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+                        <div className="flex items-center gap-2 bg-muted/60 rounded-lg px-2.5 py-1">
+                          <div className="w-20 h-2 rounded-full bg-muted overflow-hidden">
                             <div
-                              className={`h-full rounded-full ${tool.usage_score >= 70 ? "bg-primary" : tool.usage_score >= 40 ? "bg-yellow-400" : "bg-destructive"}`}
+                              className={`h-full rounded-full transition-all ${tool.usage_score >= 70 ? "bg-emerald-500" : tool.usage_score >= 40 ? "bg-amber-400" : "bg-destructive"}`}
                               style={{ width: `${tool.usage_score}%` }}
                             />
                           </div>
-                          <span className="text-[10px] text-muted-foreground">{tool.usage_score}%</span>
+                          <span className={`text-xs font-bold ${tool.usage_score >= 70 ? "text-emerald-600" : tool.usage_score >= 40 ? "text-amber-600" : "text-destructive"}`}>
+                            {tool.usage_score}%
+                          </span>
+                          <span className="text-[10px] text-muted-foreground">utilization</span>
                         </div>
                       )}
                       <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${s.color}`}>
