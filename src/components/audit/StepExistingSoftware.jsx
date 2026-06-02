@@ -8,19 +8,28 @@ import CostValidationWarnings from "./CostValidationWarnings";
 import StripeBillingPanel from "@/components/stripe/StripeBillingPanel";
 import WorkspaceAdminPanel from "@/components/workspace/WorkspaceAdminPanel";
 import LiveConnectPanel from "@/components/usage/LiveConnectPanel";
+import ToolAutocomplete from "./ToolAutocomplete";
 
 const CATEGORY_OPTIONS = [
-  "CRM",
   "Communication",
   "Project Management",
-  "Accounting",
+  "CRM & Sales",
+  "Productivity & Docs",
+  "Design",
+  "Dev Tools",
+  "Cloud & Infrastructure",
+  "Storage",
   "Marketing",
+  "Analytics & BI",
   "Customer Support",
   "HR",
-  "Analytics",
-  "Design",
-  "Development",
-  "Storage",
+  "Finance & Accounting",
+  "Identity & Security",
+  "E-commerce",
+  "Content",
+  "Automation",
+  "Learning",
+  "Customer Success",
   "Other",
 ];
 
@@ -114,12 +123,15 @@ export default function StepExistingSoftware({ data, onChange }) {
 
         <div className="bg-muted/50 border border-border/60 rounded-xl p-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <Input
-              placeholder="Tool name (e.g. Slack)"
+            <ToolAutocomplete
               value={draft.name}
-              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addSoftware())}
-              className="h-10 rounded-lg"
+              onChange={(val) => setDraft({ ...draft, name: val })}
+              onSelect={(tool) => setDraft({
+                ...draft,
+                name: tool.name,
+                category: tool.category,
+                monthly_cost: tool.avg_monthly_cost > 0 ? String(tool.avg_monthly_cost) : draft.monthly_cost,
+              })}
             />
             <select
               value={draft.category}
