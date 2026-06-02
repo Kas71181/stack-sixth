@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { Monitor, Layers, AlertCircle, LayoutDashboard, Users, FileText, Plug, Zap } from "lucide-react";
@@ -35,7 +36,12 @@ const TABS = [
 export default function ITDashboard() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState("decisions");
+
+  useEffect(() => {
+    if (location.state?.tab) setActiveTab(location.state.tab);
+  }, [location.state]);
   const [selectedAudit, setSelectedAudit] = useState(null);
   const [selectedRec, setSelectedRec] = useState(null);
 

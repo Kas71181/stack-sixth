@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { motion } from "framer-motion";
-import { AlertTriangle, RefreshCw, Activity, TrendingDown, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, RefreshCw, Activity, Plug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 import ToolUsageCard from "@/components/usage/ToolUsageCard";
 
 export default function UsageAnalytics() {
@@ -127,6 +128,21 @@ export default function UsageAnalytics() {
             <p className="text-2xl font-extrabold text-destructive">${Math.round(totalWaste).toLocaleString()}</p>
             <p className="text-xs text-muted-foreground mt-0.5">Wasted / Month</p>
           </div>
+        </div>
+      )}
+
+      {/* Live data nudge */}
+      {tools.length > 0 && tools.every((t) => t.source !== "live") && (
+        <div className="flex items-center justify-between gap-3 bg-primary/5 border border-primary/20 rounded-2xl px-4 py-3">
+          <div className="flex items-center gap-2">
+            <Plug className="w-4 h-4 text-primary flex-shrink-0" />
+            <p className="text-sm text-foreground">All data is estimated. Connect live sources to get real utilization.</p>
+          </div>
+          <Link to="/it-dashboard" state={{ tab: "integrations" }}>
+            <Button size="sm" variant="outline" className="gap-1.5 flex-shrink-0">
+              <Plug className="w-3.5 h-3.5" /> Connect Sources
+            </Button>
+          </Link>
         </div>
       )}
 
