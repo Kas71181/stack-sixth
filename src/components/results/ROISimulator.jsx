@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
-import { TrendingUp, Sliders } from "lucide-react";
+import { TrendingUp, Sliders, PackageOpen } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
 
 function formatCurrency(val) {
   if (val >= 1000) return `$${(val / 1000).toFixed(1)}k`;
@@ -31,6 +32,7 @@ export default function ROISimulator({ recommendations }) {
     Object.fromEntries(actionable.map((r, i) => [i, 75]))
   );
   const [consolidation, setConsolidation] = useState(60);
+  const [migrationCost, setMigrationCost] = useState(2000);
 
   const monthlySavings = useMemo(() => {
     const fromRecs = actionable.reduce((sum, r, i) => {
@@ -119,16 +121,41 @@ export default function ROISimulator({ recommendations }) {
             />
           </div>
 
+          {/* Migration Cost Input */}
+          <div className="pt-2 border-t border-border/40">
+            <div className="flex items-center gap-2 mb-2">
+              <PackageOpen className="w-3.5 h-3.5 text-muted-foreground" />
+              <p className="text-sm font-medium">One-time Migration Cost</p>
+            </div>
+            <p className="text-xs text-muted-foreground mb-2">Include consultant fees, downtime, retraining, etc.</p>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+              <Input
+                type="number"
+                min={0}
+                value={migrationCost}
+                onChange={(e) => setMigrationCost(Math.max(0, Number(e.target.value)))}
+                className="pl-7 text-sm"
+              />
+            </div>
+          </div>
+
           {/* Summary */}
           <div className="bg-primary/5 border border-primary/15 rounded-xl p-4 mt-2">
             <div className="flex justify-between text-sm mb-1">
               <span className="text-muted-foreground">Monthly savings</span>
               <span className="font-semibold font-mono">{formatCurrency(monthlySavings)}/mo</span>
             </div>
+            <div className="flex justify-between text-sm mb-1">
+              <span className="text-muted-foreground">Migration cost</span>
+              <span className="font-semibold font-mono text-destructive">-{formatCurrency(migrationCost)}</span>
+            </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Break-even (est.)</span>
+              <span className="text-muted-foreground">True break-even</span>
               <span className="font-semibold">
-                {monthlySavings > 0 ? `Month ${Math.min(3, Math.ceil(500 / monthlySavings) || 1)}` : "—"}
+                {monthlySavings > 0
+                  ? `Month ${Math.ceil((migrationCost / monthlySavings) + 3) || 1}`
+                  : "—"}
               </span>
             </div>
           </div>

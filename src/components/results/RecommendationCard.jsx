@@ -1,4 +1,4 @@
-import { ChevronDown, ArrowRight, Link2, Star, Clock, AlertTriangle, CheckCircle2, ShoppingCart, Check, ExternalLink, ShieldCheck, SendHorizonal } from "lucide-react";
+import { ChevronDown, ArrowRight, Link2, Star, Clock, AlertTriangle, CheckCircle2, ShoppingCart, Check, ExternalLink, ShieldCheck, SendHorizonal, Database, GitBranch, Calendar, FileOutput } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/components/cart/CartContext";
@@ -49,6 +49,31 @@ const APPROVAL_STATUS = {
   approved: "approved",
 };
 
+// Lock-in risk based on known tool characteristics
+const LOCK_IN_DATA = {
+  salesforce: { score: "High", export: "CSV/API", deps: "4-6 integrations", weeks: "8-12" },
+  hubspot: { score: "High", export: "CSV/API", deps: "3-5 integrations", weeks: "6-10" },
+  netsuite: { score: "High", export: "CSV/API", deps: "5-8 integrations", weeks: "12-16" },
+  zendesk: { score: "Medium", export: "CSV/JSON", deps: "2-4 integrations", weeks: "4-6" },
+  jira: { score: "Medium", export: "CSV/XML/API", deps: "3-5 integrations", weeks: "4-8" },
+  notion: { score: "Low", export: "Markdown/CSV/PDF", deps: "1-2 integrations", weeks: "1-2" },
+  airtable: { score: "Low", export: "CSV/JSON", deps: "1-3 integrations", weeks: "2-4" },
+  slack: { score: "Medium", export: "JSON export", deps: "3-6 integrations", weeks: "3-5" },
+  intercom: { score: "Medium", export: "CSV/JSON", deps: "2-4 integrations", weeks: "4-6" },
+  monday: { score: "Low", export: "CSV/Excel", deps: "1-3 integrations", weeks: "2-3" },
+};
+
+const LOCK_IN_COLORS = {
+  High: "text-destructive bg-destructive/10 border-destructive/20",
+  Medium: "text-yellow-700 bg-yellow-50 border-yellow-200",
+  Low: "text-emerald-700 bg-emerald-50 border-emerald-200",
+};
+
+function getLockInData(toolName) {
+  const key = toolName?.toLowerCase().replace(/\s+/g, "");
+  return LOCK_IN_DATA[key] || null;
+}
+
 export default function RecommendationCard({ rec, index, auditName = "" }) {
   const [expanded, setExpanded] = useState(false);
   const { addItem, items } = useCart();
@@ -65,6 +90,7 @@ export default function RecommendationCard({ rec, index, auditName = "" }) {
 
   const RiskIcon = RISK_ICONS[rec.migration_risk]?.icon || Clock;
   const riskColor = RISK_ICONS[rec.migration_risk]?.color || "text-muted-foreground";
+  const lockIn = getLockInData(rec.replacement_candidate_for || rec.name);
 
   return (
     <div className="bg-card border border-border/60 rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
@@ -183,6 +209,35 @@ export default function RecommendationCard({ rec, index, auditName = "" }) {
                 </span>
               )}
             </div>
+
+            {/* Lock-in Risk Panel */}
+            {lockIn && (
+              <div className="mt-3 pt-3 border-t border-border/40">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Switching Cost Analysis</p>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${LOCK_IN_COLORS[lockIn.score]}`}>
+                    {lockIn.score} Lock-in
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="bg-muted/50 rounded-lg p-2.5 text-center">
+                    <FileOutput className="w-3.5 h-3.5 text-muted-foreground mx-auto mb-1" />
+                    <p className="text-[10px] text-muted-foreground">Data Export</p>
+                    <p className="text-xs font-semibold mt-0.5">{lockIn.export}</p>
+                  </div>
+                  <div className="bg-muted/50 rounded-lg p-2.5 text-center">
+                    <GitBranch className="w-3.5 h-3.5 text-muted-foreground mx-auto mb-1" />
+                    <p className="text-[10px] text-muted-foreground">Dependencies</p>
+                    <p className="text-xs font-semibold mt-0.5">{lockIn.deps}</p>
+                  </div>
+                  <div className="bg-muted/50 rounded-lg p-2.5 text-center">
+                    <Calendar className="w-3.5 h-3.5 text-muted-foreground mx-auto mb-1" />
+                    <p className="text-[10px] text-muted-foreground">Parallel Run</p>
+                    <p className="text-xs font-semibold mt-0.5">{lockIn.weeks} wks</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Approval workflow */}
             <div className="mt-3 pt-3 border-t border-border/40 flex items-center gap-3 flex-wrap">
