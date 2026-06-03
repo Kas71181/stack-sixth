@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
 
           <!-- CTA -->
           <div style="text-align:center;">
-            <a href="https://app.base44.com" style="display:inline-block;background:#1d4ed8;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:10px;">Review in Dashboard →</a>
+            <a href="${Deno.env.get('BASE44_APP_BASE_URL') || 'https://stacksixth.base44.app'}" style="display:inline-block;background:#1d4ed8;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:10px;">Review in Dashboard →</a>
           </div>
 
         </td></tr>
