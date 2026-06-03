@@ -111,17 +111,116 @@ Respond as JSON matching this schema:
     });
 
     // Send email notification to the audit owner
-    const savingsText = result.new_savings_identified > 0
-      ? `\n\n💰 New savings identified: $${result.new_savings_identified}/mo`
-      : '';
-    const flagsText = result.flagged_count > 0
-      ? `\n⚠️ Flagged tools: ${result.flagged_count}`
-      : '';
+    const recItems = (result.recommendations || [])
+      .map(r => `<li style="margin:0 0 8px 0;color:#374151;">${r}</li>`)
+      .join('');
+
+    const toolRows = (result.tools_snapshot || []).slice(0, 8).map(t => {
+      const statusColor = t.status === 'adopted' ? '#059669' : t.status === 'at_risk' ? '#dc2626' : t.status === 'skipped' ? '#6b7280' : '#d97706';
+      const statusLabel = t.status === 'adopted' ? '✅ Adopted' : t.status === 'at_risk' ? '⚠️ At Risk' : t.status === 'skipped' ? '— Skipped' : '⏳ Pending';
+      return `
+        <tr>
+          <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:14px;color:#111827;font-weight:500;">${t.name}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:13px;color:#6b7280;">${t.category || ''}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:13px;font-weight:600;color:${statusColor};">${statusLabel}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:13px;color:#374151;text-align:right;">${t.monthly_cost ? `$${t.monthly_cost}/mo` : '—'}</td>
+        </tr>`;
+    }).join('');
+
+    const emailBody = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+        <!-- Header -->
+        <tr><td style="background:linear-gradient(135deg,#1d4ed8 0%,#1e40af 100%);border-radius:16px 16px 0 0;padding:36px 40px;text-align:center;">
+          <div style="font-size:13px;font-weight:700;color:#93c5fd;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Stack Sixth</div>
+          <h1 style="margin:0;font-size:26px;font-weight:800;color:#ffffff;line-height:1.2;">Monthly Stack Report</h1>
+          <p style="margin:8px 0 0;font-size:15px;color:#bfdbfe;">${audit.company_name} · ${reportPeriod}</p>
+        </td></tr>
+
+        <!-- Body -->
+        <tr><td style="background:#ffffff;padding:36px 40px;">
+
+          <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.6;">Hi ${user.full_name || 'there'},</p>
+          <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">Your monthly SaaS stack monitoring report is ready. Here's the executive summary:</p>
+
+          <!-- Summary box -->
+          <div style="background:#f0f9ff;border-left:4px solid #3b82f6;border-radius:0 8px 8px 0;padding:16px 20px;margin-bottom:28px;">
+            <p style="margin:0;font-size:14px;color:#1e40af;line-height:1.6;">${result.report_summary}</p>
+          </div>
+
+          <!-- Stats row -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+            <tr>
+              <td width="33%" style="padding:0 6px 0 0;">
+                <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px;text-align:center;">
+                  <div style="font-size:22px;font-weight:800;color:#059669;">$${(result.total_spend_estimate || 0).toLocaleString()}</div>
+                  <div style="font-size:11px;color:#6b7280;margin-top:3px;font-weight:500;">Est. Monthly Spend</div>
+                </div>
+              </td>
+              <td width="33%" style="padding:0 3px;">
+                <div style="background:#fefce8;border:1px solid #fef08a;border-radius:10px;padding:16px;text-align:center;">
+                  <div style="font-size:22px;font-weight:800;color:#d97706;">$${(result.new_savings_identified || 0).toLocaleString()}</div>
+                  <div style="font-size:11px;color:#6b7280;margin-top:3px;font-weight:500;">Savings Available</div>
+                </div>
+              </td>
+              <td width="33%" style="padding:0 0 0 6px;">
+                <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:16px;text-align:center;">
+                  <div style="font-size:22px;font-weight:800;color:#dc2626;">${result.flagged_count || 0}</div>
+                  <div style="font-size:11px;color:#6b7280;margin-top:3px;font-weight:500;">Flagged Tools</div>
+                </div>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Recommendations -->
+          ${recItems ? `
+          <h2 style="margin:0 0 12px;font-size:16px;font-weight:700;color:#111827;">Action Items This Month</h2>
+          <ul style="margin:0 0 28px;padding-left:20px;list-style-type:disc;">${recItems}</ul>
+          ` : ''}
+
+          <!-- Tools table -->
+          ${toolRows ? `
+          <h2 style="margin:0 0 12px;font-size:16px;font-weight:700;color:#111827;">Tool Status Snapshot</h2>
+          <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;margin-bottom:28px;">
+            <thead>
+              <tr style="background:#f9fafb;">
+                <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Tool</th>
+                <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Category</th>
+                <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Status</th>
+                <th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Cost</th>
+              </tr>
+            </thead>
+            <tbody>${toolRows}</tbody>
+          </table>
+          ` : ''}
+
+          <!-- CTA -->
+          <div style="text-align:center;margin-top:8px;">
+            <a href="https://app.base44.com" style="display:inline-block;background:#1d4ed8;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:10px;">View Full Report →</a>
+          </div>
+
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="background:#f3f4f6;border-radius:0 0 16px 16px;padding:20px 40px;text-align:center;">
+          <p style="margin:0;font-size:12px;color:#9ca3af;">Stack Sixth AI CFO · You're receiving this because you enabled monitoring for ${audit.company_name}.</p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
 
     await base44.integrations.Core.SendEmail({
       to: user.email,
-      subject: `Stack Sixth: Monthly Report Ready — ${audit.company_name} (${reportPeriod})`,
-      body: `Hi ${user.full_name || 'there'},\n\nYour monthly stack monitoring report for ${audit.company_name} is ready.\n\n${result.report_summary}${savingsText}${flagsText}\n\nView the full report in your Stack Sixth dashboard.\n\n— Stack Sixth AI`,
+      subject: `📊 Stack Sixth: Monthly Report Ready — ${audit.company_name} (${reportPeriod})`,
+      body: emailBody,
     });
 
     return Response.json({ success: true, report });
