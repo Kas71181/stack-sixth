@@ -143,14 +143,9 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* Onboarding Checklist */}
+      {/* Savings Scoreboard */}
       <motion.div {...fade(0.07)}>
-        <OnboardingChecklist
-          audits={completedAudits}
-          recommendations={recommendations}
-          monitorReports={monitorReports}
-          userActivity={userActivity}
-        />
+        <SavingsScoreboard recommendations={recommendations} audits={completedAudits} />
       </motion.div>
 
       {/* Spend Summary */}
