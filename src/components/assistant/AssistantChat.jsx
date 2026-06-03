@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { MessageSquare, X, Send, Loader2, Bot } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import ProactiveInsights from "./ProactiveInsights";
 
-export default function AssistantChat() {
+export default function AssistantChat({ audits, recommendations, monitorReports }) {
   const [open, setOpen] = useState(false);
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -75,10 +76,18 @@ export default function AssistantChat() {
               </div>
             )}
             {visibleMessages.length === 0 && conversation && (
-              <div className="text-center py-8">
-                <Bot className="w-8 h-8 mx-auto mb-2 text-primary/30" />
-                <p className="text-sm text-muted-foreground">Hi! I'm your Stack Sixth assistant.</p>
-                <p className="text-xs text-muted-foreground mt-1">Ask me about your audit results, recommendations, or how to navigate the platform.</p>
+              <div className="py-4 space-y-4">
+                <div className="text-center">
+                  <Bot className="w-8 h-8 mx-auto mb-2 text-primary/30" />
+                  <p className="text-sm text-muted-foreground">Hi! I'm your Stack Sixth assistant.</p>
+                  <p className="text-xs text-muted-foreground mt-1">Ask me anything, or tap a suggestion below.</p>
+                </div>
+                <ProactiveInsights
+                  audits={audits}
+                  recommendations={recommendations}
+                  monitorReports={monitorReports}
+                  onSelectInsight={(text) => { setInput(text); }}
+                />
               </div>
             )}
             {visibleMessages.map((msg, i) => (

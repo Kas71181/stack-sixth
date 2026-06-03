@@ -10,6 +10,8 @@ import SpendSummaryBar from "@/components/dashboard/SpendSummaryBar";
 import SpendByCategoryChart from "@/components/dashboard/SpendByCategoryChart";
 import MonthlySpendTrendChart from "@/components/dashboard/MonthlySpendTrendChart";
 import QuickScan from "@/components/dashboard/QuickScan";
+import SavingsScoreboard from "@/components/dashboard/SavingsScoreboard";
+import OnboardingChecklist from "@/components/dashboard/OnboardingChecklist";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -35,6 +37,12 @@ export default function Dashboard() {
   const { data: monitorReports } = useQuery({
     queryKey: ["monitor-reports-dash", user?.id],
     queryFn: () => base44.entities.ToolMonitor.filter({ created_by_id: user?.id }, "-created_date", 50),
+    enabled: !!user?.id,
+  });
+
+  const { data: userActivity } = useQuery({
+    queryKey: ["user-activity-dash", user?.id],
+    queryFn: () => base44.entities.UserActivity.filter({ created_by_id: user?.id }, "-updated_date", 20),
     enabled: !!user?.id,
   });
 
@@ -135,13 +143,28 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* Spend Summary */}
+      {/* Savings Scoreboard */}
       <motion.div {...fade(0.05)}>
+        <SavingsScoreboard recommendations={recommendations} audits={completedAudits} />
+      </motion.div>
+
+      {/* Onboarding Checklist */}
+      <motion.div {...fade(0.07)}>
+        <OnboardingChecklist
+          audits={completedAudits}
+          recommendations={recommendations}
+          monitorReports={monitorReports}
+          userActivity={userActivity}
+        />
+      </motion.div>
+
+      {/* Spend Summary */}
+      <motion.div {...fade(0.1)}>
         <SpendSummaryBar audits={completedAudits} recommendations={recommendations} />
       </motion.div>
 
       {/* Action Queue */}
-      <motion.div {...fade(0.1)}>
+      <motion.div {...fade(0.15)}>
         <ActionCenter
           audits={completedAudits}
           recommendations={recommendations}

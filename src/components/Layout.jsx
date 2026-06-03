@@ -4,6 +4,8 @@ import { useCart } from "@/components/cart/CartContext";
 import CartDrawer from "@/components/cart/CartDrawer";
 import AssistantChat from "@/components/assistant/AssistantChat";
 import { useAuth } from "@/lib/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 
 const navItems = [
   { path: "/", label: "Dashboard", icon: Home },
@@ -17,6 +19,22 @@ export default function Layout() {
   const location = useLocation();
   const { items, setIsOpen } = useCart();
   const { user, logout, navigateToLogin } = useAuth();
+
+  const { data: audits } = useQuery({
+    queryKey: ["audits-layout", user?.id],
+    queryFn: () => base44.entities.SoftwareAudit.filter({ created_by_id: user?.id, status: "completed" }, "-created_date", 20),
+    enabled: !!user?.id,
+  });
+  const { data: recommendations } = useQuery({
+    queryKey: ["recs-layout", user?.id],
+    queryFn: () => base44.entities.Recommendation.filter({ created_by_id: user?.id }, "-created_date", 100),
+    enabled: !!user?.id,
+  });
+  const { data: monitorReports } = useQuery({
+    queryKey: ["monitors-layout", user?.id],
+    queryFn: () => base44.entities.ToolMonitor.filter({ created_by_id: user?.id }, "-created_date", 20),
+    enabled: !!user?.id,
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -83,7 +101,7 @@ export default function Layout() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Outlet />
       </main>
-      <AssistantChat />
+      <AssistantChat audits={audits} recommendations={recommendations} monitorReports={monitorReports} />
     </div>
   );
 }
