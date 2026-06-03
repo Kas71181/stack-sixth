@@ -98,11 +98,13 @@ export default function ToolUsageCard({ tool }) {
             </div>
           )}
 
-          {tool.source === "live" && (
-            <div className="flex flex-col justify-end">
+          <div className="flex flex-col justify-end">
+            {tool.source === "live" ? (
               <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">● Live</span>
-            </div>
-          )}
+            ) : (
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200" title="Data is estimated, not from a live connection">~ Estimated</span>
+            )}
+          </div>
         </div>
 
         {wastedCost && (
