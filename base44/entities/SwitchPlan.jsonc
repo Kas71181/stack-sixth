@@ -1,0 +1,98 @@
+{
+  "name": "SwitchPlan",
+  "type": "object",
+  "properties": {
+    "from_tool": {
+      "type": "string",
+      "title": "Switching From"
+    },
+    "to_tool": {
+      "type": "string",
+      "title": "Switching To"
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "Cost Savings",
+        "Feature Gap",
+        "Consolidation",
+        "Better Alternative",
+        "Vendor Issue",
+        "Other"
+      ],
+      "title": "Reason for Switch"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Planning",
+        "Parallel Run",
+        "Cutover",
+        "Completed",
+        "Cancelled"
+      ],
+      "default": "Planning",
+      "title": "Status"
+    },
+    "decision_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Decision Date"
+    },
+    "cutover_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Target Cutover Date"
+    },
+    "old_tool_renewal_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Old Tool Renewal Date"
+    },
+    "monthly_cost_old": {
+      "type": "number",
+      "title": "Monthly Cost (Old Tool)"
+    },
+    "monthly_cost_new": {
+      "type": "number",
+      "title": "Monthly Cost (New Tool)"
+    },
+    "affected_users": {
+      "type": "number",
+      "title": "Affected Users"
+    },
+    "champion": {
+      "type": "string",
+      "title": "Internal Champion (name/email)"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    },
+    "checklist": {
+      "type": "array",
+      "title": "Checklist",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "completed": {
+            "type": "boolean"
+          },
+          "phase": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "from_tool",
+    "to_tool"
+  ]
+}

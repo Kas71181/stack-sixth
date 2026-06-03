@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { BarChart3, History, Home, Monitor, ShoppingCart, LogOut, User, Activity } from "lucide-react";
+import { BarChart3, History, Home, Monitor, ShoppingCart, LogOut, User, Activity, ArrowLeftRight } from "lucide-react";
 import { useCart } from "@/components/cart/CartContext";
 import CartDrawer from "@/components/cart/CartDrawer";
 import AssistantChat from "@/components/assistant/AssistantChat";
@@ -13,6 +13,7 @@ const navItems = [
   { path: "/history", label: "History", icon: History },
   { path: "/it-dashboard", label: "IT Manager", icon: Monitor, adminOnly: true },
   { path: "/monitoring", label: "Monitor", icon: Activity },
+  { path: "/switch-planner", label: "Switch Planner", icon: ArrowLeftRight },
 ];
 
 export default function Layout() {
