@@ -1,0 +1,80 @@
+{
+  "name": "Contract",
+  "type": "object",
+  "properties": {
+    "vendor_name": {
+      "type": "string",
+      "title": "Vendor Name"
+    },
+    "contract_type": {
+      "type": "string",
+      "enum": [
+        "SaaS Subscription",
+        "Annual License",
+        "Monthly License",
+        "Enterprise Agreement",
+        "Other"
+      ],
+      "title": "Contract Type"
+    },
+    "monthly_cost": {
+      "type": "number",
+      "title": "Monthly Cost ($)"
+    },
+    "annual_cost": {
+      "type": "number",
+      "title": "Annual Cost ($)"
+    },
+    "renewal_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Renewal Date"
+    },
+    "notice_period_days": {
+      "type": "number",
+      "title": "Cancellation Notice Period (days)"
+    },
+    "auto_renews": {
+      "type": "boolean",
+      "title": "Auto-Renews",
+      "default": true
+    },
+    "seats_licensed": {
+      "type": "number",
+      "title": "Seats Licensed"
+    },
+    "negotiation_leverage": {
+      "type": "string",
+      "title": "Negotiation Leverage Notes"
+    },
+    "key_terms": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Key Terms"
+    },
+    "file_url": {
+      "type": "string",
+      "title": "Uploaded File URL"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Active",
+        "Expiring Soon",
+        "Expired",
+        "Cancelled"
+      ],
+      "default": "Active",
+      "title": "Status"
+    },
+    "company_id": {
+      "type": "string",
+      "title": "Company ID"
+    }
+  },
+  "required": [
+    "vendor_name"
+  ]
+}

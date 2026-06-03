@@ -1,0 +1,48 @@
+{
+  "name": "BenchmarkData",
+  "type": "object",
+  "properties": {
+    "tool_name": {
+      "type": "string",
+      "title": "Tool Name"
+    },
+    "category": {
+      "type": "string",
+      "title": "Category"
+    },
+    "industry": {
+      "type": "string",
+      "title": "Industry"
+    },
+    "company_size_range": {
+      "type": "string",
+      "enum": [
+        "1-10",
+        "11-50",
+        "51-200",
+        "201-500",
+        "500+"
+      ],
+      "title": "Company Size Range"
+    },
+    "avg_monthly_cost": {
+      "type": "number",
+      "title": "Avg Monthly Cost"
+    },
+    "avg_utilization_rate": {
+      "type": "number",
+      "title": "Avg Utilization Rate (0-1)"
+    },
+    "avg_activity_score": {
+      "type": "number",
+      "title": "Avg Activity Score (0-100)"
+    },
+    "sample_count": {
+      "type": "number",
+      "title": "Sample Count (anonymized)"
+    }
+  },
+  "required": [
+    "tool_name"
+  ]
+}

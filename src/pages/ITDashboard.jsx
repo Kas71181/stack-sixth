@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
-import { Monitor, Layers, AlertCircle, LayoutDashboard, Users, FileText, Plug, Zap } from "lucide-react";
+import { Monitor, Layers, AlertCircle, LayoutDashboard, Users, FileText, Plug, Zap, TrendingUp } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import SoftwareEvaluationTable from "../components/itdashboard/SoftwareEvaluationTable";
@@ -17,6 +17,8 @@ import ToolStack from "./ToolStack";
 import UsageAnalytics from "./UsageAnalytics";
 import AuditReportPage from "./AuditReportPage";
 import IntegrationsPage from "./IntegrationsPage";
+import ContractIntelligence from "./ContractIntelligence";
+import BenchmarkPanel from "@/components/benchmarks/BenchmarkPanel";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -31,6 +33,8 @@ const TABS = [
   { id: "usage", label: "Usage Analytics", icon: Users },
   { id: "audit", label: "Audit Report", icon: FileText },
   { id: "integrations", label: "Integrations", icon: Plug },
+  { id: "contracts", label: "Contracts", icon: FileText },
+  { id: "benchmarks", label: "Benchmarks", icon: TrendingUp },
 ];
 
 export default function ITDashboard() {
@@ -242,6 +246,21 @@ export default function ITDashboard() {
       {activeTab === "usage" && <UsageAnalytics />}
       {activeTab === "audit" && <AuditReportPage />}
       {activeTab === "integrations" && <IntegrationsPage />}
+      {activeTab === "contracts" && <ContractIntelligence />}
+      {activeTab === "benchmarks" && (
+        <div className="space-y-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-xl font-extrabold tracking-tight">Stack Benchmarks</h1>
+              <p className="text-xs text-muted-foreground">How your costs & utilization compare to similar companies</p>
+            </div>
+          </div>
+          <BenchmarkPanel integrations={completedAudits.flatMap(a => a.existing_software || [])} />
+        </div>
+      )}
     </div>
   );
 }

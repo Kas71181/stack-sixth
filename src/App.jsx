@@ -13,6 +13,7 @@ import Results from './pages/Results.jsx';
 import History from './pages/History';
 import ITDashboard from './pages/ITDashboard';
 import Monitoring from './pages/Monitoring';
+import ContractIntelligence from './pages/ContractIntelligence';
 
 
 const AuthenticatedApp = () => {
@@ -48,6 +49,7 @@ const AuthenticatedApp = () => {
         <Route path="/history" element={<History />} />
         <Route path="/it-dashboard" element={<ITDashboard />} />
         <Route path="/monitoring" element={<Monitoring />} />
+        <Route path="/contracts" element={<ContractIntelligence />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
 

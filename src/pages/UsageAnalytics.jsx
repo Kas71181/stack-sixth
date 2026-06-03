@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import ToolUsageCard from "@/components/usage/ToolUsageCard";
+import DeepActivityMetrics from "@/components/usage/DeepActivityMetrics";
 
 export default function UsageAnalytics() {
   const qc = useQueryClient();
@@ -156,6 +157,9 @@ export default function UsageAnalytics() {
           </p>
         </motion.div>
       )}
+
+      {/* Deep activity metrics for live-connected tools */}
+      <DeepActivityMetrics />
 
       {/* Filter tabs */}
       <div className="flex gap-1.5">
