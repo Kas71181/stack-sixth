@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
   try {
@@ -66,8 +66,8 @@ Deno.serve(async (req) => {
       ).length;
 
       let status = 'Active';
-      let activityScore = 75;
-      let daysActive = 18;
+      let activityScore = 0;
+      let daysActive = 0;
 
       if (daysSinceEdit === null || daysSinceEdit > 90) {
         status = 'Inactive';
@@ -75,11 +75,14 @@ Deno.serve(async (req) => {
         daysActive = 0;
       } else if (daysSinceEdit > 30) {
         status = 'Dormant';
-        activityScore = 30;
-        daysActive = 4;
+        activityScore = 20;
+        daysActive = 0;
       } else {
-        activityScore = Math.min(100, 40 + recentEdits * 8);
-        daysActive = Math.min(30, recentEdits * 2);
+        // recentEdits = pages this user personally last-edited in last 30 days
+        // Each unique edit counts as roughly 1 active day (capped at 30)
+        daysActive = Math.min(30, recentEdits);
+        activityScore = Math.min(100, 20 + recentEdits * 5);
+        status = daysActive === 0 ? 'Dormant' : 'Active';
       }
 
       return {
