@@ -90,15 +90,6 @@ export default function ITDashboard() {
   const approved = allTools.filter((t) => t._decision === "approve");
   const rejected = allTools.filter((t) => t._decision === "reject");
 
-  if (user && user.role !== "admin") {
-    return (
-      <div className="flex flex-col items-center justify-center py-32 gap-3 text-center">
-        <Monitor className="w-10 h-10 text-muted-foreground/40" />
-        <p className="font-bold text-lg">Access Restricted</p>
-        <p className="text-sm text-muted-foreground max-w-xs">The IT Manager dashboard is only available to administrators.</p>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
