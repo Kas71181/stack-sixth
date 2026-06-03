@@ -14,6 +14,10 @@ import History from './pages/History';
 import ITDashboard from './pages/ITDashboard';
 import Monitoring from './pages/Monitoring';
 import ContractIntelligence from './pages/ContractIntelligence';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 
 const AuthenticatedApp = () => {
@@ -42,6 +46,10 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/audit" element={<AuditForm />} />
