@@ -11,7 +11,7 @@ const navItems = [
   { path: "/", label: "Dashboard", icon: Home },
   { path: "/audit", label: "New Audit", icon: BarChart3 },
   { path: "/history", label: "History", icon: History },
-  { path: "/it-dashboard", label: "IT Manager", icon: Monitor, adminOnly: true },
+  { path: "/it-dashboard", label: "IT Manager", icon: Monitor },
   { path: "/monitoring", label: "Monitor", icon: Activity },
   { path: "/switch-planner", label: "Switch Planner", icon: ArrowLeftRight },
 ];
