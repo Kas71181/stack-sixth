@@ -43,7 +43,7 @@ export default function RecommendationActions({ rec, auditId }) {
 
       {open && (
         <div className="mt-2 p-3 bg-muted/40 rounded-lg border border-border/40 space-y-2">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
               <label className="text-[10px] text-muted-foreground font-medium flex items-center gap-1 mb-1">
                 <User className="w-3 h-3" /> Assignee

@@ -68,11 +68,11 @@ export default function RecommendationsList({ auditId }) {
               <span className="text-sm font-bold text-emerald-600 font-mono">${rec.estimated_monthly_savings || 0}/mo</span>
             </div>
             <p className="text-sm text-muted-foreground mb-3">{rec.description}</p>
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <select
                 value={rec.status}
                 onChange={(e) => updateMutation.mutate({ id: rec.id, status: e.target.value })}
-                className={`h-8 rounded-lg border border-input bg-background px-3 text-xs ${STATUS_STYLES[rec.status] || ""}`}
+                className={`h-8 w-full sm:w-auto rounded-lg border border-input bg-background px-3 text-xs ${STATUS_STYLES[rec.status] || ""}`}
               >
                 {(isAdmin ? STATUS_OPTIONS_ADMIN : STATUS_OPTIONS_USER).map((s) => (
                   <option key={s} value={s}>{s}</option>
@@ -81,13 +81,13 @@ export default function RecommendationsList({ auditId }) {
               {rec.status === "Pending Approval" && isAdmin && (
                 <button
                   onClick={() => updateMutation.mutate({ id: rec.id, status: "Completed" })}
-                  className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors"
+                  className="flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors w-full sm:w-auto"
                 >
                   <ShieldCheck className="w-3.5 h-3.5" /> Approve & Complete
                 </button>
               )}
               {rec.status === "Pending Approval" && !isAdmin && (
-                <span className="flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg font-medium">
+                <span className="flex items-center justify-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg font-medium w-full sm:w-auto">
                   <ShieldCheck className="w-3.5 h-3.5" /> Awaiting admin approval
                 </span>
               )}
