@@ -48,6 +48,7 @@ export default function OnboardingChecklist({ audits, recommendations, monitorRe
   if ((userActivity || []).some((u) => u.source === "live")) completedIds.add("connect");
   if ((recommendations || []).some((r) => r.status === "In Progress" || r.status === "Completed")) completedIds.add("recommendation");
   if ((monitorReports || []).length > 0) completedIds.add("monitor");
+  if ((audits || []).some((a) => (a.existing_software || []).some((s) => s._contractId))) completedIds.add("contract");
 
   const doneCount = completedIds.size;
   const totalCount = steps.length;

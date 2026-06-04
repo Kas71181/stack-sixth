@@ -1,68 +1,30 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, Loader2, ArrowRight, Zap } from "lucide-react";
+import { Sparkles, ArrowRight, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { base44 } from "@/api/base44Client";
 
 export default function QuickScan() {
   const navigate = useNavigate();
   const [teamSize, setTeamSize] = useState("");
   const [budget, setBudget] = useState("");
-  const [loading, setLoading] = useState(false);
   const [estimate, setEstimate] = useState(null);
 
-  const handleScan = async () => {
+  const handleScan = () => {
     if (!teamSize) return;
-    setLoading(true);
     const size = parseInt(teamSize);
-    const monthlyBudget = parseFloat(budget) || size * 150; // ~$150/person average SaaS spend
-
-    // Industry benchmark: 30-40% waste, quick estimate
+    const monthlyBudget = parseFloat(budget) || size * 150;
     const wasteMin = Math.round(monthlyBudget * 0.28);
     const wasteMax = Math.round(monthlyBudget * 0.40);
-    const avgToolsPerPerson = 8;
     const estimatedTools = Math.round(size * (size < 20 ? 0.8 : size < 100 ? 0.5 : 0.3));
-
-    // Quick AI validation of the estimate
-    try {
-      const res = await base44.integrations.Core.InvokeLLM({
-        prompt: `A company has ${size} employees and spends approximately $${monthlyBudget}/month on SaaS.
-        Based on industry benchmarks, estimate:
-        1. The likely monthly waste (duplicate tools, idle licenses, over-provisioned plans)
-        2. How many SaaS tools they likely have
-        3. The top 3 categories where they're likely wasting money
-        Be specific and realistic. Use SMB industry benchmark data.`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            waste_low: { type: "number" },
-            waste_high: { type: "number" },
-            estimated_tools: { type: "number" },
-            top_waste_categories: { type: "array", items: { type: "string" } },
-            key_insight: { type: "string" },
-          },
-        },
-      });
-      setEstimate({
-        wasteMin: res.waste_low || wasteMin,
-        wasteMax: res.waste_high || wasteMax,
-        tools: res.estimated_tools || estimatedTools,
-        categories: res.top_waste_categories || ["Communication", "Project Management", "CRM"],
-        insight: res.key_insight || `Companies your size typically save $${wasteMin}–$${wasteMax}/mo with a full audit.`,
-        budget: monthlyBudget,
-      });
-    } catch {
-      setEstimate({
-        wasteMin,
-        wasteMax,
-        tools: estimatedTools,
-        categories: ["Communication tools", "Project management", "CRM & Sales"],
-        insight: `Companies with ${size} people typically waste 30–40% of their SaaS budget.`,
-        budget: monthlyBudget,
-      });
-    }
-    setLoading(false);
+    setEstimate({
+      wasteMin,
+      wasteMax,
+      tools: estimatedTools,
+      categories: ["Communication tools", "Project management", "CRM & Sales"],
+      insight: `Companies with ${size} people typically waste 28–40% of their SaaS budget on unused licenses and duplicate tools.`,
+      budget: monthlyBudget,
+    });
   };
 
   if (estimate) {
@@ -144,20 +106,11 @@ export default function QuickScan() {
 
       <Button
         onClick={handleScan}
-        disabled={!teamSize || loading}
+        disabled={!teamSize}
         className="w-full gap-2"
       >
-        {loading ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Estimating your waste...
-          </>
-        ) : (
-          <>
-            <Sparkles className="w-4 h-4" />
-            Show My Estimate
-          </>
-        )}
+        <Sparkles className="w-4 h-4" />
+        Show My Estimate
       </Button>
     </div>
   );

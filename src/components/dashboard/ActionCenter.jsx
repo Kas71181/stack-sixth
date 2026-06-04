@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, TrendingDown, AlertTriangle, RefreshCw, Activity, ChevronRight, DollarSign, Users, Zap } from "lucide-react";
 
-function ActionItem({ icon: Icon, iconColor, iconBg, title, subtitle, cta, href, urgent }) {
+import { TrendingDown, AlertTriangle, RefreshCw, Activity, ChevronRight, DollarSign, Zap } from "lucide-react";
+
+function ActionItem({ icon: Icon, iconColor, iconBg, title, subtitle, cta, href, state, urgent }) {
   return (
     <Link
       to={href}
+      state={state}
       className={`flex items-center gap-4 p-4 rounded-xl border transition-all hover:shadow-md group ${
         urgent
           ? "bg-amber-50 border-amber-200 hover:border-amber-300"
@@ -91,19 +93,24 @@ export default function ActionCenter({ audits, recommendations, monitorReports }
       title: "Check live usage data",
       subtitle: "Connect tools to see who's actually using what",
       cta: "Connect",
-      href: "/it-dashboard?tab=usage",
+      href: "/it-dashboard",
+      state: { tab: "usage" },
     });
   }
 
-  actions.push({
-    icon: RefreshCw,
-    iconColor: "text-primary",
-    iconBg: "bg-accent",
-    title: "Run a new audit",
-    subtitle: "Analyze your latest software stack for new savings",
-    cta: "Start",
-    href: "/audit",
-  });
+  // Only show "Run a new audit" if there are no urgent items to avoid noise
+  const hasUrgent = actions.some((a) => a.urgent);
+  if (!hasUrgent) {
+    actions.push({
+      icon: RefreshCw,
+      iconColor: "text-primary",
+      iconBg: "bg-accent",
+      title: "Run a new audit",
+      subtitle: "Analyze your latest software stack for new savings",
+      cta: "Start",
+      href: "/audit",
+    });
+  }
 
   if (actions.length === 0) return null;
 
