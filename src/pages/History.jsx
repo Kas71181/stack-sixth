@@ -96,14 +96,14 @@ export default function History() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       {totalSavings > 0 && (
-                        <span className="text-sm font-mono font-semibold text-primary">
-                          ${totalSavings.toLocaleString()} savings
+                        <span className="hidden xs:block text-xs font-mono font-semibold text-primary whitespace-nowrap">
+                          ${totalSavings.toLocaleString()}
                         </span>
                       )}
                       <span
-                        className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${
                           audit.status === "completed"
                             ? "bg-primary/10 text-primary"
                             : audit.status === "error"
@@ -113,7 +113,7 @@ export default function History() {
                       >
                         {audit.status}
                       </span>
-                      <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                      <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
                     </div>
                   </Link>
                   {confirmDelete === audit.id ? (

@@ -40,6 +40,7 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-background">
       <CartDrawer />
+      {/* Desktop header */}
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -57,14 +58,14 @@ export default function Layout() {
                   <Link
                     key={path}
                     to={path}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    className={`hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                       isActive
                         ? "bg-primary/10 text-primary"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted"
                     }`}
                   >
                     <Icon className="w-4 h-4" />
-                    <span className="hidden sm:inline">{label}</span>
+                    <span className="hidden lg:inline">{label}</span>
                   </Link>
                 );
               })}
@@ -99,9 +100,32 @@ export default function Layout() {
           </div>
         </div>
       </header>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 sm:pb-8">
         <Outlet />
       </main>
+
+      {/* Mobile bottom nav */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-t border-border/50">
+        <div className="flex items-center justify-around px-1 py-2">
+          {navItems.map(({ path, label, icon: Icon }) => {
+            const isActive = location.pathname === path;
+            return (
+              <Link
+                key={path}
+                to={path}
+                className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-0 flex-1 ${
+                  isActive ? "text-primary" : "text-muted-foreground"
+                }`}
+              >
+                <Icon className="w-5 h-5 flex-shrink-0" />
+                <span className="text-[9px] font-medium truncate w-full text-center">{label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+
       <AssistantChat audits={audits} recommendations={recommendations} monitorReports={monitorReports} />
     </div>
   );
