@@ -94,9 +94,9 @@ export default function RecommendationCard({ rec, index, auditName = "" }) {
 
   return (
     <div className="bg-card border border-border/60 rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
-      <button
+      <div
         onClick={() => setExpanded(!expanded)}
-        className="w-full text-left p-5 flex items-start gap-4"
+        className="w-full text-left p-5 flex items-start gap-4 cursor-pointer"
       >
         <ToolLogo name={rec.name} index={index} />
         <div className="flex-1 min-w-0">
@@ -153,7 +153,7 @@ export default function RecommendationCard({ rec, index, auditName = "" }) {
             </Badge>
           </div>
         </div>
-      </button>
+      </div>
 
       {expanded && (
         <div className="px-5 pb-5 pt-0 border-t border-border/40">
