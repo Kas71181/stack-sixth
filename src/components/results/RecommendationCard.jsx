@@ -1,4 +1,4 @@
-import { ChevronDown, ArrowRight, Link2, Star, Clock, AlertTriangle, CheckCircle2, ShoppingCart, Check, ExternalLink, ShieldCheck, SendHorizonal, Database, GitBranch, Calendar, FileOutput } from "lucide-react";
+import { ChevronDown, ArrowRight, Link2, Star, Clock, AlertTriangle, CheckCircle2, ShoppingCart, Check, ExternalLink, ShieldCheck, SendHorizonal, GitBranch, Calendar, FileOutput } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/components/cart/CartContext";
@@ -8,13 +8,12 @@ import { useAuth } from "@/lib/AuthContext";
 function ToolLogo({ name, index }) {
   const [imgError, setImgError] = useState(false);
   const domain = name.toLowerCase().replace(/\s+/g, "") + ".com";
-  const logoUrl = `https://logo.clearbit.com/${domain}`;
 
   if (!imgError) {
     return (
       <div className="w-10 h-10 rounded-xl bg-white border border-border/60 shadow-sm flex items-center justify-center flex-shrink-0 overflow-hidden">
         <img
-          src={logoUrl}
+          src={`https://logo.clearbit.com/${domain}`}
           alt={name}
           className="w-7 h-7 object-contain"
           onError={() => setImgError(true)}
@@ -43,13 +42,6 @@ const RISK_ICONS = {
   unknown: { icon: Clock, color: "text-muted-foreground" },
 };
 
-const APPROVAL_STATUS = {
-  none: null,
-  pending: "pending",
-  approved: "approved",
-};
-
-// Lock-in risk based on known tool characteristics
 const LOCK_IN_DATA = {
   salesforce: { score: "High", export: "CSV/API", deps: "4-6 integrations", weeks: "8-12" },
   hubspot: { score: "High", export: "CSV/API", deps: "3-5 integrations", weeks: "6-10" },
@@ -69,18 +61,15 @@ const LOCK_IN_COLORS = {
   Low: "text-emerald-700 bg-emerald-50 border-emerald-200",
 };
 
-function getLockInData(toolName) {
-  const key = toolName?.toLowerCase().replace(/\s+/g, "");
-  return LOCK_IN_DATA[key] || null;
-}
-
 export default function RecommendationCard({ rec, index, auditName = "" }) {
   const [expanded, setExpanded] = useState(false);
+  const [approvalStatus, setApprovalStatus] = useState("none"); // "none" | "pending" | "approved"
+  const [buyUrl, setBuyUrl] = useState(null);
+
   const { addItem, items } = useCart();
   const { getUrl } = useAffiliateLinks();
-  const [buyUrl, setBuyUrl] = useState(null);
-  const [approvalStatus, setApprovalStatus] = useState(APPROVAL_STATUS.none);
   const { user } = useAuth();
+
   const isAdmin = user?.role === "admin";
   const inCart = items.some((i) => i.name === rec.name);
 
@@ -90,13 +79,18 @@ export default function RecommendationCard({ rec, index, auditName = "" }) {
 
   const RiskIcon = RISK_ICONS[rec.migration_risk]?.icon || Clock;
   const riskColor = RISK_ICONS[rec.migration_risk]?.color || "text-muted-foreground";
-  const lockIn = getLockInData(rec.replacement_candidate_for || rec.name);
+  const lockInKey = (rec.replacement_candidate_for || rec.name)?.toLowerCase().replace(/\s+/g, "");
+  const lockIn = LOCK_IN_DATA[lockInKey] || null;
 
   return (
     <div className="bg-card border border-border/60 rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
+      {/* Clickable header */}
       <div
-        onClick={() => setExpanded(!expanded)}
-        className="w-full text-left p-5 flex items-start gap-4 cursor-pointer"
+        role="button"
+        tabIndex={0}
+        onClick={() => setExpanded((v) => !v)}
+        onKeyDown={(e) => e.key === "Enter" && setExpanded((v) => !v)}
+        className="w-full p-5 flex items-start gap-4 cursor-pointer select-none"
       >
         <ToolLogo name={rec.name} index={index} />
         <div className="flex-1 min-w-0">
@@ -110,6 +104,7 @@ export default function RecommendationCard({ rec, index, auditName = "" }) {
                 <span className="hidden sm:block text-sm font-mono font-medium">${rec.estimated_monthly_cost}/mo</span>
               )}
               <button
+                type="button"
                 onClick={(e) => { e.stopPropagation(); if (!inCart) addItem(rec, auditName); }}
                 className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg border font-medium transition-all ${
                   inCart
@@ -142,10 +137,7 @@ export default function RecommendationCard({ rec, index, auditName = "" }) {
               <Star className="w-3.5 h-3.5 text-primary fill-primary" />
               <span className="text-xs font-semibold">{rec.match_score}</span>
             </div>
-            <Badge
-              variant="outline"
-              className={`text-[10px] font-medium px-2 ${PRIORITY_STYLES[rec.implementation_priority] || ""}`}
-            >
+            <Badge variant="outline" className={`text-[10px] font-medium px-2 ${PRIORITY_STYLES[rec.implementation_priority] || ""}`}>
               {rec.implementation_priority} priority
             </Badge>
             <Badge variant="outline" className="text-[10px] font-medium px-2">
@@ -155,13 +147,12 @@ export default function RecommendationCard({ rec, index, auditName = "" }) {
         </div>
       </div>
 
+      {/* Expanded content */}
       {expanded && (
         <div className="px-5 pb-5 pt-0 border-t border-border/40">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                Why It Fits
-              </p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Why It Fits</p>
               <ul className="space-y-1.5">
                 {rec.why_it_fits?.map((w, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm">
@@ -172,9 +163,7 @@ export default function RecommendationCard({ rec, index, auditName = "" }) {
               </ul>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                Integrations
-              </p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Integrations</p>
               <ul className="space-y-1.5">
                 {rec.integration_notes?.map((n, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm">
@@ -192,6 +181,7 @@ export default function RecommendationCard({ rec, index, auditName = "" }) {
                 <p className="text-sm text-primary font-medium">{rec.savings_or_roi_note}</p>
               </div>
             )}
+
             <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <RiskIcon className={`w-3.5 h-3.5 ${riskColor}`} />
@@ -210,7 +200,6 @@ export default function RecommendationCard({ rec, index, auditName = "" }) {
               )}
             </div>
 
-            {/* Lock-in Risk Panel */}
             {lockIn && (
               <div className="mt-3 pt-3 border-t border-border/40">
                 <div className="flex items-center justify-between mb-2">
@@ -239,43 +228,45 @@ export default function RecommendationCard({ rec, index, auditName = "" }) {
               </div>
             )}
 
-            {/* Approval workflow */}
             <div className="mt-3 pt-3 border-t border-border/40 flex flex-wrap items-center gap-2">
-              {approvalStatus === APPROVAL_STATUS.none && (
+              {approvalStatus === "none" && (
                 <button
-                  onClick={() => setApprovalStatus(APPROVAL_STATUS.pending)}
+                  type="button"
+                  onClick={() => setApprovalStatus("pending")}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-xs font-semibold hover:bg-amber-100 transition-colors"
                 >
                   <SendHorizonal className="w-3.5 h-3.5" />
                   Submit for Approval
                 </button>
               )}
-              {approvalStatus === APPROVAL_STATUS.pending && !isAdmin && (
+              {approvalStatus === "pending" && !isAdmin && (
                 <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-xs font-semibold">
                   <ShieldCheck className="w-3.5 h-3.5" />
                   Awaiting admin approval
                 </span>
               )}
-              {approvalStatus === APPROVAL_STATUS.pending && isAdmin && (
+              {approvalStatus === "pending" && isAdmin && (
                 <>
                   <span className="flex items-center gap-1.5 text-xs text-amber-700 font-medium">
                     <ShieldCheck className="w-3.5 h-3.5" /> Pending your approval
                   </span>
                   <button
-                    onClick={() => setApprovalStatus(APPROVAL_STATUS.approved)}
+                    type="button"
+                    onClick={() => setApprovalStatus("approved")}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" /> Approve
                   </button>
                   <button
-                    onClick={() => setApprovalStatus(APPROVAL_STATUS.none)}
+                    type="button"
+                    onClick={() => setApprovalStatus("none")}
                     className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Reject
                   </button>
                 </>
               )}
-              {approvalStatus === APPROVAL_STATUS.approved && (
+              {approvalStatus === "approved" && (
                 <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Approved
                 </span>
