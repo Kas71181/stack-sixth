@@ -101,24 +101,24 @@ export default function RecommendationCard({ rec, index, auditName = "" }) {
         <ToolLogo name={rec.name} index={index} />
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <div>
-              <h3 className="font-semibold text-base">{rec.name}</h3>
+            <div className="min-w-0">
+              <h3 className="font-semibold text-base truncate">{rec.name}</h3>
               <p className="text-xs text-muted-foreground mt-0.5">{rec.category}</p>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               {rec.estimated_monthly_cost != null && (
-                <span className="text-sm font-mono font-medium">${rec.estimated_monthly_cost}/mo</span>
+                <span className="hidden sm:block text-sm font-mono font-medium">${rec.estimated_monthly_cost}/mo</span>
               )}
               <button
                 onClick={(e) => { e.stopPropagation(); if (!inCart) addItem(rec, auditName); }}
-                className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border font-medium transition-all ${
+                className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg border font-medium transition-all ${
                   inCart
                     ? "bg-emerald-50 text-emerald-700 border-emerald-200 cursor-default"
                     : "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
                 }`}
               >
                 {inCart ? <Check className="w-3 h-3" /> : <ShoppingCart className="w-3 h-3" />}
-                {inCart ? "Added" : "Add"}
+                <span className="hidden sm:inline">{inCart ? "Added" : "Add"}</span>
               </button>
               {buyUrl && (
                 <a
@@ -126,14 +126,14 @@ export default function RecommendationCard({ rec, index, auditName = "" }) {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border font-medium bg-primary text-primary-foreground border-primary hover:bg-primary/90 transition-all"
+                  className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border font-medium bg-primary text-primary-foreground border-primary hover:bg-primary/90 transition-all"
                 >
                   <ExternalLink className="w-3 h-3" />
-                  Buy
+                  <span className="hidden sm:inline">Buy</span>
                 </a>
               )}
               <ChevronDown
-                className={`w-4 h-4 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
+                className={`w-4 h-4 text-muted-foreground transition-transform flex-shrink-0 ${expanded ? "rotate-180" : ""}`}
               />
             </div>
           </div>
@@ -240,7 +240,7 @@ export default function RecommendationCard({ rec, index, auditName = "" }) {
             )}
 
             {/* Approval workflow */}
-            <div className="mt-3 pt-3 border-t border-border/40 flex items-center gap-3 flex-wrap">
+            <div className="mt-3 pt-3 border-t border-border/40 flex flex-wrap items-center gap-2">
               {approvalStatus === APPROVAL_STATUS.none && (
                 <button
                   onClick={() => setApprovalStatus(APPROVAL_STATUS.pending)}
