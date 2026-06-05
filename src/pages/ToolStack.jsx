@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { motion } from "framer-motion";
-import { Plus, Search, Layers, Trash2, Pencil, Users } from "lucide-react";
+import { Plus, Search, Layers, Trash2, Pencil, Users, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +31,59 @@ export default function ToolStack() {
     queryKey: ["integrations", user?.id],
     queryFn: () => base44.entities.SaasIntegration.filter({ created_by_id: user?.id }),
     enabled: !!user?.id,
+  });
+
+  const { data: latestAudit } = useQuery({
+    queryKey: ["latest-audit-for-stack", user?.id],
+    queryFn: async () => {
+      const audits = await base44.entities.SoftwareAudit.filter(
+        { created_by_id: user?.id, status: "completed" },
+        "-created_date",
+        1
+      );
+      return audits[0] || null;
+    },
+    enabled: !!user?.id,
+  });
+
+  const importMutation = useMutation({
+    mutationFn: async (tools) => {
+      const CATEGORY_MAP = {
+        communication: "Communication",
+        "project management": "Project Management",
+        crm: "CRM & Sales",
+        sales: "CRM & Sales",
+        productivity: "Productivity & Docs",
+        docs: "Productivity & Docs",
+        analytics: "Analytics & BI",
+        bi: "Analytics & BI",
+        marketing: "Marketing",
+        support: "Customer Support",
+        identity: "Identity & Security",
+        security: "Identity & Security",
+        dev: "Dev Tools",
+        finance: "Finance & HR",
+        hr: "Finance & HR",
+      };
+      const guessCategory = (cat) => {
+        if (!cat) return "Productivity & Docs";
+        const lower = cat.toLowerCase();
+        for (const [k, v] of Object.entries(CATEGORY_MAP)) {
+          if (lower.includes(k)) return v;
+        }
+        return "Productivity & Docs";
+      };
+      for (const t of tools) {
+        await base44.entities.SaasIntegration.create({
+          tool_name: t.name,
+          category: guessCategory(t.category),
+          monthly_cost: t.monthly_cost || null,
+          connection_status: "Manual Upload",
+          last_synced: new Date().toISOString().split("T")[0],
+        });
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["integrations"] }),
   });
 
   const deleteMutation = useMutation({
@@ -88,12 +141,35 @@ export default function ToolStack() {
             <Layers className="w-7 h-7 text-primary" />
           </div>
           <h2 className="text-lg font-bold mb-1">No tools added yet</h2>
-          <p className="text-sm text-muted-foreground mb-5 max-w-sm mx-auto">
-            Manually add any software your scan didn't pick up — enter the name, cost, and seat info to get full visibility.
-          </p>
-          <Button onClick={() => { setEditTool(null); setShowAdd(true); }} className="gap-2">
-            <Plus className="w-4 h-4" /> Add Your First Tool
-          </Button>
+          {latestAudit?.existing_software?.length > 0 ? (
+            <>
+              <p className="text-sm text-muted-foreground mb-5 max-w-sm mx-auto">
+                We found <strong>{latestAudit.existing_software.length} tools</strong> from your last audit (<em>{latestAudit.company_name}</em>). Import them automatically or add manually.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button
+                  onClick={() => importMutation.mutate(latestAudit.existing_software)}
+                  disabled={importMutation.isPending}
+                  className="gap-2"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  {importMutation.isPending ? "Importing..." : `Import ${latestAudit.existing_software.length} Tools from Audit`}
+                </Button>
+                <Button variant="outline" onClick={() => { setEditTool(null); setShowAdd(true); }} className="gap-2">
+                  <Plus className="w-4 h-4" /> Add Manually
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground mb-5 max-w-sm mx-auto">
+                Manually add any software your scan didn't pick up — enter the name, cost, and seat info to get full visibility.
+              </p>
+              <Button onClick={() => { setEditTool(null); setShowAdd(true); }} className="gap-2">
+                <Plus className="w-4 h-4" /> Add Your First Tool
+              </Button>
+            </>
+          )}
         </motion.div>
       ) : (
         <div className="space-y-2">
