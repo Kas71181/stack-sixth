@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import ToolUsageCard from "@/components/usage/ToolUsageCard";
-import DeepActivityMetrics from "@/components/usage/DeepActivityMetrics";
 
 export default function UsageAnalytics() {
   const qc = useQueryClient();
@@ -28,14 +27,22 @@ export default function UsageAnalytics() {
     enabled: !!user?.id,
   });
 
-  // Aggregate to tool-level (deduplicate, prefer live data)
+  // First pass: collect all live users per tool
+  const liveUsersMap = {};
+  activities.forEach((a) => {
+    if (a.source === "live") {
+      if (!liveUsersMap[a.tool_name]) liveUsersMap[a.tool_name] = [];
+      liveUsersMap[a.tool_name].push(a);
+    }
+  });
+
+  // Second pass: build tool-level summary, prefer live representative record
   const toolMap = {};
   activities.forEach((a) => {
     const key = a.tool_name;
     if (!toolMap[key] || a.source === "live") {
-      toolMap[key] = { ...a };
+      toolMap[key] = { ...a, liveUsers: liveUsersMap[a.tool_name] || [] };
     }
-    // merge category from integrations
   });
   integrations.forEach((i) => {
     if (toolMap[i.tool_name]) {
@@ -157,9 +164,6 @@ export default function UsageAnalytics() {
           </p>
         </motion.div>
       )}
-
-      {/* Deep activity metrics for live-connected tools */}
-      <DeepActivityMetrics />
 
       {/* Filter tabs */}
       <div className="flex gap-1.5">
