@@ -29,7 +29,6 @@ const fade = (delay = 0) => ({
 
 const TABS = [
   { id: "decisions", label: "AI Decisions", icon: Monitor },
-  { id: "overview", label: "SaaS Overview", icon: LayoutDashboard },
   { id: "tools", label: "Tool Stack", icon: Layers },
   { id: "usage", label: "Usage Analytics", icon: Users },
   { id: "audit", label: "Audit Report", icon: FileText },
@@ -234,7 +233,6 @@ export default function ITDashboard() {
         </>
       )}
 
-      {activeTab === "overview" && <StackDashboard embedded />}
       {activeTab === "tools" && <ToolStack />}
       {activeTab === "usage" && <UsageAnalytics />}
       {activeTab === "audit" && <AuditReportPage />}
