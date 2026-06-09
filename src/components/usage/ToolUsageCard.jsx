@@ -61,14 +61,27 @@ export default function ToolUsageCard({ tool }) {
     ? tool.license_cost_per_month
     : null;
 
-  // Live user breakdown (merged from DeepActivityMetrics)
+  // Live user breakdown
   const liveUsers = tool.liveUsers || [];
   const hasLive = liveUsers.length > 0;
   const activeCount = liveUsers.filter((u) => u.status === "Active").length;
   const dormantCount = liveUsers.filter((u) => u.status === "Dormant").length;
   const inactiveCount = liveUsers.filter((u) => u.status === "Inactive" || u.status === "Never Logged In").length;
-  const avgDays = hasLive ? Math.round(liveUsers.reduce((s, u) => s + (u.days_active_last_30 || 0), 0) / liveUsers.length) : null;
-  const avgScore = hasLive ? Math.round(liveUsers.reduce((s, u) => s + (u.activity_score || 0), 0) / liveUsers.length) : null;
+  const avg = (key) => hasLive ? Math.round(liveUsers.reduce((s, u) => s + (u[key] || 0), 0) / liveUsers.length) : null;
+  const avgDays = avg("days_active_last_30");
+  const avgScore = avg("activity_score");
+
+  // Deep signals (avg across live users, or from the tool record itself for single-user)
+  const src = hasLive ? liveUsers : [tool];
+  const sumSig = (key) => src.reduce((s, u) => s + (u[key] || 0), 0);
+  const hasSignals = src.some((u) => u.logins_last_30 != null || u.transactions_last_30 != null || u.content_created_last_30 != null);
+  const signals = hasSignals ? [
+    { label: "Logins", value: sumSig("logins_last_30"), icon: "🔐" },
+    { label: "Transactions", value: sumSig("transactions_last_30"), icon: "⚡" },
+    { label: "Content Created", value: sumSig("content_created_last_30"), icon: "✏️" },
+    { label: "Features Used", value: Math.max(...src.map((u) => u.features_used || 0)), icon: "🧩" },
+    { label: "API Calls", value: sumSig("api_calls_last_30"), icon: "🔌" },
+  ].filter((s) => s.value > 0) : [];
 
   return (
     <>
@@ -110,6 +123,17 @@ export default function ToolUsageCard({ tool }) {
             </div>
             <MetricBar value={avgDays} max={30} label="Avg active days / 30" unit="d" />
             <MetricBar value={avgScore} max={100} label="Avg activity score" unit="" />
+          </div>
+        )}
+
+        {/* Deep signal pills */}
+        {signals.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {signals.map((s) => (
+              <span key={s.label} className="text-[10px] bg-muted/60 border border-border/50 px-2 py-0.5 rounded-full text-foreground font-medium">
+                {s.icon} {s.value.toLocaleString()} {s.label}
+              </span>
+            ))}
           </div>
         )}
 

@@ -66,6 +66,10 @@ Deno.serve(async (req) => {
           const profileRes = await fetch(`https://api.github.com/users/${member.login}`, { headers });
           const profile = await profileRes.json();
 
+          const pushEvents = recentEvents.filter((e) => e.type === 'PushEvent').length;
+          const prEvents = recentEvents.filter((e) => e.type === 'PullRequestEvent').length;
+          const uniqueRepos = new Set(recentEvents.map((e) => e.repo?.name)).size;
+
           allMembers.push({
             tool_name: 'GitHub',
             user_email: profile.email || `${member.login}@github`,
@@ -77,6 +81,12 @@ Deno.serve(async (req) => {
             license_cost_per_month: 0,
             wasted_cost_flag: status !== 'Active',
             source: 'live',
+            // Deep activity signals
+            logins_last_30: Math.min(30, eventsLast30), // event days = login proxy
+            features_used: uniqueRepos, // repos interacted with = feature breadth
+            transactions_last_30: eventsLast30, // total events = transactions
+            content_created_last_30: pushEvents + prEvents, // commits + PRs = content created
+            api_calls_last_30: 0,
           });
         }
       }
@@ -94,6 +104,11 @@ Deno.serve(async (req) => {
       const daysSinceActive = lastActiveDate ? Math.floor((now - lastActiveDate.getTime()) / (1000 * 60 * 60 * 24)) : null;
       const eventsLast30 = recentEvents.filter((e) => e.created_at && new Date(e.created_at) >= thirtyDaysAgo).length;
 
+      const pushEvents = recentEvents.filter((e) => e.type === 'PushEvent').length;
+      const prEvents = recentEvents.filter((e) => e.type === 'PullRequestEvent').length;
+      const uniqueRepos = new Set(recentEvents.map((e) => e.repo?.name)).size;
+      const soloStatus = daysSinceActive === null || daysSinceActive > 90 ? 'Inactive' : daysSinceActive > 30 ? 'Dormant' : 'Active';
+
       allMembers.push({
         tool_name: 'GitHub',
         user_email: profile.email || `${profile.login}@github`,
@@ -101,10 +116,15 @@ Deno.serve(async (req) => {
         last_active_date: lastActiveDate ? lastActiveDate.toISOString().split('T')[0] : null,
         days_active_last_30: eventsLast30,
         activity_score: Math.min(100, 40 + eventsLast30 * 5),
-        status: daysSinceActive === null || daysSinceActive > 90 ? 'Inactive' : daysSinceActive > 30 ? 'Dormant' : 'Active',
+        status: soloStatus,
         license_cost_per_month: 0,
-        wasted_cost_flag: false,
+        wasted_cost_flag: soloStatus !== 'Active',
         source: 'live',
+        logins_last_30: Math.min(30, eventsLast30),
+        features_used: uniqueRepos,
+        transactions_last_30: eventsLast30,
+        content_created_last_30: pushEvents + prEvents,
+        api_calls_last_30: 0,
       });
     }
 

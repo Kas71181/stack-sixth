@@ -103,6 +103,12 @@ Deno.serve(async (req) => {
         license_cost_per_month: 0,
         wasted_cost_flag: status !== 'Active',
         source: 'live',
+        // Deep activity signals
+        logins_last_30: daysActive, // proxy: days with activity = days they logged in
+        features_used: msgCount > 0 ? Math.min(5, 1 + Math.floor(msgCount / 10)) : 0, // channels/features engaged
+        transactions_last_30: msgCount, // messages sent = primary transaction
+        content_created_last_30: msgCount, // messages = content created
+        api_calls_last_30: 0, // not applicable for end-users in Slack
       };
     });
 

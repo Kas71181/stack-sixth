@@ -63,6 +63,26 @@
       ],
       "default": "estimated",
       "title": "Data Source"
+    },
+    "logins_last_30": {
+      "type": "number",
+      "title": "Logins (Last 30 Days)"
+    },
+    "features_used": {
+      "type": "number",
+      "title": "Distinct Features Used"
+    },
+    "transactions_last_30": {
+      "type": "number",
+      "title": "Transactions / Actions (Last 30 Days)"
+    },
+    "content_created_last_30": {
+      "type": "number",
+      "title": "Content Created (Last 30 Days)"
+    },
+    "api_calls_last_30": {
+      "type": "number",
+      "title": "API Calls (Last 30 Days)"
     }
   },
   "required": [

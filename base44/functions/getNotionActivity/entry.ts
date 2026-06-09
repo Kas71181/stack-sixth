@@ -85,6 +85,11 @@ Deno.serve(async (req) => {
         status = daysActive === 0 ? 'Dormant' : 'Active';
       }
 
+      // Content created = pages where this user is the creator (not just editor)
+      const createdPages = pages.filter(
+        (p) => p.created_by?.id === u.id && p.created_time && new Date(p.created_time) >= thirtyDaysAgo
+      ).length;
+
       return {
         tool_name: 'Notion',
         user_email: email,
@@ -96,6 +101,12 @@ Deno.serve(async (req) => {
         license_cost_per_month: 0,
         wasted_cost_flag: status !== 'Active',
         source: 'live',
+        // Deep activity signals
+        logins_last_30: daysActive, // days with edits = login proxy
+        features_used: recentEdits > 0 ? Math.min(5, 1 + Math.floor(recentEdits / 5)) : 0, // breadth of page interactions
+        transactions_last_30: recentEdits, // page edits = transactions
+        content_created_last_30: createdPages, // pages created = content created
+        api_calls_last_30: 0,
       };
     });
 
