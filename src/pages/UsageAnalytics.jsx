@@ -27,23 +27,42 @@ export default function UsageAnalytics() {
     enabled: !!user?.id,
   });
 
-  // First pass: collect all live users per tool
+  // Collect all live user records per tool name
   const liveUsersMap = {};
   activities.forEach((a) => {
-    if (a.source === "live") {
+    if (a.source === "live" && a.user_email !== "aggregate@placeholder") {
       if (!liveUsersMap[a.tool_name]) liveUsersMap[a.tool_name] = [];
       liveUsersMap[a.tool_name].push(a);
     }
   });
 
-  // Second pass: build tool-level summary, prefer live representative record
+  // Build one entry per tool: prefer live summary, skip estimated if live exists
   const toolMap = {};
   activities.forEach((a) => {
     const key = a.tool_name;
+    const hasLiveData = liveUsersMap[key]?.length > 0;
+    // Skip estimated/placeholder records when live data exists for this tool
+    if (a.user_email === "aggregate@placeholder" && hasLiveData) return;
     if (!toolMap[key] || a.source === "live") {
-      toolMap[key] = { ...a, liveUsers: liveUsersMap[a.tool_name] || [] };
+      toolMap[key] = { ...a, liveUsers: liveUsersMap[key] || [] };
     }
   });
+
+  // For tools that only have live data, compute a representative summary record
+  Object.keys(liveUsersMap).forEach((toolName) => {
+    if (toolMap[toolName]) {
+      const users = liveUsersMap[toolName];
+      const avg = (key) => users.length ? Math.round(users.reduce((s, u) => s + (u[key] || 0), 0) / users.length) : 0;
+      const activeCount = users.filter((u) => u.status === "Active").length;
+      const score = avg("activity_score");
+      toolMap[toolName].activity_score = score;
+      toolMap[toolName].days_active_last_30 = avg("days_active_last_30");
+      toolMap[toolName].status = activeCount / users.length >= 0.7 ? "Active" : activeCount / users.length >= 0.3 ? "Dormant" : "Inactive";
+      toolMap[toolName].wasted_cost_flag = score < 40;
+      toolMap[toolName].source = "live";
+    }
+  });
+
   integrations.forEach((i) => {
     if (toolMap[i.tool_name]) {
       toolMap[i.tool_name].category = i.category;
