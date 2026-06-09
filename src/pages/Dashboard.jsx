@@ -12,6 +12,7 @@ import MonthlySpendTrendChart from "@/components/dashboard/MonthlySpendTrendChar
 import QuickScan from "@/components/dashboard/QuickScan";
 import SavingsScoreboard from "@/components/dashboard/SavingsScoreboard";
 import OnboardingChecklist from "@/components/dashboard/OnboardingChecklist";
+import RenewalTimeline from "@/components/dashboard/RenewalTimeline";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -43,6 +44,12 @@ export default function Dashboard() {
   const { data: userActivity } = useQuery({
     queryKey: ["user-activity-dash", user?.id],
     queryFn: () => base44.entities.UserActivity.filter({ created_by_id: user?.id }, "-updated_date", 20),
+    enabled: !!user?.id,
+  });
+
+  const { data: contracts } = useQuery({
+    queryKey: ["contracts-dash", user?.id],
+    queryFn: () => base44.entities.Contract.filter({ created_by_id: user?.id }),
     enabled: !!user?.id,
   });
 
@@ -114,25 +121,30 @@ export default function Dashboard() {
     );
   }
 
-  // ── Returning user: Action Center ───────────────────────────────────────────
+  // ── Returning user: Command Center ──────────────────────────────────────────
   const firstName = user?.full_name?.split(" ")[0] || "there";
   const openRecs = (recommendations || []).filter((r) => r.status === "Open");
   const totalSavings = openRecs.reduce((s, r) => s + (r.estimated_monthly_savings || 0), 0);
+  const totalSpend = completedAudits.reduce((s, a) => s + (a.monthly_budget || 0), 0);
+  const totalTools = completedAudits.reduce((s, a) => s + (a.existing_software?.length || 0), 0);
+  const urgentRenewals = (monitorReports || []).flatMap((r) =>
+    (r.tools_snapshot || []).filter((t) => {
+      if (!t.renewal_date) return false;
+      const days = Math.ceil((new Date(t.renewal_date) - new Date()) / (1000 * 60 * 60 * 24));
+      return days >= 0 && days <= 30;
+    })
+  );
 
   return (
     <div className="space-y-8">
-      {/* Greeting */}
+      {/* Hero command center row */}
       <motion.div {...fade()}>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight">
               Good {getTimeOfDay()}, {firstName} 👋
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {openRecs.length > 0
-                ? `You have ${openRecs.length} open recommendation${openRecs.length > 1 ? "s" : ""} — $${totalSavings.toLocaleString()}/mo in potential savings.`
-                : "Your software stack is up to date. Run a new audit anytime."}
-            </p>
+            <p className="text-sm text-muted-foreground mt-1">Here's the health of your stack right now.</p>
           </div>
           <Link to="/audit">
             <Button className="gap-2 flex-shrink-0" size="sm">
@@ -141,25 +153,43 @@ export default function Dashboard() {
             </Button>
           </Link>
         </div>
+
+        {/* Big 4 stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="bg-card border border-border/60 rounded-2xl p-4 flex flex-col gap-1">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Monthly Spend</p>
+            <p className="text-2xl font-extrabold">${totalSpend.toLocaleString()}</p>
+          </div>
+          <div className={`rounded-2xl p-4 flex flex-col gap-1 border ${totalSavings > 0 ? "bg-emerald-50 border-emerald-200" : "bg-card border-border/60"}`}>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Savings Found</p>
+            <p className={`text-2xl font-extrabold ${totalSavings > 0 ? "text-emerald-700" : ""}`}>
+              ${totalSavings.toLocaleString()}<span className="text-sm font-semibold">/mo</span>
+            </p>
+          </div>
+          <div className="bg-card border border-border/60 rounded-2xl p-4 flex flex-col gap-1">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Tools Tracked</p>
+            <p className="text-2xl font-extrabold">{totalTools}</p>
+          </div>
+          <div className={`rounded-2xl p-4 flex flex-col gap-1 border ${urgentRenewals.length > 0 ? "bg-amber-50 border-amber-200" : "bg-card border-border/60"}`}>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Renewals Due</p>
+            <p className={`text-2xl font-extrabold ${urgentRenewals.length > 0 ? "text-amber-700" : ""}`}>{urgentRenewals.length}</p>
+            <p className="text-[10px] text-muted-foreground">in next 30 days</p>
+          </div>
+        </div>
       </motion.div>
 
-      {/* Savings Scoreboard */}
-      <motion.div {...fade(0.07)}>
-        <SavingsScoreboard recommendations={recommendations} audits={completedAudits} />
-      </motion.div>
-
-      {/* Spend Summary */}
-      <motion.div {...fade(0.1)}>
-        <SpendSummaryBar audits={completedAudits} recommendations={recommendations} />
-      </motion.div>
-
-      {/* Action Queue */}
-      <motion.div {...fade(0.15)}>
-        <ActionCenter
-          audits={completedAudits}
-          recommendations={recommendations}
-          monitorReports={monitorReports}
-        />
+      {/* Action Queue + Renewal Timeline side by side on larger screens */}
+      <motion.div {...fade(0.12)} className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="lg:col-span-3">
+          <ActionCenter
+            audits={completedAudits}
+            recommendations={recommendations}
+            monitorReports={monitorReports}
+          />
+        </div>
+        <div className="lg:col-span-2">
+          <RenewalTimeline monitorReports={monitorReports} contracts={contracts} />
+        </div>
       </motion.div>
 
       {/* Recent Audits */}

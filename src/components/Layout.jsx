@@ -3,6 +3,7 @@ import { BarChart3, History, Home, Monitor, ShoppingCart, LogOut, User, Activity
 import { useCart } from "@/components/cart/CartContext";
 import CartDrawer from "@/components/cart/CartDrawer";
 import AssistantChat from "@/components/assistant/AssistantChat";
+import GlobalSearch from "@/components/GlobalSearch";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
@@ -51,6 +52,9 @@ export default function Layout() {
                 className="h-40 object-contain"
               />
             </Link>
+            <div className="flex-1 max-w-xs hidden sm:block mx-4">
+              <GlobalSearch audits={audits} recommendations={recommendations} />
+            </div>
             <nav className="flex items-center gap-1">
               {navItems.filter(({ adminOnly }) => !adminOnly || user?.role === "admin").map(({ path, label, icon: Icon }) => {
                 const isActive = location.pathname === path;
