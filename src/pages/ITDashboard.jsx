@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
-import { Monitor, Layers, AlertCircle, LayoutDashboard, Users, FileText, Plug, Zap, TrendingUp } from "lucide-react";
+import { Monitor, Layers, AlertCircle, LayoutDashboard, Users, FileText, Plug, Zap, TrendingUp, ShieldCheck } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import SoftwareEvaluationTable from "../components/itdashboard/SoftwareEvaluationTable";
@@ -19,6 +19,7 @@ import AuditReportPage from "./AuditReportPage";
 import IntegrationsPage from "./IntegrationsPage";
 import ContractIntelligence from "./ContractIntelligence";
 import BenchmarkPanel from "@/components/benchmarks/BenchmarkPanel";
+import RoleRelevancePanel from "@/components/roles/RoleRelevancePanel";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -35,6 +36,7 @@ const TABS = [
   { id: "integrations", label: "Integrations", icon: Plug },
   { id: "contracts", label: "Contracts", icon: FileText },
   { id: "benchmarks", label: "Benchmarks", icon: TrendingUp },
+  { id: "roles", label: "Role Relevance", icon: ShieldCheck },
 ];
 
 export default function ITDashboard() {
@@ -238,6 +240,8 @@ export default function ITDashboard() {
       {activeTab === "audit" && <AuditReportPage />}
       {activeTab === "integrations" && <IntegrationsPage />}
       {activeTab === "contracts" && <ContractIntelligence />}
+      {activeTab === "roles" && <RoleRelevancePanel />}
+
       {activeTab === "benchmarks" && (
         <div className="space-y-5">
           <div className="flex items-center gap-3">
