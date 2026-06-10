@@ -68,7 +68,7 @@ export default function Layout() {
               <img
                 src="https://media.base44.com/images/public/69f28176704facfd454194e1/3dbb86754_Untitleddesign2.svg"
                 alt="Stack Sixth"
-                className="h-14 object-contain"
+                className="h-20 object-contain"
               />
             </Link>
             <div className="flex-1 max-w-xs hidden sm:block mx-4">
