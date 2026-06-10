@@ -84,6 +84,15 @@ module.exports = {
   safelist: [
     "dark:bg-white/8",
     "dark:hover:bg-white/8",
+    "dark:hover:bg-white/6",
+    "dark:bg-primary/12",
+    "dark:border-emerald-600/30",
+    "dark:border-amber-600/30",
+    "dark:text-emerald-400",
+    "dark:text-amber-400",
+    "dark:text-violet-400",
+    "dark:bg-emerald-900/30",
+    "dark:border-emerald-700/40",
   ],
   plugins: [require("tailwindcss-animate")],
 }

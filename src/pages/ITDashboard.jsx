@@ -128,24 +128,24 @@ export default function ITDashboard() {
         )}
       </motion.div>
 
-      {/* Tab bar — sliding pill */}
-      <motion.div {...fade(0.04)} className="relative flex bg-muted/50 border border-border/60 rounded-2xl p-1.5 overflow-x-auto">
+      {/* Tab bar — glass sliding pill */}
+      <motion.div {...fade(0.04)} className="relative flex tab-track overflow-x-auto">
         {/* Sliding pill */}
         <div
-          className="absolute top-1.5 bottom-1.5 bg-card border border-border/60 rounded-xl shadow-sm transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none"
-          style={{ left: pillStyle.left, width: pillStyle.width }}
+          className="absolute top-1 bottom-1 glass-strong rounded-xl shadow-md transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none"
+          style={{ left: `calc(${pillStyle.left}px)`, width: pillStyle.width }}
         />
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             ref={(el) => { tabRefs.current[id] = el; }}
             onClick={() => setActiveTab(id)}
-            className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors duration-150 ${
+            className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-colors duration-150 active:scale-[0.97] ${
               activeTab === id ? "text-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Icon className="w-4 h-4" />
-            {label}
+            <span className="hidden sm:inline">{label}</span>
           </button>
         ))}
       </motion.div>
@@ -196,7 +196,7 @@ export default function ITDashboard() {
                   <ToolComparisonPanel tools={selectedAudit ? allTools.filter((t) => t._auditId === selectedAudit) : allTools} />
                 </motion.div>
               )}
-              <motion.div {...fade(0.1)} className="bg-card border border-border/60 rounded-2xl px-5 py-4">
+              <motion.div {...fade(0.1)} className="glass-card px-5 py-4">
                 <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Filter by Audit</p>
                 <div className="flex flex-wrap gap-2">
                   <button

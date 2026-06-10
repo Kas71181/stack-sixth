@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { BarChart3, History, Home, Monitor, ShoppingCart, LogOut, User, Activity, ArrowLeftRight, Settings, ChevronDown } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 import { useState, useRef, useEffect } from "react";
 import { useCart } from "@/components/cart/CartContext";
 import CartDrawer from "@/components/cart/CartDrawer";
@@ -64,7 +65,15 @@ export default function Layout() {
       {/* Floating glass header */}
       <header className="sticky top-0 z-50">
         {/* Glass blur layer */}
-        <div className="absolute inset-0 bg-background/60 backdrop-blur-2xl saturate-150 border-b border-white/10 shadow-[0_1px_0_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)]" />
+        <div className="absolute inset-0 border-b"
+          style={{
+            background: 'var(--nav-bg)',
+            borderColor: 'var(--nav-border)',
+            backdropFilter: 'blur(28px) saturate(200%)',
+            WebkitBackdropFilter: 'blur(28px) saturate(200%)',
+            boxShadow: '0 1px 0 rgba(0,0,0,0.03), 0 4px 20px rgba(0,0,0,0.05)',
+          }}
+        />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-[4.5rem]">
 
@@ -92,8 +101,8 @@ export default function Layout() {
                     to={path}
                     className={`hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 active:scale-[0.96] ${
                       isActive
-                        ? "bg-primary/10 text-primary shadow-sm shadow-primary/10 ring-1 ring-primary/15"
-                        : "text-muted-foreground hover:text-foreground hover:bg-white/50 hover:backdrop-blur-sm dark:hover:bg-white/5"
+                        ? "bg-primary/12 text-primary shadow-sm shadow-primary/15 ring-1 ring-primary/20"
+                        : "text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/6"
                     }`}
                   >
                     <Icon className="w-3.5 h-3.5" />
@@ -116,8 +125,11 @@ export default function Layout() {
                 )}
               </button>
 
+              {/* Theme toggle */}
+              <ThemeToggle />
+
               {/* Divider */}
-              <div className="w-px h-5 bg-border/60 mx-1.5" />
+              <div className="w-px h-5 bg-border/60 mx-1" />
 
               {/* User menu */}
               <div ref={userMenuRef} className="relative">
@@ -134,7 +146,7 @@ export default function Layout() {
                       <ChevronDown className={`w-3 h-3 hidden sm:inline transition-transform duration-200 ${userMenuOpen ? "rotate-180" : ""}`} />
                     </button>
                     {userMenuOpen && (
-                      <div className="absolute right-0 top-full mt-2 w-52 glass-card py-1.5 z-50 overflow-hidden">
+                      <div className="absolute right-0 top-full mt-2 w-52 glass-strong py-1.5 z-50 overflow-hidden shadow-xl">
                         <div className="px-3 py-2 border-b border-border/50 mb-1">
                           <p className="text-xs font-semibold text-foreground truncate">{user.full_name || "Account"}</p>
                           <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
@@ -180,7 +192,15 @@ export default function Layout() {
 
       {/* Mobile bottom nav — glass pill */}
       <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50">
-        <div className="absolute inset-0 bg-background/75 backdrop-blur-2xl border-t border-white/10 shadow-[0_-4px_24px_rgba(0,0,0,0.08)]" />
+        <div className="absolute inset-0 border-t"
+          style={{
+            background: 'var(--nav-bg)',
+            borderColor: 'var(--nav-border)',
+            backdropFilter: 'blur(28px) saturate(200%)',
+            WebkitBackdropFilter: 'blur(28px) saturate(200%)',
+            boxShadow: '0 -4px 24px rgba(0,0,0,0.07)',
+          }}
+        />
         <div className="relative flex items-center justify-around px-1 py-2">
           {navItems.map(({ path, label, icon: Icon }) => {
             const isActive = location.pathname === path;

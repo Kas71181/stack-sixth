@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, BarChart3, Sparkles, AlertCircle, Plus } from "lucide-react";
+import { ArrowRight, BarChart3, Sparkles, AlertCircle, Plus, TrendingUp, Zap, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
@@ -70,35 +70,38 @@ export default function Dashboard() {
   if (!hasData) {
     return (
       <div className="space-y-10">
-        <motion.section {...fade()} className="text-center max-w-2xl mx-auto pt-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent text-accent-foreground text-xs font-medium mb-6">
-            <BarChart3 className="w-3.5 h-3.5" />
+        <motion.section {...fade()} className="text-center max-w-2xl mx-auto pt-12 relative">
+          {/* Hero glow */}
+          <div className="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 w-[700px] h-64 rounded-full bg-primary/10 blur-3xl -z-10" />
+
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-card text-xs font-semibold text-primary mb-7 shadow-sm">
+            <Sparkles className="w-3.5 h-3.5" />
             AI-Powered SaaS Spend Management
           </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight mb-4">
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight mb-5">
             Take charge of your{" "}
-            <span className="text-primary">software spend</span>
+            <span className="text-gradient">software spend</span>
           </h1>
-          <p className="text-muted-foreground text-lg leading-relaxed mb-8">
-            SMBs waste <strong className="text-foreground">30–40%</strong> of their SaaS budget on duplicate tools, idle licenses, and overpriced plans.
-            Stack Sixth finds it and helps you fix it — in minutes.
+          <p className="text-muted-foreground text-lg leading-relaxed mb-8 max-w-lg mx-auto">
+            SMBs waste <strong className="text-foreground font-semibold">30–40%</strong> of their SaaS budget on duplicate tools, idle licenses, and overpriced plans.
+            Stack Sixth finds it — in minutes.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
             <Link to="/audit">
-              <Button size="lg" className="gap-2 text-base px-8 h-12 rounded-xl shadow-lg shadow-primary/20 w-full sm:w-auto">
+              <Button size="lg" className="gap-2 text-base px-8 h-12 rounded-xl shadow-lg shadow-primary/25 btn-glow w-full sm:w-auto active:scale-[0.97]">
                 Start Free Audit
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
             <Link to="/audit?type=optimize">
-              <Button size="lg" variant="outline" className="gap-2 text-base px-8 h-12 rounded-xl w-full sm:w-auto">
+              <Button size="lg" variant="outline" className="gap-2 text-base px-8 h-12 rounded-xl glass-card hover:bg-white/80 dark:hover:bg-white/8 w-full sm:w-auto active:scale-[0.97] border-border/60">
                 Optimize Existing Stack
               </Button>
             </Link>
           </div>
 
           {/* Quick Scan */}
-          <div className="text-left mb-6">
+          <div className="text-left mb-8">
             <QuickScan />
           </div>
 
@@ -108,12 +111,14 @@ export default function Dashboard() {
               { emoji: "🔍", title: "Find wasted spend", desc: "Duplicate tools, idle licenses, overpriced plans — all surfaced automatically." },
               { emoji: "💡", title: "Get a savings plan", desc: "AI ranks your biggest opportunities with estimated monthly savings." },
               { emoji: "📈", title: "Track & act", desc: "Assign actions, monitor renewals, and measure savings over time." },
-            ].map(({ emoji, title, desc }) => (
-              <div key={title} className="bg-card border border-border/60 rounded-2xl p-5">
-                <p className="text-2xl mb-3">{emoji}</p>
-                <p className="font-semibold text-sm mb-1">{title}</p>
+            ].map(({ emoji, title, desc }, i) => (
+              <motion.div key={title} {...fade(0.1 + i * 0.06)} className="glass-card hover-lift p-5 group cursor-default">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center mb-4 text-lg">
+                  {emoji}
+                </div>
+                <p className="font-semibold text-sm mb-1.5">{title}</p>
                 <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </motion.section>
@@ -137,45 +142,78 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Hero command center row */}
+      {/* Hero command center */}
       <motion.div {...fade()} className="relative">
-        {/* Radial glow */}
-        <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 w-[600px] h-48 rounded-full bg-primary/8 blur-3xl -z-10" />
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
+        {/* Radial hero glow */}
+        <div className="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 w-[700px] h-56 rounded-full bg-primary/8 blur-3xl -z-10 dark:bg-primary/12" />
+
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight">
+            <p className="text-xs font-semibold text-primary/70 uppercase tracking-widest mb-1">Command Center</p>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight">
               Good {getTimeOfDay()}, {firstName} 👋
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">Here's the health of your stack right now.</p>
+            <p className="text-sm text-muted-foreground mt-1.5">Your stack health at a glance.</p>
           </div>
           <Link to="/audit">
-            <Button className="gap-2 flex-shrink-0" size="sm">
+            <Button className="gap-2 flex-shrink-0 shadow-md shadow-primary/20 btn-glow active:scale-[0.97]" size="sm">
               <Plus className="w-4 h-4" />
               New Audit
             </Button>
           </Link>
         </div>
 
-        {/* Big 4 stats */}
+        {/* Big 4 KPI cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="glass-card hover-lift rounded-2xl p-4 flex flex-col gap-1">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Monthly Spend</p>
+          {/* Monthly Spend */}
+          <div className="stat-card">
+            <div className="flex items-center gap-1.5 mb-1">
+              <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
+                <BarChart3 className="w-3 h-3 text-primary" />
+              </div>
+              <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Monthly Spend</p>
+            </div>
             <p className="text-2xl font-extrabold font-mono tabular-nums">${totalSpend.toLocaleString()}</p>
           </div>
-          <div className={`glass-card hover-lift rounded-2xl p-4 flex flex-col gap-1 ${totalSavings > 0 ? "bg-emerald-50/80 border-emerald-200/60" : ""}`}>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Savings Found</p>
-            <p className={`text-2xl font-extrabold font-mono tabular-nums ${totalSavings > 0 ? "text-emerald-700" : ""}`}>
+
+          {/* Savings Found */}
+          <div className={`stat-card ${totalSavings > 0 ? "border-emerald-300/50 dark:border-emerald-600/30" : ""}`}
+            style={totalSavings > 0 ? { background: 'rgba(16,185,129,0.07)' } : {}}>
+            <div className="flex items-center gap-1.5 mb-1">
+              <div className="w-5 h-5 rounded-md bg-emerald-500/15 flex items-center justify-center">
+                <TrendingUp className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Savings Found</p>
+            </div>
+            <p className={`text-2xl font-extrabold font-mono tabular-nums ${totalSavings > 0 ? "text-emerald-600 dark:text-emerald-400" : ""}`}>
               ${totalSavings.toLocaleString()}<span className="text-sm font-semibold">/mo</span>
             </p>
           </div>
-          <div className="glass-card hover-lift rounded-2xl p-4 flex flex-col gap-1">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Tools Tracked</p>
+
+          {/* Tools Tracked */}
+          <div className="stat-card">
+            <div className="flex items-center gap-1.5 mb-1">
+              <div className="w-5 h-5 rounded-md bg-violet-500/12 flex items-center justify-center">
+                <Zap className="w-3 h-3 text-violet-600 dark:text-violet-400" />
+              </div>
+              <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Tools Tracked</p>
+            </div>
             <p className="text-2xl font-extrabold font-mono tabular-nums">{totalTools}</p>
           </div>
-          <div className={`glass-card hover-lift rounded-2xl p-4 flex flex-col gap-1 ${urgentRenewals.length > 0 ? "bg-amber-50/80 border-amber-200/60" : ""}`}>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Renewals Due</p>
-            <p className={`text-2xl font-extrabold font-mono tabular-nums ${urgentRenewals.length > 0 ? "text-amber-700" : ""}`}>{urgentRenewals.length}</p>
-            <p className="text-[10px] text-muted-foreground">in next 30 days</p>
+
+          {/* Renewals Due */}
+          <div className={`stat-card ${urgentRenewals.length > 0 ? "border-amber-300/50 dark:border-amber-600/30" : ""}`}
+            style={urgentRenewals.length > 0 ? { background: 'rgba(245,158,11,0.07)' } : {}}>
+            <div className="flex items-center gap-1.5 mb-1">
+              <div className="w-5 h-5 rounded-md bg-amber-500/15 flex items-center justify-center">
+                <RefreshCw className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+              </div>
+              <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Renewals Due</p>
+            </div>
+            <p className={`text-2xl font-extrabold font-mono tabular-nums ${urgentRenewals.length > 0 ? "text-amber-600 dark:text-amber-400" : ""}`}>
+              {urgentRenewals.length}
+            </p>
+            <p className="text-[10px] text-muted-foreground">next 30 days</p>
           </div>
         </div>
       </motion.div>
@@ -196,43 +234,44 @@ export default function Dashboard() {
 
       {/* Recent Audits */}
       <motion.div {...fade(0.15)}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold">Recent Audits</h2>
-          <Link to="/history" className="text-sm text-primary font-medium hover:underline">
-            View all
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-bold tracking-tight">Recent Audits</h2>
+          <Link to="/history" className="text-xs text-primary font-semibold hover:text-primary/80 transition-colors flex items-center gap-1">
+            View all <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
         <div className="space-y-2">
-          {completedAudits.slice(0, 3).map((audit) => {
+          {completedAudits.slice(0, 3).map((audit, i) => {
             const savings = audit.analysis_result?.recommendations?.reduce(
               (s, r) => s + (r.estimated_savings_opportunity || 0), 0
             ) || 0;
             return (
-              <Link
-                key={audit.id}
-                to={`/results/${audit.id}`}
-                className="flex items-center justify-between glass-card hover-lift rounded-xl px-5 py-3.5 hover:border-primary/20 active:scale-[0.99] group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center flex-shrink-0">
-                    <Sparkles className="w-4 h-4 text-primary" />
+              <motion.div key={audit.id} {...fade(0.15 + i * 0.04)}>
+                <Link
+                  to={`/results/${audit.id}`}
+                  className="flex items-center justify-between glass-card hover-lift rounded-xl px-5 py-3.5 hover:border-primary/25 active:scale-[0.99] group block"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/15 transition-colors">
+                      <Sparkles className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">{audit.company_name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {audit.existing_software?.length || 0} tools · {audit.team_size} people
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold text-sm">{audit.company_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {audit.existing_software?.length || 0} tools · {audit.team_size} people
-                    </p>
+                  <div className="flex items-center gap-3">
+                    {savings > 0 && (
+                      <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-700/40 px-2.5 py-0.5 rounded-full">
+                        ${savings.toLocaleString()}/mo
+                      </span>
+                    )}
+                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  {savings > 0 && (
-                    <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                      ${savings.toLocaleString()}/mo savings
-                    </span>
-                  )}
-                  <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                </div>
-              </Link>
+                </Link>
+              </motion.div>
             );
           })}
         </div>

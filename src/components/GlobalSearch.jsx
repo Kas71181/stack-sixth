@@ -105,7 +105,14 @@ export default function GlobalSearch({ audits = [], recommendations = [], tools 
 
       {/* Panel */}
       <div
-        className="relative w-full max-w-lg bg-card/85 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl shadow-black/10 overflow-hidden"
+        className="relative w-full max-w-lg rounded-2xl overflow-hidden"
+        style={{
+          background: 'var(--glass-bg-strong)',
+          backdropFilter: 'blur(32px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(32px) saturate(200%)',
+          border: '1px solid var(--glass-border)',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.08)',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Input */}
