@@ -71,9 +71,9 @@ export default function Layout() {
             {/* Logo */}
             <Link to="/" className="flex items-center flex-shrink-0 group">
               <img
-                src="https://media.base44.com/images/public/69f28176704facfd454194e1/3dbb86754_Untitleddesign2.svg"
+                src="https://media.base44.com/images/public/69f28176704facfd454194e1/d3ef5da50_StackSixth.svg"
                 alt="Stack Sixth"
-                className="h-24 object-contain transition-opacity duration-200 group-hover:opacity-80"
+                className="h-28 object-contain transition-opacity duration-200 group-hover:opacity-80"
               />
             </Link>
 
