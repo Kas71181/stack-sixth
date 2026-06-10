@@ -15,6 +15,7 @@ import ITDashboard from './pages/ITDashboard';
 import Monitoring from './pages/Monitoring';
 import ContractIntelligence from './pages/ContractIntelligence';
 import SwitchPlanner from './pages/SwitchPlanner';
+import SettingsPage from './pages/SettingsPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -60,6 +61,7 @@ const AuthenticatedApp = () => {
         <Route path="/monitoring" element={<Monitoring />} />
         <Route path="/contracts" element={<ContractIntelligence />} />
         <Route path="/switch-planner" element={<SwitchPlanner />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
 
