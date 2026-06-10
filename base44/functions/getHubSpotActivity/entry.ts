@@ -1,0 +1,90 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+    let apiKey = Deno.env.get("HUBSPOT_API_KEY");
+    if (!apiKey) {
+      const stored = await base44.entities.ApiCredential.filter({ service: 'hubspot' });
+      apiKey = stored[0]?.api_key || null;
+    }
+    if (!apiKey) return Response.json({ success: false, not_configured: true, error: 'HUBSPOT_API_KEY not configured' }, { status: 200 });
+
+    // Fetch users from HubSpot
+    const usersRes = await fetch('https://api.hubapi.com/settings/v3/users/', {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      }
+    });
+
+    if (!usersRes.ok) {
+      const err = await usersRes.json();
+      return Response.json({ error: err.message || 'HubSpot API error' }, { status: 400 });
+    }
+
+    const usersData = await usersRes.json();
+    const members = usersData.results || [];
+
+    // Fetch recent activity via engagements
+    const engRes = await fetch('https://api.hubapi.com/engagements/v1/engagements/recent/modified?count=100', {
+      headers: { 'Authorization': `Bearer ${apiKey}` }
+    });
+    const engData = engRes.ok ? await engRes.json() : { results: [] };
+    const recentEngagements = engData.results || [];
+
+    // Build a map of user email -> last engagement date
+    const engagementByOwner = {};
+    for (const eng of recentEngagements) {
+      const ownerId = eng.engagement?.ownerId;
+      const ts = eng.engagement?.lastUpdated;
+      if (ownerId && ts) {
+        if (!engagementByOwner[ownerId] || ts > engagementByOwner[ownerId]) {
+          engagementByOwner[ownerId] = ts;
+        }
+      }
+    }
+
+    const now = new Date();
+    const activityRecords = members.map((m) => {
+      const lastEngTs = engagementByOwner[m.id];
+      const lastActive = lastEngTs ? new Date(lastEngTs) : null;
+      const daysSince = lastActive ? Math.floor((now - lastActive) / (1000 * 60 * 60 * 24)) : 999;
+      const activityScore = daysSince <= 7 ? 90 : daysSince <= 14 ? 70 : daysSince <= 30 ? 40 : 10;
+      const status = activityScore >= 70 ? 'Active' : activityScore >= 40 ? 'Dormant' : 'Inactive';
+
+      return {
+        tool_name: 'HubSpot',
+        user_email: m.email,
+        user_name: `${m.firstName || ''} ${m.lastName || ''}`.trim() || m.email,
+        last_active_date: lastActive ? lastActive.toISOString().split('T')[0] : null,
+        days_active_last_30: Math.max(0, 30 - daysSince),
+        activity_score: activityScore,
+        status,
+        wasted_cost_flag: activityScore < 40,
+        source: 'live',
+      };
+    });
+
+    const existing = await base44.asServiceRole.entities.UserActivity.filter({ tool_name: 'HubSpot' });
+    const existingByEmail = new Map(existing.map((r) => [r.user_email, r.id]));
+
+    let created = 0, updated = 0;
+    for (const record of activityRecords) {
+      if (existingByEmail.has(record.user_email)) {
+        await base44.asServiceRole.entities.UserActivity.update(existingByEmail.get(record.user_email), record);
+        updated++;
+      } else {
+        await base44.asServiceRole.entities.UserActivity.create(record);
+        created++;
+      }
+    }
+
+    return Response.json({ success: true, total: activityRecords.length, created, updated });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+});

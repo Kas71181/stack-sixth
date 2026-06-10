@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CheckCircle2, Loader2, Plug, RefreshCw, AlertCircle, Zap, ExternalLink, Key } from "lucide-react";
+import { CheckCircle2, Loader2, Plug, RefreshCw, AlertCircle, Zap, ExternalLink, Key, PlayCircle } from "lucide-react";
 import { toast } from "sonner";
 
 const CONNECTORS = [
@@ -78,6 +78,33 @@ const API_KEY_CONNECTORS = [
     secretKey: "SALESFORCE_CLIENT_ID",
     placeholder: "Configure secrets in Dashboard settings",
     multiSecret: true,
+  },
+  {
+    id: "hubspot",
+    functionName: "getHubSpotActivity",
+    label: "HubSpot",
+    description: "CRM users & engagement activity",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/HubSpot_Logo.svg/2560px-HubSpot_Logo.svg.png",
+    setupUrl: "https://app.hubspot.com/api-key",
+    setupLabel: "Get HubSpot API Key →",
+    secretKey: "HUBSPOT_API_KEY",
+    placeholder: "HubSpot Private App token",
+  },
+  {
+    id: "quickbooks",
+    functionName: "getQuickBooksActivity",
+    label: "QuickBooks",
+    description: "Employee list & account activity",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Intuit_QuickBooks_logo.svg/2560px-Intuit_QuickBooks_logo.svg.png",
+    setupUrl: "https://developer.intuit.com/app/developer/qbo/docs/get-started",
+    setupLabel: "Get QuickBooks Access Token →",
+    secretKey: "QUICKBOOKS_ACCESS_TOKEN",
+    placeholder: "Access token",
+    multiSecret: true,
+    fields: [
+      { key: "api_key", label: "Access Token", placeholder: "Bearer access token" },
+      { key: "realm_id", label: "Company ID (Realm ID)", placeholder: "Your QBO company ID" },
+    ],
   },
 ];
 
@@ -310,7 +337,17 @@ function ApiKeyConnectorCard({ connector, onSynced }) {
     setErrorMsg("");
     try {
       let saveRes;
-      if (connector.multiSecret) {
+      if (connector.fields) {
+        // Custom fields (e.g. QuickBooks): first field is api_key, rest go into extra_fields
+        const [first, ...rest] = connector.fields;
+        const extra = {};
+        rest.forEach((f) => { extra[f.key] = fields[f.key] || ""; });
+        saveRes = await base44.functions.invoke("saveApiCredential", {
+          service: connector.id,
+          api_key: fields[first.key] || "",
+          extra_fields: extra,
+        });
+      } else if (connector.multiSecret) {
         saveRes = await base44.functions.invoke("saveApiCredential", {
           service: connector.id,
           api_key: fields.client_id || "",
@@ -398,7 +435,20 @@ function ApiKeyConnectorCard({ connector, onSynced }) {
             {connector.setupLabel} <ExternalLink className="w-3 h-3" />
           </a>
 
-          {connector.multiSecret ? (
+          {connector.fields ? (
+            <div className="space-y-2 mt-2">
+              {connector.fields.map((f) => (
+                <Input
+                  key={f.key}
+                  type={f.key.toLowerCase().includes("token") || f.key.toLowerCase().includes("secret") ? "password" : "text"}
+                  placeholder={f.placeholder}
+                  value={fields[f.key] || ""}
+                  onChange={(e) => setFields((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                  className="text-xs h-8"
+                />
+              ))}
+            </div>
+          ) : connector.multiSecret ? (
             <div className="space-y-2 mt-2">
               <Input
                 placeholder="Client ID"
@@ -477,12 +527,46 @@ function ApiKeyConnectorCard({ connector, onSynced }) {
 }
 
 export default function LiveConnectPanel({ onSynced }) {
+  const [syncingAll, setSyncingAll] = useState(false);
+
+  const handleSyncAll = async () => {
+    setSyncingAll(true);
+    const allFunctions = [
+      ...CONNECTORS.map((c) => c.functionName),
+      ...API_KEY_CONNECTORS.map((c) => c.functionName),
+    ];
+    let successCount = 0;
+    let totalUsers = 0;
+    const results = await Promise.allSettled(
+      allFunctions.map((fn) => base44.functions.invoke(fn, {}))
+    );
+    results.forEach((r) => {
+      if (r.status === "fulfilled" && r.value?.data?.success) {
+        successCount++;
+        totalUsers += r.value.data.total || 0;
+      }
+    });
+    setSyncingAll(false);
+    if (successCount > 0) {
+      toast.success(`Synced ${totalUsers} users across ${successCount} connected tool(s)`);
+      onSynced();
+    } else {
+      toast.info("No connected tools responded — connect at least one tool below first.");
+    }
+  };
+
   return (
     <div className="bg-gradient-to-br from-primary/5 to-blue-50 border border-primary/20 rounded-2xl p-5">
-      <div className="flex items-center gap-2 mb-1">
-        <Zap className="w-4 h-4 text-primary" />
-        <h2 className="font-bold text-sm">Live Data Connectors</h2>
-        <span className="text-[10px] bg-primary text-white font-semibold px-2 py-0.5 rounded-full ml-1">BETA</span>
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-2">
+          <Zap className="w-4 h-4 text-primary" />
+          <h2 className="font-bold text-sm">Live Data Connectors</h2>
+          <span className="text-[10px] bg-primary text-white font-semibold px-2 py-0.5 rounded-full ml-1">BETA</span>
+        </div>
+        <Button size="sm" variant="outline" className="gap-1.5 text-primary border-primary/30 hover:bg-primary/5" onClick={handleSyncAll} disabled={syncingAll}>
+          {syncingAll ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PlayCircle className="w-3.5 h-3.5" />}
+          {syncingAll ? "Syncing all…" : "Sync All Connected"}
+        </Button>
       </div>
       <p className="text-xs text-muted-foreground mb-4">
         Connect your tools to pull <strong>real per-user activity data</strong> into your audit.
