@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { BarChart3, History, Home, Monitor, ShoppingCart, LogOut, User, Activity, ArrowLeftRight, Settings } from "lucide-react";
+import { BarChart3, History, Home, Monitor, ShoppingCart, LogOut, User, Activity, ArrowLeftRight, Settings, ChevronDown } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { useCart } from "@/components/cart/CartContext";
 import CartDrawer from "@/components/cart/CartDrawer";
 import AssistantChat from "@/components/assistant/AssistantChat";
@@ -15,11 +16,18 @@ const navItems = [
   { path: "/it-dashboard", label: "IT Manager", icon: Monitor },
   { path: "/monitoring", label: "Monitor", icon: Activity },
   { path: "/switch-planner", label: "Switch Planner", icon: ArrowLeftRight },
-  { path: "/settings", label: "Settings", icon: Settings },
 ];
 
 export default function Layout() {
   const location = useLocation();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setUserMenuOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
   const { items, setIsOpen } = useCart();
   const { user, logout, navigateToLogin } = useAuth();
 
@@ -60,7 +68,7 @@ export default function Layout() {
               <img
                 src="https://media.base44.com/images/public/69f28176704facfd454194e1/3dbb86754_Untitleddesign2.svg"
                 alt="Stack Sixth"
-                className="h-40 object-contain"
+                className="h-10 object-contain"
               />
             </Link>
             <div className="flex-1 max-w-xs hidden sm:block mx-4">
@@ -96,20 +104,47 @@ export default function Layout() {
                   </span>
                 )}
               </button>
-              <div className="flex items-center gap-1 ml-1 pl-2 border-l border-border/60">
-                {user && (
-                  <span className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground px-2">
-                    <User className="w-3.5 h-3.5" />
-                    {user.full_name || user.email}
-                  </span>
+              <div className="flex items-center gap-1 ml-1 pl-2 border-l border-border/60" ref={userMenuRef}>
+                {user ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => setUserMenuOpen((o) => !o)}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
+                    >
+                      <User className="w-4 h-4" />
+                      <span className="hidden sm:inline max-w-[120px] truncate">{user.full_name || user.email}</span>
+                      <ChevronDown className="w-3.5 h-3.5 hidden sm:inline" />
+                    </button>
+                    {userMenuOpen && (
+                      <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-border/60 rounded-xl shadow-lg py-1 z-50">
+                        <Link
+                          to="/settings"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                        >
+                          <Settings className="w-4 h-4" />
+                          Settings
+                        </Link>
+                        <div className="my-1 border-t border-border/60" />
+                        <button
+                          onClick={() => { setUserMenuOpen(false); logout(); }}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Logout
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    onClick={navigateToLogin}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
+                  >
+                    <User className="w-4 h-4" />
+                    <span className="hidden sm:inline">Login</span>
+                  </button>
                 )}
-                <button
-                  onClick={() => user ? logout() : navigateToLogin()}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
-                >
-                  {user ? <LogOut className="w-4 h-4" /> : <User className="w-4 h-4" />}
-                  <span className="hidden sm:inline">{user ? "Logout" : "Login"}</span>
-                </button>
               </div>
             </nav>
           </div>
