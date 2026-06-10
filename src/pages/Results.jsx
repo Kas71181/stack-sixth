@@ -46,6 +46,15 @@ export default function Results() {
   const [retryError, setRetryError] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const handleUpdateRec = async (index, updates) => {
+    const recs = [...(audit.analysis_result?.recommendations || [])];
+    recs[index] = { ...recs[index], ...updates };
+    await base44.entities.SoftwareAudit.update(audit.id, {
+      analysis_result: { ...audit.analysis_result, recommendations: recs },
+    });
+    queryClient.invalidateQueries({ queryKey: ["audit", id] });
+  };
+
   const handleShare = async () => {
     const url = window.location.href.split("?")[0];
     try {
@@ -390,7 +399,7 @@ export default function Results() {
                       </div>
                       <div className="space-y-3">
                         {recs.map((rec, i) => (
-                          <RecommendationCard key={i} rec={rec} index={result.recommendations.indexOf(rec)} auditName={audit.company_name} />
+                          <RecommendationCard key={i} rec={rec} index={result.recommendations.indexOf(rec)} auditName={audit.company_name} onUpdate={handleUpdateRec} />
                         ))}
                       </div>
                     </div>
@@ -401,7 +410,7 @@ export default function Results() {
           ) : (
             <div className="space-y-3">
               {result.recommendations?.map((rec, i) => (
-                <RecommendationCard key={i} rec={rec} index={i} auditName={audit.company_name} />
+                <RecommendationCard key={i} rec={rec} index={i} auditName={audit.company_name} onUpdate={handleUpdateRec} />
               ))}
             </div>
           )

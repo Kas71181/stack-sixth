@@ -1,4 +1,4 @@
-import { ChevronDown, ArrowRight, Link2, Star, Clock, AlertTriangle, CheckCircle2, ShoppingCart, Check, ExternalLink, ShieldCheck, SendHorizonal, GitBranch, Calendar, FileOutput } from "lucide-react";
+import { ChevronDown, ArrowRight, Link2, Star, Clock, AlertTriangle, CheckCircle2, ShoppingCart, Check, ExternalLink, ShieldCheck, SendHorizonal, GitBranch, Calendar, FileOutput, UserCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/components/cart/CartContext";
@@ -61,10 +61,13 @@ const LOCK_IN_COLORS = {
   Low: "text-emerald-700 bg-emerald-50 border-emerald-200",
 };
 
-export default function RecommendationCard({ rec, index, auditName = "" }) {
+export default function RecommendationCard({ rec, index, auditName = "", onUpdate }) {
   const [expanded, setExpanded] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState("none"); // "none" | "pending" | "approved"
   const [buyUrl, setBuyUrl] = useState(null);
+  const [assignee, setAssignee] = useState(rec.assignee || "");
+  const [dueDate, setDueDate] = useState(rec.due_date || "");
+  const [saving, setSaving] = useState(false);
 
   const { addItem, items } = useCart();
   const { getUrl } = useAffiliateLinks();
@@ -76,6 +79,13 @@ export default function RecommendationCard({ rec, index, auditName = "" }) {
   useEffect(() => {
     getUrl(rec.name).then(setBuyUrl);
   }, [rec.name]);
+
+  const handleSaveTask = async () => {
+    if (!onUpdate) return;
+    setSaving(true);
+    await onUpdate(index, { assignee, due_date: dueDate });
+    setSaving(false);
+  };
 
   const RiskIcon = RISK_ICONS[rec.migration_risk]?.icon || Clock;
   const riskColor = RISK_ICONS[rec.migration_risk]?.color || "text-muted-foreground";
@@ -225,6 +235,54 @@ export default function RecommendationCard({ rec, index, auditName = "" }) {
                     <p className="text-xs font-semibold mt-0.5">{lockIn.weeks} wks</p>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Assign & Due Date */}
+            {onUpdate && (
+              <div className="mt-3 pt-3 border-t border-border/40">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2.5">Assign & Track</p>
+                <div className="flex flex-wrap gap-2 items-end">
+                  <div className="flex-1 min-w-36">
+                    <label className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1">
+                      <UserCircle className="w-3 h-3" /> Assignee
+                    </label>
+                    <input
+                      type="text"
+                      value={assignee}
+                      onChange={(e) => setAssignee(e.target.value)}
+                      placeholder="Name or email"
+                      className="w-full text-xs bg-muted/60 border border-border/60 rounded-lg px-2.5 py-1.5 outline-none focus:border-primary/50 transition-colors"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-36">
+                    <label className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1">
+                      <Calendar className="w-3 h-3" /> Due Date
+                    </label>
+                    <input
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      className="w-full text-xs bg-muted/60 border border-border/60 rounded-lg px-2.5 py-1.5 outline-none focus:border-primary/50 transition-colors"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSaveTask}
+                    disabled={saving}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  >
+                    {saving ? <Clock className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                    Save
+                  </button>
+                </div>
+                {(rec.assignee || rec.due_date) && (
+                  <p className="text-[10px] text-muted-foreground mt-1.5">
+                    {rec.assignee && <span>Assigned to <strong>{rec.assignee}</strong></span>}
+                    {rec.assignee && rec.due_date && <span> · </span>}
+                    {rec.due_date && <span>Due <strong>{rec.due_date}</strong></span>}
+                  </p>
+                )}
               </div>
             )}
 
