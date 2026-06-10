@@ -81,5 +81,9 @@ module.exports = {
   		}
   	}
   },
+  safelist: [
+    "dark:bg-white/8",
+    "dark:hover:bg-white/8",
+  ],
   plugins: [require("tailwindcss-animate")],
 }
