@@ -37,6 +37,16 @@ export default function Layout() {
     queryFn: () => base44.entities.ToolMonitor.filter({ created_by_id: user?.id }, "-created_date", 20),
     enabled: !!user?.id,
   });
+  const { data: contracts } = useQuery({
+    queryKey: ["contracts-layout", user?.id],
+    queryFn: () => base44.entities.Contract.filter({ created_by_id: user?.id }),
+    enabled: !!user?.id,
+  });
+  const { data: userActivity } = useQuery({
+    queryKey: ["activity-layout", user?.id],
+    queryFn: () => base44.entities.UserActivity.filter({ created_by_id: user?.id }, "-updated_date", 50),
+    enabled: !!user?.id,
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -130,7 +140,7 @@ export default function Layout() {
         </div>
       </nav>
 
-      <AssistantChat audits={audits} recommendations={recommendations} monitorReports={monitorReports} />
+      <AssistantChat audits={audits} recommendations={recommendations} monitorReports={monitorReports} contracts={contracts} userActivity={userActivity} />
     </div>
   );
 }
