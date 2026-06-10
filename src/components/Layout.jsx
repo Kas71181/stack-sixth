@@ -64,11 +64,11 @@ export default function Layout() {
       <header className="sticky top-0 z-50 border-b border-white/10 bg-background/70 backdrop-blur-2xl shadow-sm shadow-black/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center">
+            <Link to="/" className="flex items-center flex-shrink-0 bg-foreground rounded-xl px-3 py-1.5">
               <img
                 src="https://media.base44.com/images/public/69f28176704facfd454194e1/3dbb86754_Untitleddesign2.svg"
                 alt="Stack Sixth"
-                className="h-10 object-contain"
+                className="h-7 object-contain"
               />
             </Link>
             <div className="flex-1 max-w-xs hidden sm:block mx-4">
