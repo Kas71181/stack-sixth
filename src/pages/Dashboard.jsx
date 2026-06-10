@@ -156,21 +156,21 @@ export default function Dashboard() {
 
         {/* Big 4 stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="bg-card border border-border/60 rounded-2xl p-4 flex flex-col gap-1">
+          <div className="glass-card hover-lift rounded-2xl p-4 flex flex-col gap-1">
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Monthly Spend</p>
             <p className="text-2xl font-extrabold">${totalSpend.toLocaleString()}</p>
           </div>
-          <div className={`rounded-2xl p-4 flex flex-col gap-1 border ${totalSavings > 0 ? "bg-emerald-50 border-emerald-200" : "bg-card border-border/60"}`}>
+          <div className={`glass-card hover-lift rounded-2xl p-4 flex flex-col gap-1 ${totalSavings > 0 ? "bg-emerald-50/80 border-emerald-200/60" : ""}`}>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Savings Found</p>
             <p className={`text-2xl font-extrabold ${totalSavings > 0 ? "text-emerald-700" : ""}`}>
               ${totalSavings.toLocaleString()}<span className="text-sm font-semibold">/mo</span>
             </p>
           </div>
-          <div className="bg-card border border-border/60 rounded-2xl p-4 flex flex-col gap-1">
+          <div className="glass-card hover-lift rounded-2xl p-4 flex flex-col gap-1">
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Tools Tracked</p>
             <p className="text-2xl font-extrabold">{totalTools}</p>
           </div>
-          <div className={`rounded-2xl p-4 flex flex-col gap-1 border ${urgentRenewals.length > 0 ? "bg-amber-50 border-amber-200" : "bg-card border-border/60"}`}>
+          <div className={`glass-card hover-lift rounded-2xl p-4 flex flex-col gap-1 ${urgentRenewals.length > 0 ? "bg-amber-50/80 border-amber-200/60" : ""}`}>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Renewals Due</p>
             <p className={`text-2xl font-extrabold ${urgentRenewals.length > 0 ? "text-amber-700" : ""}`}>{urgentRenewals.length}</p>
             <p className="text-[10px] text-muted-foreground">in next 30 days</p>
@@ -209,7 +209,7 @@ export default function Dashboard() {
               <Link
                 key={audit.id}
                 to={`/results/${audit.id}`}
-                className="flex items-center justify-between bg-card border border-border/60 rounded-xl px-5 py-3.5 hover:shadow-md hover:border-primary/20 transition-all group"
+                className="flex items-center justify-between glass-card hover-lift rounded-xl px-5 py-3.5 hover:border-primary/20 active:scale-[0.99] group"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center flex-shrink-0">

@@ -16,7 +16,7 @@ function RenewalItem({ tool, days }) {
     : { bg: "bg-card border-border/60", icon: "text-emerald-600 bg-emerald-50", badge: "bg-muted text-muted-foreground", bar: "bg-emerald-400" };
 
   return (
-    <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${colors.bg}`}>
+    <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md ${colors.bg}`}>
       <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${colors.icon}`}>
         <Icon className="w-4 h-4" />
       </div>

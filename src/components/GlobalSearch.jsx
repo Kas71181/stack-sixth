@@ -105,7 +105,7 @@ export default function GlobalSearch({ audits = [], recommendations = [], tools 
 
       {/* Panel */}
       <div
-        className="relative w-full max-w-lg bg-card border border-border rounded-2xl shadow-2xl overflow-hidden"
+        className="relative w-full max-w-lg bg-card/85 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl shadow-black/10 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Input */}

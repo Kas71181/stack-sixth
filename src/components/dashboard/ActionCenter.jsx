@@ -7,10 +7,10 @@ function ActionItem({ icon: Icon, iconColor, iconBg, title, subtitle, cta, href,
     <Link
       to={href}
       state={state}
-      className={`flex items-center gap-4 p-4 rounded-xl border transition-all hover:shadow-md group ${
+      className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.99] group ${
         urgent
-          ? "bg-amber-50 border-amber-200 hover:border-amber-300"
-          : "bg-card border-border/60 hover:border-primary/30"
+          ? "bg-amber-50/80 backdrop-blur-sm border-amber-200/70 hover:border-amber-300 hover:shadow-amber-100"
+          : "bg-card/80 backdrop-blur-sm border-border/60 hover:border-primary/30 hover:shadow-primary/5"
       }`}
     >
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>

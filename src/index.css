@@ -87,3 +87,23 @@
     @apply bg-background text-foreground font-inter;
   }
 }
+
+@layer components {
+  /* Frosted glass card */
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-xl border border-white/20 shadow-sm;
+  }
+
+  /* Hover lift — add to any interactive card */
+  .hover-lift {
+    @apply transition-all duration-300 ease-out;
+  }
+  .hover-lift:hover {
+    @apply -translate-y-0.5 shadow-lg shadow-primary/5;
+  }
+
+  /* Subtle inner glow on focus/hover for inputs & buttons */
+  .glow-ring:focus-within {
+    @apply ring-2 ring-primary/30 ring-offset-0;
+  }
+}

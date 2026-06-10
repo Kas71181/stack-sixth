@@ -42,7 +42,7 @@ export default function Layout() {
     <div className="min-h-screen bg-background">
       <CartDrawer />
       {/* Desktop header */}
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-background/70 backdrop-blur-2xl shadow-sm shadow-black/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center">
@@ -62,10 +62,10 @@ export default function Layout() {
                   <Link
                     key={path}
                     to={path}
-                    className={`hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    className={`hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 active:scale-95 ${
                       isActive
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                        ? "bg-primary/10 text-primary shadow-sm shadow-primary/10"
+                        : "text-muted-foreground hover:text-foreground hover:bg-white/60 hover:backdrop-blur-sm"
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -110,7 +110,7 @@ export default function Layout() {
       </main>
 
       {/* Mobile bottom nav */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-t border-border/50">
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/75 backdrop-blur-2xl border-t border-white/10 shadow-[0_-4px_24px_rgba(0,0,0,0.06)]">
         <div className="flex items-center justify-around px-1 py-2">
           {navItems.map(({ path, label, icon: Icon }) => {
             const isActive = location.pathname === path;
