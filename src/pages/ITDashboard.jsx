@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
@@ -43,10 +43,19 @@ export default function ITDashboard() {
   const { user } = useAuth();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState("decisions");
+  const [pillStyle, setPillStyle] = useState({ left: 0, width: 0 });
+  const tabRefs = useRef({});
 
   useEffect(() => {
     if (location.state?.tab) setActiveTab(location.state.tab);
   }, [location.state]);
+
+  useEffect(() => {
+    const el = tabRefs.current[activeTab];
+    if (el) {
+      setPillStyle({ left: el.offsetLeft, width: el.offsetWidth });
+    }
+  }, [activeTab]);
   const [selectedAudit, setSelectedAudit] = useState(null);
   const [selectedRec, setSelectedRec] = useState(null);
 
@@ -119,16 +128,20 @@ export default function ITDashboard() {
         )}
       </motion.div>
 
-      {/* Tab bar */}
-      <motion.div {...fade(0.04)} className="flex gap-1 bg-muted/50 border border-border/60 rounded-2xl p-1.5 overflow-x-auto">
+      {/* Tab bar — sliding pill */}
+      <motion.div {...fade(0.04)} className="relative flex bg-muted/50 border border-border/60 rounded-2xl p-1.5 overflow-x-auto">
+        {/* Sliding pill */}
+        <div
+          className="absolute top-1.5 bottom-1.5 bg-card border border-border/60 rounded-xl shadow-sm transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none"
+          style={{ left: pillStyle.left, width: pillStyle.width }}
+        />
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
+            ref={(el) => { tabRefs.current[id] = el; }}
             onClick={() => setActiveTab(id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-              activeTab === id
-                ? "bg-card text-foreground shadow-sm border border-border/60"
-                : "text-muted-foreground hover:text-foreground"
+            className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors duration-150 ${
+              activeTab === id ? "text-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Icon className="w-4 h-4" />

@@ -138,7 +138,9 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       {/* Hero command center row */}
-      <motion.div {...fade()}>
+      <motion.div {...fade()} className="relative">
+        {/* Radial glow */}
+        <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 w-[600px] h-48 rounded-full bg-primary/8 blur-3xl -z-10" />
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight">
@@ -158,21 +160,21 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="glass-card hover-lift rounded-2xl p-4 flex flex-col gap-1">
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Monthly Spend</p>
-            <p className="text-2xl font-extrabold">${totalSpend.toLocaleString()}</p>
+            <p className="text-2xl font-extrabold font-mono tabular-nums">${totalSpend.toLocaleString()}</p>
           </div>
           <div className={`glass-card hover-lift rounded-2xl p-4 flex flex-col gap-1 ${totalSavings > 0 ? "bg-emerald-50/80 border-emerald-200/60" : ""}`}>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Savings Found</p>
-            <p className={`text-2xl font-extrabold ${totalSavings > 0 ? "text-emerald-700" : ""}`}>
+            <p className={`text-2xl font-extrabold font-mono tabular-nums ${totalSavings > 0 ? "text-emerald-700" : ""}`}>
               ${totalSavings.toLocaleString()}<span className="text-sm font-semibold">/mo</span>
             </p>
           </div>
           <div className="glass-card hover-lift rounded-2xl p-4 flex flex-col gap-1">
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Tools Tracked</p>
-            <p className="text-2xl font-extrabold">{totalTools}</p>
+            <p className="text-2xl font-extrabold font-mono tabular-nums">{totalTools}</p>
           </div>
           <div className={`glass-card hover-lift rounded-2xl p-4 flex flex-col gap-1 ${urgentRenewals.length > 0 ? "bg-amber-50/80 border-amber-200/60" : ""}`}>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Renewals Due</p>
-            <p className={`text-2xl font-extrabold ${urgentRenewals.length > 0 ? "text-amber-700" : ""}`}>{urgentRenewals.length}</p>
+            <p className={`text-2xl font-extrabold font-mono tabular-nums ${urgentRenewals.length > 0 ? "text-amber-700" : ""}`}>{urgentRenewals.length}</p>
             <p className="text-[10px] text-muted-foreground">in next 30 days</p>
           </div>
         </div>
