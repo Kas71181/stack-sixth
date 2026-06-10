@@ -82,7 +82,12 @@ export default function Layout() {
               <img
                 src="https://media.base44.com/images/public/69f28176704facfd454194e1/d3ef5da50_StackSixth.svg"
                 alt="Stack Sixth"
-                className="h-9 object-contain transition-opacity duration-200 group-hover:opacity-80"
+                className="h-9 object-contain transition-opacity duration-200 group-hover:opacity-80 dark:hidden"
+              />
+              <img
+                src="https://media.base44.com/images/public/69f28176704facfd454194e1/9bbf1227c_Asset5.svg"
+                alt="Stack Sixth"
+                className="h-9 object-contain transition-opacity duration-200 group-hover:opacity-80 hidden dark:block"
               />
             </Link>
 
