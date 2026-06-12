@@ -707,9 +707,14 @@ export default function LiveConnectPanel({ onSynced, integrations = [] }) {
     return t === cId || t === cLabel || t.includes(cId) || cId.includes(t) || t.includes(cLabel) || cLabel.includes(t);
   };
 
+  const seenToolNames = new Set();
   const unmappedStackTools = integrations.filter((i) => {
-    return !CONNECTORS.some((c) => matchesConnector(i.tool_name, c)) &&
-           !API_KEY_CONNECTORS.some((c) => matchesConnector(i.tool_name, c));
+    const key = i.tool_name.toLowerCase().trim();
+    if (seenToolNames.has(key)) return false;
+    if (CONNECTORS.some((c) => matchesConnector(i.tool_name, c))) return false;
+    if (API_KEY_CONNECTORS.some((c) => matchesConnector(i.tool_name, c))) return false;
+    seenToolNames.add(key);
+    return true;
   });
 
   return (
