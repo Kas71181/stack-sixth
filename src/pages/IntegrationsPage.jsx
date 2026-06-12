@@ -94,7 +94,7 @@ export default function IntegrationsPage({ onLiveSynced, onGoToUsage }) {
           <LiveConnectPanel
             integrations={integrations}
             onSynced={() => {
-              qc.invalidateQueries({ queryKey: ["user-activity", user?.id] });
+              qc.invalidateQueries({ queryKey: ["user-activity"] });
               onLiveSynced?.();
             }}
           />

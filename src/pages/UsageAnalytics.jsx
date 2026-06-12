@@ -17,9 +17,11 @@ export default function UsageAnalytics({ syncKey = 0 }) {
 
   // Re-fetch when a live sync happens from Integrations tab
   const { data: activities = [], isLoading } = useQuery({
-    queryKey: ["user-activity", user?.id, syncKey],
+    queryKey: ["user-activity", user?.id],
     queryFn: () => base44.entities.UserActivity.filter({ created_by_id: user?.id }),
     enabled: !!user?.id,
+    // Re-fetch whenever the parent increments syncKey (tab switch or manual sync)
+    staleTime: 0,
   });
 
   const { data: integrations = [] } = useQuery({
@@ -101,7 +103,7 @@ export default function UsageAnalytics({ syncKey = 0 }) {
       toast.info("All tools already have activity entries.");
     } else {
       await base44.entities.UserActivity.bulkCreate(toCreate);
-      await qc.invalidateQueries({ queryKey: ["user-activity", user?.id] });
+      await qc.invalidateQueries({ queryKey: ["user-activity"] });
       toast.success(`Synced ${toCreate.length} tool(s) from your stack.`);
     }
     setSyncing(false);
