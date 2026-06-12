@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CheckCircle2, Loader2, Plug, RefreshCw, AlertCircle, Zap, ExternalLink, Key, PlayCircle } from "lucide-react";
+import { CheckCircle2, Loader2, Plug, RefreshCw, AlertCircle, Zap, ExternalLink, Key, PlayCircle, PencilLine, Users, Activity, TrendingUp, X } from "lucide-react";
 import { toast } from "sonner";
 
 const CONNECTORS = [
@@ -561,6 +561,113 @@ function ApiKeyConnectorCard({ connector, onSynced, inStack = false }) {
   );
 }
 
+function ManualToolCard({ tool, onSynced }) {
+  const [expanded, setExpanded] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [activity, setActivity] = useState(null);
+  const [fields, setFields] = useState({ active_users: "", licensed_seats: "", activity_score: "", license_cost_per_month: "" });
+
+  useEffect(() => {
+    base44.entities.UserActivity.filter({ tool_name: tool.tool_name, user_email: "aggregate@placeholder" })
+      .then((res) => { if (res?.[0]) setActivity(res[0]); })
+      .catch(() => {});
+  }, [tool.tool_name]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    const activeUsers = parseInt(fields.active_users) || 0;
+    const licensedSeats = parseInt(fields.licensed_seats) || 0;
+    const score = parseInt(fields.activity_score) || (licensedSeats > 0 ? Math.round((activeUsers / licensedSeats) * 100) : 0);
+    const status = score >= 70 ? "Active" : score >= 30 ? "Dormant" : "Inactive";
+    const payload = {
+      tool_name: tool.tool_name,
+      user_email: "aggregate@placeholder",
+      user_name: `${tool.tool_name} (manual)`,
+      activity_score: score,
+      status,
+      source: "manual",
+      license_cost_per_month: parseFloat(fields.license_cost_per_month) || tool.monthly_cost || 0,
+      days_active_last_30: Math.round(score * 0.22),
+      wasted_cost_flag: score < 40,
+    };
+    if (activity?.id) {
+      await base44.entities.UserActivity.update(activity.id, payload);
+    } else {
+      await base44.entities.UserActivity.create(payload);
+    }
+    setActivity(payload);
+    setExpanded(false);
+    setSaving(false);
+    toast.success(`${tool.tool_name} stats saved`);
+    onSynced();
+  };
+
+  const scoreColor = activity?.activity_score >= 70 ? "text-emerald-600" : activity?.activity_score >= 30 ? "text-amber-600" : "text-red-500";
+
+  return (
+    <div className="bg-card border border-border/60 rounded-xl overflow-hidden transition-all">
+      <button
+        className="w-full p-3 flex items-center gap-3 hover:bg-muted/30 transition-colors text-left"
+        onClick={() => setExpanded((v) => !v)}
+      >
+        <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground flex-shrink-0">
+          {tool.tool_name.charAt(0)}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-semibold truncate">{tool.tool_name}</p>
+          {activity ? (
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className={`text-[10px] font-bold ${scoreColor}`}>{activity.activity_score}% health</span>
+              <span className="text-[10px] text-muted-foreground">· {activity.status}</span>
+            </div>
+          ) : (
+            <p className="text-[10px] text-muted-foreground">Click to enter usage data</p>
+          )}
+        </div>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {activity && <span className="text-[9px] bg-blue-100 text-blue-700 font-semibold px-1.5 py-0.5 rounded-full">MANUAL</span>}
+          <PencilLine className="w-3.5 h-3.5 text-muted-foreground" />
+        </div>
+      </button>
+
+      {expanded && (
+        <div className="border-t border-border/60 px-3 py-3 space-y-2 bg-muted/20">
+          <p className="text-[11px] font-semibold text-muted-foreground mb-2">Enter usage stats for {tool.tool_name}</p>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] text-muted-foreground flex items-center gap-1 mb-1"><Users className="w-3 h-3" /> Active Users</label>
+              <Input type="number" min={0} placeholder="e.g. 12" value={fields.active_users}
+                onChange={(e) => setFields((f) => ({ ...f, active_users: e.target.value }))} className="h-7 text-xs" />
+            </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground flex items-center gap-1 mb-1"><Users className="w-3 h-3" /> Licensed Seats</label>
+              <Input type="number" min={0} placeholder="e.g. 20" value={fields.licensed_seats}
+                onChange={(e) => setFields((f) => ({ ...f, licensed_seats: e.target.value }))} className="h-7 text-xs" />
+            </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground flex items-center gap-1 mb-1"><Activity className="w-3 h-3" /> Health Score (0–100)</label>
+              <Input type="number" min={0} max={100} placeholder="Auto-calc if blank" value={fields.activity_score}
+                onChange={(e) => setFields((f) => ({ ...f, activity_score: e.target.value }))} className="h-7 text-xs" />
+            </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground flex items-center gap-1 mb-1"><TrendingUp className="w-3 h-3" /> Cost/Month ($)</label>
+              <Input type="number" min={0} placeholder={tool.monthly_cost || "e.g. 500"} value={fields.license_cost_per_month}
+                onChange={(e) => setFields((f) => ({ ...f, license_cost_per_month: e.target.value }))} className="h-7 text-xs" />
+            </div>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <Button size="sm" variant="outline" className="flex-1 h-7 text-xs" onClick={() => setExpanded(false)}>Cancel</Button>
+            <Button size="sm" className="flex-1 h-7 text-xs gap-1" onClick={handleSave} disabled={saving}>
+              {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+              Save
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function LiveConnectPanel({ onSynced, integrations = [] }) {
   const [syncingAll, setSyncingAll] = useState(false);
 
@@ -640,18 +747,15 @@ export default function LiveConnectPanel({ onSynced, integrations = [] }) {
       {/* Stack tools without any connector */}
       {unmappedStackTools.length > 0 && (
         <div className="mt-5">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">From your stack — no direct connector yet</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+          <div className="flex items-center gap-2 mb-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">From your stack — enter usage manually</p>
+          </div>
+          <p className="text-[11px] text-muted-foreground mb-3">
+            These tools don't have a live data connector yet. Click any card to enter usage stats manually — they'll show up in your Usage Health dashboard.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {unmappedStackTools.map((tool) => (
-              <div key={tool.id} className="bg-card border border-border/60 rounded-xl p-3 flex items-center gap-2 opacity-70">
-                <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground flex-shrink-0">
-                  {tool.tool_name.charAt(0)}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold truncate">{tool.tool_name}</p>
-                  <p className="text-[10px] text-muted-foreground">Manual only</p>
-                </div>
-              </div>
+              <ManualToolCard key={tool.id} tool={tool} onSynced={onSynced} />
             ))}
           </div>
         </div>
