@@ -9,14 +9,15 @@ import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import ToolUsageCard from "@/components/usage/ToolUsageCard";
 
-export default function UsageAnalytics() {
+export default function UsageAnalytics({ syncKey = 0 }) {
   const qc = useQueryClient();
   const { user } = useAuth();
   const [syncing, setSyncing] = useState(false);
   const [filter, setFilter] = useState("All");
 
+  // Re-fetch when a live sync happens from Integrations tab
   const { data: activities = [], isLoading } = useQuery({
-    queryKey: ["user-activity", user?.id],
+    queryKey: ["user-activity", user?.id, syncKey],
     queryFn: () => base44.entities.UserActivity.filter({ created_by_id: user?.id }),
     enabled: !!user?.id,
   });

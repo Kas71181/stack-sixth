@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
-import { CheckCircle2, Clock, Zap, Activity, Search } from "lucide-react";
+import { CheckCircle2, Clock, Zap, Activity, Search, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ConnectToolModal from "@/components/integrations/ConnectToolModal";
@@ -12,7 +12,7 @@ import { useWizardImport } from "@/hooks/useWizardImport";
 import LiveConnectPanel from "@/components/usage/LiveConnectPanel";
 import { TOOL_CATALOG } from "@/lib/toolCatalog";
 
-export default function IntegrationsPage() {
+export default function IntegrationsPage({ onLiveSynced, onGoToUsage }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [selectedTool, setSelectedTool] = useState(null);
@@ -20,6 +20,7 @@ export default function IntegrationsPage() {
   const [search, setSearch] = useState("");
   const [showWizard, setShowWizard] = useState(false);
   const [activeSection, setActiveSection] = useState("tools"); // "tools" | "live-data"
+  const [hasSynced, setHasSynced] = useState(false);
 
   // Build grouped catalog from TOOL_CATALOG
   const allCategories = useMemo(() => [...new Set(TOOL_CATALOG.map((t) => t.category))].sort(), []);
@@ -91,7 +92,25 @@ export default function IntegrationsPage() {
           <div className="bg-accent/40 border border-primary/10 rounded-xl px-4 py-3">
             <p className="text-sm text-foreground">Connect your tools below to pull <strong>real per-user activity data</strong> into Usage Health. Connected sources replace estimates with live utilization scores that feed directly into your monitoring reports.</p>
           </div>
-          <LiveConnectPanel onSynced={() => qc.invalidateQueries({ queryKey: ["user-activity", user?.id] })} />
+          <LiveConnectPanel onSynced={() => {
+            qc.invalidateQueries({ queryKey: ["user-activity", user?.id] });
+            setHasSynced(true);
+            onLiveSynced?.();
+          }} />
+          {hasSynced && onGoToUsage && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+              className="flex items-center justify-between gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3"
+            >
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <p className="text-sm text-emerald-800 font-medium">Live data synced — Usage Health is now updated with real user activity.</p>
+              </div>
+              <Button size="sm" onClick={onGoToUsage} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white flex-shrink-0">
+                <Activity className="w-3.5 h-3.5" /> View Usage Health
+              </Button>
+            </motion.div>
+          )}
         </div>
       )}
 

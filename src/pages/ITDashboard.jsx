@@ -45,6 +45,11 @@ export default function ITDashboard() {
   const [activeTab, setActiveTab] = useState("decisions");
   const [pillStyle, setPillStyle] = useState({ left: 0, width: 0 });
   const tabRefs = useRef({});
+  const [liveSyncKey, setLiveSyncKey] = useState(0);
+
+  const handleLiveSynced = () => {
+    setLiveSyncKey((k) => k + 1);
+  };
 
   useEffect(() => {
     if (location.state?.tab) setActiveTab(location.state.tab);
@@ -247,9 +252,11 @@ export default function ITDashboard() {
       )}
 
       {activeTab === "tools" && <ToolStack />}
-      {activeTab === "usage" && <UsageAnalytics />}
+      {activeTab === "usage" && <UsageAnalytics syncKey={liveSyncKey} />}
       {activeTab === "audit" && <AuditReportPage />}
-      {activeTab === "integrations" && <IntegrationsPage />}
+      {activeTab === "integrations" && (
+        <IntegrationsPage onLiveSynced={handleLiveSynced} onGoToUsage={() => setActiveTab("usage")} />
+      )}
       {activeTab === "contracts" && <ContractIntelligence />}
       {activeTab === "roles" && <RoleRelevancePanel />}
 
