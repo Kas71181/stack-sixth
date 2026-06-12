@@ -592,10 +592,17 @@ export default function LiveConnectPanel({ onSynced, integrations = [] }) {
 
   const stackNames = integrations.map((i) => i.tool_name.toLowerCase().trim());
 
+  // Check if a stack tool name fuzzy-matches a connector (partial match either direction)
+  const matchesConnector = (toolName, connector) => {
+    const t = toolName.toLowerCase().trim();
+    const cId = connector.id.toLowerCase();
+    const cLabel = connector.label.toLowerCase();
+    return t === cId || t === cLabel || t.includes(cId) || cId.includes(t) || t.includes(cLabel) || cLabel.includes(t);
+  };
+
   const unmappedStackTools = integrations.filter((i) => {
-    const key = i.tool_name.toLowerCase().trim();
-    return !CONNECTORS.some((c) => c.id === key || c.label.toLowerCase() === key) &&
-           !API_KEY_CONNECTORS.some((c) => c.id === key || c.label.toLowerCase() === key);
+    return !CONNECTORS.some((c) => matchesConnector(i.tool_name, c)) &&
+           !API_KEY_CONNECTORS.some((c) => matchesConnector(i.tool_name, c));
   });
 
   return (
@@ -619,14 +626,14 @@ export default function LiveConnectPanel({ onSynced, integrations = [] }) {
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">OAuth — One-click connect</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
         {CONNECTORS.map((c) => (
-          <ConnectorCard key={c.id} connector={c} onSynced={onSynced} inStack={stackNames.includes(c.id) || stackNames.includes(c.label.toLowerCase())} />
+          <ConnectorCard key={c.id} connector={c} onSynced={onSynced} inStack={integrations.some((i) => matchesConnector(i.tool_name, c))} />
         ))}
       </div>
 
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">API Key — Requires setup</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {API_KEY_CONNECTORS.map((c) => (
-          <ApiKeyConnectorCard key={c.id} connector={c} onSynced={onSynced} inStack={stackNames.includes(c.id) || stackNames.includes(c.label.toLowerCase())} />
+          <ApiKeyConnectorCard key={c.id} connector={c} onSynced={onSynced} inStack={integrations.some((i) => matchesConnector(i.tool_name, c))} />
         ))}
       </div>
 
