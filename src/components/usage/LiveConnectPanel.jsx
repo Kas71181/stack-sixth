@@ -329,10 +329,10 @@ function ApiKeyConnectorCard({ connector, onSynced, inStack = false }) {
         onSynced();
       } else if (res.data?.not_configured) {
         setStatus("idle");
-        // credentials not saved yet — show form
       } else {
         setErrorMsg(res.data?.error || "Sync failed");
         setStatus("error");
+        setShowForm(true);
       }
     } catch (err) {
       setStatus("idle");
@@ -355,10 +355,12 @@ function ApiKeyConnectorCard({ connector, onSynced, inStack = false }) {
       } else {
         setErrorMsg(res.data?.error || "Sync failed");
         setStatus("error");
+        setShowForm(true);
       }
     } catch (err) {
       setErrorMsg(err?.message || "Sync failed");
       setStatus("error");
+      setShowForm(true);
     }
   };
 
