@@ -14,12 +14,13 @@ Deno.serve(async (req) => {
     if (!apiKey) return Response.json({ success: false, not_configured: true, error: 'APOLLO_API_KEY not configured' }, { status: 200 });
 
     // Fetch users from Apollo.io (v1 API with header-based auth)
-    const usersRes = await fetch('https://api.apollo.io/api/v1/users?page=1&per_page=200', {
+    const usersRes = await fetch('https://api.apollo.io/api/v1/users/search?page=1&per_page=200', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
         'Cache-Control': 'no-cache',
+        'accept': 'application/json',
       },
     });
 
