@@ -91,10 +91,13 @@ export default function IntegrationsPage({ onLiveSynced, onGoToUsage }) {
           <div className="bg-accent/40 border border-primary/10 rounded-xl px-4 py-3">
             <p className="text-sm text-foreground">Connect your tools below to pull <strong>real per-user activity data</strong> into Usage Health. Connected sources replace estimates with live utilization scores that feed directly into your monitoring reports.</p>
           </div>
-          <LiveConnectPanel onSynced={() => {
-            qc.invalidateQueries({ queryKey: ["user-activity", user?.id] });
-            onLiveSynced?.();
-          }} />
+          <LiveConnectPanel
+            integrations={integrations}
+            onSynced={() => {
+              qc.invalidateQueries({ queryKey: ["user-activity", user?.id] });
+              onLiveSynced?.();
+            }}
+          />
         </div>
       )}
 

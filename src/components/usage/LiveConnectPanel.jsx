@@ -111,7 +111,7 @@ const API_KEY_CONNECTORS = [
   },
 ];
 
-function ConnectorCard({ connector, onSynced }) {
+function ConnectorCard({ connector, onSynced, inStack = false }) {
   const [status, setStatus] = useState("idle"); // idle | connecting | connected | syncing | done | error | needs_setup
   const [stats, setStats] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
@@ -203,14 +203,17 @@ function ConnectorCard({ connector, onSynced }) {
   };
 
   return (
-    <div className="bg-card border border-border/60 rounded-2xl p-5 flex flex-col gap-4">
+    <div className={`bg-card border rounded-2xl p-5 flex flex-col gap-4 ${inStack ? "border-primary/30 ring-1 ring-primary/10" : "border-border/60"}`}>
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
           <img src={connector.logo} alt={connector.label} className="w-7 h-7 object-contain" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-sm">{connector.label}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="font-bold text-sm">{connector.label}</p>
+            {inStack && <span className="text-[9px] font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">IN STACK</span>}
+          </div>
           <p className="text-xs text-muted-foreground truncate">{connector.description}</p>
         </div>
         {status === "done" && (
@@ -305,7 +308,7 @@ function ConnectorCard({ connector, onSynced }) {
   );
 }
 
-function ApiKeyConnectorCard({ connector, onSynced }) {
+function ApiKeyConnectorCard({ connector, onSynced, inStack = false }) {
   const [status, setStatus] = useState("idle"); // idle | entering | saving | syncing | done | error
   const [stats, setStats] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
@@ -415,14 +418,17 @@ function ApiKeyConnectorCard({ connector, onSynced }) {
   };
 
   return (
-    <div className="bg-card border border-border/60 rounded-2xl p-5 flex flex-col gap-4">
+    <div className={`bg-card border rounded-2xl p-5 flex flex-col gap-4 ${inStack ? "border-primary/30 ring-1 ring-primary/10" : "border-border/60"}`}>
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
           <img src={connector.logo} alt={connector.label} className="w-7 h-7 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-sm">{connector.label}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="font-bold text-sm">{connector.label}</p>
+            {inStack && <span className="text-[9px] font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">IN STACK</span>}
+          </div>
           <p className="text-xs text-muted-foreground truncate">{connector.description}</p>
         </div>
         {status === "done" && (
@@ -553,7 +559,25 @@ function ApiKeyConnectorCard({ connector, onSynced }) {
   );
 }
 
-export default function LiveConnectPanel({ onSynced }) {
+// Tools in the stack that have a known OAuth or API connector
+const CONNECTOR_IDS_BY_NAME = {
+  slack: "6a1dba44349cdfe5f00d8fb7",
+  github: "6a1db9e6a90dd35761465e22",
+  notion: "6a1db8b6d0e9930c01976399",
+};
+const FUNCTION_BY_NAME = {
+  slack: "getSlackActivity",
+  github: "getGitHubActivity",
+  notion: "getNotionActivity",
+  zoom: "getZoomActivity",
+  apollo: "getApolloActivity",
+  "apollo.io": "getApolloActivity",
+  hubspot: "getHubSpotActivity",
+  quickbooks: "getQuickBooksActivity",
+  salesforce: "getSalesforceActivity",
+};
+
+export default function LiveConnectPanel({ onSynced, integrations = [] }) {
   const [syncingAll, setSyncingAll] = useState(false);
 
   const handleSyncAll = async () => {
@@ -582,6 +606,29 @@ export default function LiveConnectPanel({ onSynced }) {
     }
   };
 
+  // Build dynamic connector lists from the user's stack
+  const stackNames = integrations.map((i) => i.tool_name.toLowerCase().trim());
+
+  // OAuth connectors: show all defaults + any stack tools that match
+  const oauthConnectors = CONNECTORS.filter((c) => {
+    // always show default connectors, and ones that are in the stack
+    return true; // show all; ConnectorCard handles "not in stack" gracefully
+  });
+
+  // API key connectors: show all defaults + stack tools that match by name
+  const apiKeyConnectors = API_KEY_CONNECTORS;
+
+  // Stack tools that don't have any connector at all — show as "manual only"
+  const knownConnectorNames = new Set([
+    ...CONNECTORS.map((c) => c.id),
+    ...API_KEY_CONNECTORS.map((c) => c.id),
+  ]);
+  const unmappedStackTools = integrations.filter((i) => {
+    const key = i.tool_name.toLowerCase().trim();
+    return !CONNECTORS.some((c) => c.id === key || c.label.toLowerCase() === key) &&
+           !API_KEY_CONNECTORS.some((c) => c.id === key || c.label.toLowerCase() === key);
+  });
+
   return (
     <div className="bg-gradient-to-br from-primary/5 to-blue-50 border border-primary/20 rounded-2xl p-5">
       <div className="flex items-center justify-between mb-1">
@@ -597,21 +644,42 @@ export default function LiveConnectPanel({ onSynced }) {
       </div>
       <p className="text-xs text-muted-foreground mb-4">
         Connect your tools to pull <strong>real per-user activity data</strong> into your audit.
+        {integrations.length > 0 && <span className="text-primary font-medium"> Showing connectors for your {integrations.length}-tool stack.</span>}
       </p>
 
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">OAuth — One-click connect</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-        {CONNECTORS.map((c) => (
-          <ConnectorCard key={c.id} connector={c} onSynced={onSynced} />
+        {oauthConnectors.map((c) => (
+          <ConnectorCard key={c.id} connector={c} onSynced={onSynced} inStack={stackNames.includes(c.id) || stackNames.includes(c.label.toLowerCase())} />
         ))}
       </div>
 
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">API Key — Requires setup</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {API_KEY_CONNECTORS.map((c) => (
-          <ApiKeyConnectorCard key={c.id} connector={c} onSynced={onSynced} />
+        {apiKeyConnectors.map((c) => (
+          <ApiKeyConnectorCard key={c.id} connector={c} onSynced={onSynced} inStack={stackNames.includes(c.id) || stackNames.includes(c.label.toLowerCase())} />
         ))}
       </div>
+
+      {/* Stack tools without any connector */}
+      {unmappedStackTools.length > 0 && (
+        <div className="mt-5">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">From your stack — no direct connector yet</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            {unmappedStackTools.map((tool) => (
+              <div key={tool.id} className="bg-card border border-border/60 rounded-xl p-3 flex items-center gap-2 opacity-70">
+                <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground flex-shrink-0">
+                  {tool.tool_name.charAt(0)}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold truncate">{tool.tool_name}</p>
+                  <p className="text-[10px] text-muted-foreground">Manual only</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
