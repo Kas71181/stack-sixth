@@ -559,24 +559,6 @@ function ApiKeyConnectorCard({ connector, onSynced, inStack = false }) {
   );
 }
 
-// Tools in the stack that have a known OAuth or API connector
-const CONNECTOR_IDS_BY_NAME = {
-  slack: "6a1dba44349cdfe5f00d8fb7",
-  github: "6a1db9e6a90dd35761465e22",
-  notion: "6a1db8b6d0e9930c01976399",
-};
-const FUNCTION_BY_NAME = {
-  slack: "getSlackActivity",
-  github: "getGitHubActivity",
-  notion: "getNotionActivity",
-  zoom: "getZoomActivity",
-  apollo: "getApolloActivity",
-  "apollo.io": "getApolloActivity",
-  hubspot: "getHubSpotActivity",
-  quickbooks: "getQuickBooksActivity",
-  salesforce: "getSalesforceActivity",
-};
-
 export default function LiveConnectPanel({ onSynced, integrations = [] }) {
   const [syncingAll, setSyncingAll] = useState(false);
 
@@ -606,23 +588,8 @@ export default function LiveConnectPanel({ onSynced, integrations = [] }) {
     }
   };
 
-  // Build dynamic connector lists from the user's stack
   const stackNames = integrations.map((i) => i.tool_name.toLowerCase().trim());
 
-  // OAuth connectors: show all defaults + any stack tools that match
-  const oauthConnectors = CONNECTORS.filter((c) => {
-    // always show default connectors, and ones that are in the stack
-    return true; // show all; ConnectorCard handles "not in stack" gracefully
-  });
-
-  // API key connectors: show all defaults + stack tools that match by name
-  const apiKeyConnectors = API_KEY_CONNECTORS;
-
-  // Stack tools that don't have any connector at all — show as "manual only"
-  const knownConnectorNames = new Set([
-    ...CONNECTORS.map((c) => c.id),
-    ...API_KEY_CONNECTORS.map((c) => c.id),
-  ]);
   const unmappedStackTools = integrations.filter((i) => {
     const key = i.tool_name.toLowerCase().trim();
     return !CONNECTORS.some((c) => c.id === key || c.label.toLowerCase() === key) &&
@@ -649,14 +616,14 @@ export default function LiveConnectPanel({ onSynced, integrations = [] }) {
 
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">OAuth — One-click connect</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-        {oauthConnectors.map((c) => (
+        {CONNECTORS.map((c) => (
           <ConnectorCard key={c.id} connector={c} onSynced={onSynced} inStack={stackNames.includes(c.id) || stackNames.includes(c.label.toLowerCase())} />
         ))}
       </div>
 
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">API Key — Requires setup</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {apiKeyConnectors.map((c) => (
+        {API_KEY_CONNECTORS.map((c) => (
           <ApiKeyConnectorCard key={c.id} connector={c} onSynced={onSynced} inStack={stackNames.includes(c.id) || stackNames.includes(c.label.toLowerCase())} />
         ))}
       </div>
