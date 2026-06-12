@@ -51,10 +51,13 @@ const API_KEY_CONNECTORS = [
     label: "Zoom",
     description: "Meeting participants & usage",
     logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Zoom_Logo_2022.svg/2560px-Zoom_Logo_2022.svg.png",
-    setupUrl: "https://marketplace.zoom.us/",
-    setupLabel: "Get Zoom API Key →",
-    secretKey: "ZOOM_API_KEY",
-    placeholder: "Zoom Server-to-Server OAuth token",
+    setupUrl: "https://marketplace.zoom.us/develop/create",
+    setupLabel: "Create Server-to-Server OAuth App →",
+    fields: [
+      { key: "api_key", label: "Client ID", placeholder: "Client ID" },
+      { key: "client_secret", label: "Client Secret", placeholder: "Client Secret" },
+      { key: "account_id", label: "Account ID", placeholder: "Account ID" },
+    ],
   },
   {
     id: "apollo",

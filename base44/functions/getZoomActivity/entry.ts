@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
   try {
@@ -6,21 +6,50 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    let apiKey = Deno.env.get("ZOOM_API_KEY");
-    if (!apiKey) {
-      const stored = await base44.entities.ApiCredential.filter({ service: 'zoom' });
-      apiKey = stored[0]?.api_key || null;
-    }
-    if (!apiKey) return Response.json({ success: false, not_configured: true, error: 'ZOOM_API_KEY not configured' }, { status: 200 });
+    // Load credentials — need accountId, clientId, clientSecret for Server-to-Server OAuth
+    const stored = await base44.entities.ApiCredential.filter({ service: 'zoom' });
+    const cred = stored[0];
 
-    // Fetch users from Zoom
+    if (!cred?.api_key) {
+      return Response.json({ success: false, not_configured: true, error: 'Zoom credentials not configured' }, { status: 200 });
+    }
+
+    // cred.api_key = Client ID, cred.extra_fields.client_secret = Client Secret, cred.extra_fields.account_id = Account ID
+    const clientId = cred.api_key;
+    const clientSecret = cred.extra_fields?.client_secret;
+    const accountId = cred.extra_fields?.account_id;
+
+    if (!clientSecret || !accountId) {
+      return Response.json({ success: false, not_configured: true, error: 'Missing client_secret or account_id. Please reconnect Zoom.' }, { status: 200 });
+    }
+
+    // Exchange for an access token using Server-to-Server OAuth
+    const tokenRes = await fetch(
+      `https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${accountId}`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      }
+    );
+
+    if (!tokenRes.ok) {
+      const err = await tokenRes.json();
+      return Response.json({ success: false, error: `Zoom auth failed: ${err.reason || err.message || tokenRes.status}` }, { status: 200 });
+    }
+
+    const { access_token } = await tokenRes.json();
+
+    // Fetch users
     const usersRes = await fetch('https://api.zoom.us/v2/users?status=active&page_size=300', {
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }
+      headers: { 'Authorization': `Bearer ${access_token}` }
     });
 
     if (!usersRes.ok) {
       const err = await usersRes.json();
-      return Response.json({ error: err.message || 'Zoom API error' }, { status: 400 });
+      return Response.json({ success: false, error: err.message || 'Zoom API error fetching users' }, { status: 200 });
     }
 
     const usersData = await usersRes.json();
