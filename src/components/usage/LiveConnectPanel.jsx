@@ -88,10 +88,13 @@ const API_KEY_CONNECTORS = [
     label: "HubSpot",
     description: "CRM users & engagement activity",
     logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/HubSpot_Logo.svg/2560px-HubSpot_Logo.svg.png",
-    setupUrl: "https://app.hubspot.com/api-key",
-    setupLabel: "Get HubSpot API Key →",
-    secretKey: "HUBSPOT_API_KEY",
-    placeholder: "HubSpot Private App token",
+    setupUrl: "https://app.hubspot.com/private-apps",
+    setupLabel: "Create HubSpot Private App →",
+    fields: [
+      { key: "api_key", label: "Private App Token", placeholder: "pat-na1-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" },
+      { key: "client_id", label: "Client ID (optional)", placeholder: "OAuth Client ID" },
+      { key: "portal_id", label: "Portal ID (Hub ID)", placeholder: "e.g. 12345678" },
+    ],
   },
   {
     id: "quickbooks",

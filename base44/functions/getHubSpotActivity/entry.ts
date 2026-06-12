@@ -9,9 +9,11 @@ Deno.serve(async (req) => {
     let apiKey = Deno.env.get("HUBSPOT_API_KEY");
     if (!apiKey) {
       const stored = await base44.entities.ApiCredential.filter({ service: 'hubspot' });
-      apiKey = stored[0]?.api_key || null;
+      if (stored[0]) {
+        apiKey = stored[0].api_key || null;
+      }
     }
-    if (!apiKey) return Response.json({ success: false, not_configured: true, error: 'HUBSPOT_API_KEY not configured' }, { status: 200 });
+    if (!apiKey) return Response.json({ success: false, not_configured: true, error: 'HubSpot credentials not configured' }, { status: 200 });
 
     // Fetch users from HubSpot
     const usersRes = await fetch('https://api.hubapi.com/settings/v3/users/', {
