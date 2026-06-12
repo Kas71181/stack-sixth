@@ -29,7 +29,13 @@ Deno.serve(async (req) => {
 
     if (!queryRes.ok) {
       const err = await queryRes.json().catch(() => ({}));
-      return Response.json({ success: false, error: `QuickBooks API error (${queryRes.status}): ${err?.Fault?.Error?.[0]?.Message || 'Check your credentials'}` }, { status: 200 });
+      const qbMsg = err?.Fault?.Error?.[0]?.Message;
+      const hint = queryRes.status === 401
+        ? 'Your QuickBooks access token has expired (tokens last ~1 hour). Please generate a fresh access token from the Intuit Developer portal and re-enter it.'
+        : queryRes.status === 403
+        ? 'Permission denied. Ensure your QuickBooks app has the "com.intuit.quickbooks.accounting" scope.'
+        : qbMsg || 'Check your Access Token and Company ID (Realm ID).';
+      return Response.json({ success: false, error: `QuickBooks error (${queryRes.status}): ${hint}` }, { status: 200 });
     }
 
     const data = await queryRes.json();

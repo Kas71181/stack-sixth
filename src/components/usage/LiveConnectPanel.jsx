@@ -102,14 +102,11 @@ const API_KEY_CONNECTORS = [
     label: "QuickBooks",
     description: "Employee list & account activity",
     logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Intuit_QuickBooks_logo.svg/2560px-Intuit_QuickBooks_logo.svg.png",
-    setupUrl: "https://developer.intuit.com/app/developer/qbo/docs/get-started",
-    setupLabel: "Get QuickBooks Access Token →",
-    secretKey: "QUICKBOOKS_ACCESS_TOKEN",
-    placeholder: "Access token",
-    multiSecret: true,
+    setupUrl: "https://developer.intuit.com/app/developer/playground",
+    setupLabel: "Generate Access Token (Intuit Playground) →",
     fields: [
-      { key: "api_key", label: "Access Token", placeholder: "Bearer access token" },
-      { key: "realm_id", label: "Company ID (Realm ID)", placeholder: "Your QBO company ID" },
+      { key: "api_key", label: "Access Token", placeholder: "eyJhbGci... (expires in ~1 hour)" },
+      { key: "realm_id", label: "Company ID (Realm ID)", placeholder: "e.g. 9341452234567890" },
     ],
   },
 ];
