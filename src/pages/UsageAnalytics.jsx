@@ -16,12 +16,12 @@ export default function UsageAnalytics({ syncKey = 0 }) {
   const [filter, setFilter] = useState("All");
 
   // Re-fetch when a live sync happens from Integrations tab
-  const { data: activities = [], isLoading } = useQuery({
+  const { data: activities = [], isLoading, refetch } = useQuery({
     queryKey: ["user-activity", user?.id],
-    queryFn: () => base44.entities.UserActivity.filter({ created_by_id: user?.id }),
+    queryFn: () => base44.entities.UserActivity.list(),
     enabled: !!user?.id,
-    // Re-fetch whenever the parent increments syncKey (tab switch or manual sync)
     staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const { data: integrations = [] } = useQuery({
@@ -30,39 +30,45 @@ export default function UsageAnalytics({ syncKey = 0 }) {
     enabled: !!user?.id,
   });
 
-  // Collect all live user records per tool name
-  const liveUsersMap = {};
+  // Step 1: Separate live individual records from estimated/aggregate records
+  const liveUsersMap = {}; // toolName -> live user records
+  const estimatedMap = {}; // toolName -> aggregate/estimated record
+
   activities.forEach((a) => {
     if (a.source === "live" && a.user_email !== "aggregate@placeholder") {
       if (!liveUsersMap[a.tool_name]) liveUsersMap[a.tool_name] = [];
       liveUsersMap[a.tool_name].push(a);
+    } else {
+      // Keep most recent estimated/aggregate record per tool
+      if (!estimatedMap[a.tool_name]) estimatedMap[a.tool_name] = a;
     }
   });
 
-  // Build one entry per tool: prefer live summary, skip estimated if live exists
+  // Step 2: Build one display record per tool
   const toolMap = {};
-  activities.forEach((a) => {
-    const key = a.tool_name;
-    const hasLiveData = liveUsersMap[key]?.length > 0;
-    // Skip estimated/placeholder records when live data exists for this tool
-    if (a.user_email === "aggregate@placeholder" && hasLiveData) return;
-    if (!toolMap[key] || a.source === "live") {
-      toolMap[key] = { ...a, liveUsers: liveUsersMap[key] || [] };
-    }
+
+  // Add all tools that have live data — synthesize a clean summary
+  Object.keys(liveUsersMap).forEach((toolName) => {
+    const users = liveUsersMap[toolName];
+    const avg = (key) => Math.round(users.reduce((s, u) => s + (u[key] || 0), 0) / users.length);
+    const activeCount = users.filter((u) => u.status === "Active").length;
+    const score = avg("activity_score");
+    toolMap[toolName] = {
+      tool_name: toolName,
+      source: "live",
+      activity_score: score,
+      days_active_last_30: avg("days_active_last_30"),
+      status: activeCount / users.length >= 0.7 ? "Active" : activeCount / users.length >= 0.3 ? "Dormant" : "Inactive",
+      wasted_cost_flag: score < 40,
+      license_cost_per_month: users[0]?.license_cost_per_month || 0,
+      liveUsers: users,
+    };
   });
 
-  // For tools that only have live data, compute a representative summary record
-  Object.keys(liveUsersMap).forEach((toolName) => {
-    if (toolMap[toolName]) {
-      const users = liveUsersMap[toolName];
-      const avg = (key) => users.length ? Math.round(users.reduce((s, u) => s + (u[key] || 0), 0) / users.length) : 0;
-      const activeCount = users.filter((u) => u.status === "Active").length;
-      const score = avg("activity_score");
-      toolMap[toolName].activity_score = score;
-      toolMap[toolName].days_active_last_30 = avg("days_active_last_30");
-      toolMap[toolName].status = activeCount / users.length >= 0.7 ? "Active" : activeCount / users.length >= 0.3 ? "Dormant" : "Inactive";
-      toolMap[toolName].wasted_cost_flag = score < 40;
-      toolMap[toolName].source = "live";
+  // Add estimated tools that have no live data
+  Object.keys(estimatedMap).forEach((toolName) => {
+    if (!toolMap[toolName]) {
+      toolMap[toolName] = { ...estimatedMap[toolName], liveUsers: [] };
     }
   });
 
