@@ -22,25 +22,25 @@ Deno.serve(async (req) => {
     });
 
     if (!usersRes.ok) {
-      const err = await usersRes.json();
-      return Response.json({ error: err.message || 'HubSpot API error' }, { status: 400 });
+      const err = await usersRes.json().catch(() => ({}));
+      return Response.json({ success: false, error: `HubSpot API error (${usersRes.status}): ${err.message || 'Check your API key'}` }, { status: 200 });
     }
 
     const usersData = await usersRes.json();
     const members = usersData.results || [];
 
-    // Fetch recent activity via engagements
-    const engRes = await fetch('https://api.hubapi.com/engagements/v1/engagements/recent/modified?count=100', {
-      headers: { 'Authorization': `Bearer ${apiKey}` }
+    // Fetch recent activity via CRM engagements v3
+    const engRes = await fetch('https://api.hubapi.com/crm/v3/objects/engagements?limit=100&properties=hs_lastmodifieddate,hubspot_owner_id', {
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }
     });
     const engData = engRes.ok ? await engRes.json() : { results: [] };
     const recentEngagements = engData.results || [];
 
-    // Build a map of user email -> last engagement date
+    // Build a map of owner id -> last engagement date
     const engagementByOwner = {};
     for (const eng of recentEngagements) {
-      const ownerId = eng.engagement?.ownerId;
-      const ts = eng.engagement?.lastUpdated;
+      const ownerId = eng.properties?.hubspot_owner_id;
+      const ts = eng.properties?.hs_lastmodifieddate;
       if (ownerId && ts) {
         if (!engagementByOwner[ownerId] || ts > engagementByOwner[ownerId]) {
           engagementByOwner[ownerId] = ts;
