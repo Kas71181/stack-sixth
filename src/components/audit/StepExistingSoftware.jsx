@@ -9,6 +9,7 @@ import StripeBillingPanel from "@/components/stripe/StripeBillingPanel";
 import WorkspaceAdminPanel from "@/components/workspace/WorkspaceAdminPanel";
 import LiveConnectPanel from "@/components/usage/LiveConnectPanel";
 import ToolAutocomplete from "./ToolAutocomplete";
+import GmailDetectButton from "./GmailDetectButton";
 
 const CATEGORY_OPTIONS = [
   "Communication",
@@ -187,6 +188,7 @@ export default function StepExistingSoftware({ data, onChange }) {
           </Button>
         </div>
 
+        <GmailDetectButton onToolsDetected={handleImported} />
         <StripeBillingPanel onImport={handleImported} />
         <WorkspaceAdminPanel onImport={(wsInfo) => handleImported([wsInfo])} />
         <LiveConnectPanel onSynced={() => {}} />

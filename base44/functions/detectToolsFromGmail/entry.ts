@@ -139,8 +139,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { accessToken } = await base44.asServiceRole.connectors.getCurrentAppUserConnection('6a1gmail44placeholder'); 
-    // Note: connector ID will be injected after registration
+    const { accessToken } = await base44.asServiceRole.connectors.getCurrentAppUserConnection('6a2c11c93a60aebc9a354fd8');
 
     const headers = { Authorization: `Bearer ${accessToken}` };
 
