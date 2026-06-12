@@ -20,7 +20,6 @@ export default function IntegrationsPage({ onLiveSynced, onGoToUsage }) {
   const [search, setSearch] = useState("");
   const [showWizard, setShowWizard] = useState(false);
   const [activeSection, setActiveSection] = useState("tools"); // "tools" | "live-data"
-  const [hasSynced, setHasSynced] = useState(false);
 
   // Build grouped catalog from TOOL_CATALOG
   const allCategories = useMemo(() => [...new Set(TOOL_CATALOG.map((t) => t.category))].sort(), []);
@@ -94,23 +93,8 @@ export default function IntegrationsPage({ onLiveSynced, onGoToUsage }) {
           </div>
           <LiveConnectPanel onSynced={() => {
             qc.invalidateQueries({ queryKey: ["user-activity", user?.id] });
-            setHasSynced(true);
             onLiveSynced?.();
           }} />
-          {hasSynced && onGoToUsage && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-              className="flex items-center justify-between gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3"
-            >
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                <p className="text-sm text-emerald-800 font-medium">Live data synced — Usage Health is now updated with real user activity.</p>
-              </div>
-              <Button size="sm" onClick={onGoToUsage} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white flex-shrink-0">
-                <Activity className="w-3.5 h-3.5" /> View Usage Health
-              </Button>
-            </motion.div>
-          )}
         </div>
       )}
 
