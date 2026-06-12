@@ -23,7 +23,12 @@ Deno.serve(async (req) => {
 
     if (!usersRes.ok) {
       const err = await usersRes.json().catch(() => ({}));
-      return Response.json({ success: false, error: `HubSpot API error (${usersRes.status}): ${err.message || 'Check your API key'}` }, { status: 200 });
+      const hint = usersRes.status === 403
+        ? 'Your Private App token is missing the "settings.users.read" scope. Add it in HubSpot → Settings → Integrations → Private Apps → Scopes.'
+        : usersRes.status === 401
+        ? 'Invalid or expired token. Regenerate your HubSpot Private App access token.'
+        : err.message || 'Check your API key';
+      return Response.json({ success: false, error: `HubSpot API error (${usersRes.status}): ${hint}` }, { status: 200 });
     }
 
     const usersData = await usersRes.json();
