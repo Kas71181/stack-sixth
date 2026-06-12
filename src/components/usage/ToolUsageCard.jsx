@@ -63,7 +63,8 @@ export default function ToolUsageCard({ tool }) {
 
   // Live user breakdown
   const liveUsers = tool.liveUsers || [];
-  const hasLive = liveUsers.length > 0;
+  // A tool is "live" if it has per-user live records OR if the record itself came from a live sync
+  const hasLive = liveUsers.length > 0 || tool.source === "live";
   const activeCount = liveUsers.filter((u) => u.status === "Active").length;
   const dormantCount = liveUsers.filter((u) => u.status === "Dormant").length;
   const inactiveCount = liveUsers.filter((u) => u.status === "Inactive" || u.status === "Never Logged In").length;
@@ -90,7 +91,7 @@ export default function ToolUsageCard({ tool }) {
       onClick={() => setShowDrilldown(true)}
     >
       {/* Gauge */}
-      <HealthGauge score={hasLive ? (avgScore ?? score) : score} />
+      <HealthGauge score={avgScore ?? score} />
 
       {/* Content */}
       <div className="flex-1 min-w-0">
