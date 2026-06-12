@@ -28,8 +28,8 @@ Deno.serve(async (req) => {
     );
 
     if (!queryRes.ok) {
-      const err = await queryRes.json();
-      return Response.json({ error: err?.Fault?.Error?.[0]?.Message || 'QuickBooks API error' }, { status: 400 });
+      const err = await queryRes.json().catch(() => ({}));
+      return Response.json({ success: false, error: `QuickBooks API error (${queryRes.status}): ${err?.Fault?.Error?.[0]?.Message || 'Check your credentials'}` }, { status: 200 });
     }
 
     const data = await queryRes.json();

@@ -312,6 +312,30 @@ function ApiKeyConnectorCard({ connector, onSynced }) {
   const [showForm, setShowForm] = useState(false);
   const [fields, setFields] = useState({});
 
+  useEffect(() => {
+    checkAndSync();
+  }, []);
+
+  const checkAndSync = async () => {
+    setStatus("syncing");
+    try {
+      const res = await base44.functions.invoke(connector.functionName, {});
+      if (res.data?.success) {
+        setStatus("done");
+        setStats({ total: res.data.total, created: res.data.created, updated: res.data.updated });
+        onSynced();
+      } else if (res.data?.not_configured) {
+        setStatus("idle");
+        // credentials not saved yet — show form
+      } else {
+        setErrorMsg(res.data?.error || "Sync failed");
+        setStatus("error");
+      }
+    } catch (err) {
+      setStatus("idle");
+    }
+  };
+
   const handleSync = async () => {
     setStatus("syncing");
     setErrorMsg("");
