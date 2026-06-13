@@ -56,5 +56,22 @@
   },
   "required": [
     "company_id"
-  ]
+  ],
+  "rls": {
+    "enabled": true,
+    "rules": {
+      "read": {
+        "type": "owner"
+      },
+      "create": {
+        "type": "authenticated"
+      },
+      "update": {
+        "type": "owner"
+      },
+      "delete": {
+        "type": "owner"
+      }
+    }
+  }
 }

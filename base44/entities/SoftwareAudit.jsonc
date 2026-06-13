@@ -80,5 +80,22 @@
     "company_name",
     "user_type",
     "team_size"
-  ]
+  ],
+  "rls": {
+    "enabled": true,
+    "rules": {
+      "read": {
+        "type": "owner"
+      },
+      "create": {
+        "type": "authenticated"
+      },
+      "update": {
+        "type": "owner"
+      },
+      "delete": {
+        "type": "owner"
+      }
+    }
+  }
 }
