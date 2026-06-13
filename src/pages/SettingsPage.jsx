@@ -16,8 +16,10 @@ export default function SettingsPage() {
     <div className="max-w-2xl space-y-6">
       <h1 className="text-2xl font-extrabold tracking-tight">Settings</h1>
 
-      <motion.div {...fadeUp(0)}><AccountSection /></motion.div>
-      <motion.div {...fadeUp(0.05)}><CompanyProfileSection /></motion.div>
+      <motion.div {...fadeUp(0)} className="glass-card divide-y divide-border/40 overflow-hidden">
+        <AccountSection />
+        <CompanyProfileSection />
+      </motion.div>
       <motion.div {...fadeUp(0.10)}><NotificationsSection /></motion.div>
       <motion.div {...fadeUp(0.15)}><ApiCredentialsSection /></motion.div>
       <motion.div {...fadeUp(0.20)}><DangerZoneSection /></motion.div>

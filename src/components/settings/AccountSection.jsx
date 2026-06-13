@@ -28,7 +28,7 @@ export default function AccountSection() {
   };
 
   return (
-    <div className="glass-card p-6 space-y-4">
+    <div className="p-6 space-y-4">
       <div className="flex items-center gap-2 mb-1">
         <User className="w-4 h-4 text-primary" />
         <h2 className="font-bold text-sm">Account</h2>

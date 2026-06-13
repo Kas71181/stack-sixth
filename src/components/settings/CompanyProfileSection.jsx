@@ -44,7 +44,7 @@ export default function CompanyProfileSection() {
   const f = (key, val) => setForm((prev) => ({ ...prev, [key]: val }));
 
   return (
-    <div className="glass-card p-6 space-y-4">
+    <div className="p-6 space-y-4">
       <div className="flex items-center gap-2 mb-1">
         <Building2 className="w-4 h-4 text-primary" />
         <h2 className="font-bold text-sm">Company Profile</h2>
