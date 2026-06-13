@@ -34,6 +34,45 @@
       "type": "string",
       "format": "date",
       "title": "Last Audit Date"
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD",
+      "title": "Currency"
+    },
+    "fiscal_year_start": {
+      "type": "string",
+      "default": "January",
+      "title": "Fiscal Year Start Month"
+    },
+    "cost_alert_threshold": {
+      "type": "number",
+      "title": "Cost Alert Threshold ($)"
+    },
+    "notif_weekly_digest": {
+      "type": "boolean",
+      "default": true,
+      "title": "Notification: Weekly Digest"
+    },
+    "notif_inactive_alerts": {
+      "type": "boolean",
+      "default": true,
+      "title": "Notification: Inactive User Alerts"
+    },
+    "notif_cost_spike": {
+      "type": "boolean",
+      "default": true,
+      "title": "Notification: Cost Spike Alerts"
+    },
+    "notif_renewal_reminders": {
+      "type": "boolean",
+      "default": true,
+      "title": "Notification: Renewal Reminders"
+    },
+    "notif_audit_complete": {
+      "type": "boolean",
+      "default": false,
+      "title": "Notification: Audit Complete"
     }
   },
   "required": [
