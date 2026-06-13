@@ -21,7 +21,8 @@ export default function AccountSection() {
 
   const handleSave = async () => {
     setSaving(true);
-    await base44.auth.updateMe({ full_name: form.full_name });
+    const updated = await base44.auth.updateMe({ ...user, full_name: form.full_name });
+    setUser(updated);
     toast({ title: "Account updated" });
     setSaving(false);
   };
