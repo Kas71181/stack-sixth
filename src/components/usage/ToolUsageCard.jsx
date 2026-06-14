@@ -53,13 +53,18 @@ export default function ToolUsageCard({ tool }) {
   const meta = STATUS_META[tool.status] || STATUS_META.Dormant;
   const StatusIcon = meta.Icon;
 
-  const utilRate = tool.licensed_seats > 0
-    ? Math.round(((tool.active_users || 0) / tool.licensed_seats) * 100)
-    : null;
+  // Use pre-computed values if available, else fallback to local calc
+  const utilRate = tool.utilRate ?? (
+    tool.licensed_seats > 0
+      ? Math.round(((tool.active_users || 0) / tool.licensed_seats) * 100)
+      : null
+  );
+  const cpau = tool.cpau ?? null;
 
-  const wastedCost = tool.wasted_cost_flag && tool.license_cost_per_month
-    ? tool.license_cost_per_month
-    : null;
+  const totalCost = tool.licensed_seats > 0
+    ? (tool.license_cost_per_month || 0) * tool.licensed_seats
+    : tool.license_cost_per_month || 0;
+  const wastedCost = tool.wasted_cost_flag && totalCost > 0 ? totalCost : null;
 
   // Live user breakdown
   const liveUsers = tool.liveUsers || [];
@@ -138,14 +143,30 @@ export default function ToolUsageCard({ tool }) {
           </div>
         )}
 
-        {/* Estimated metrics row (only when no live data) */}
-        {!hasLive && (
-          <div className="mt-2.5 flex flex-wrap gap-3">
+        {/* Estimated active days (only when no live data) */}
+        {!hasLive && tool.days_active_last_30 != null && (
+          <div className="mt-2.5">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Active Days (30d)</p>
+            <p className="text-xs font-semibold mt-0.5">{tool.days_active_last_30} / 30</p>
+          </div>
+        )}
+
+        {/* CPAU + Utilization metrics row */}
+        {(cpau !== null || utilRate !== null) && (
+          <div className="mt-2 flex flex-wrap gap-3">
+            {cpau !== null && (
+              <div className="flex flex-col">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Cost / Active User</p>
+                <p className={`text-xs font-bold mt-0.5 font-mono ${cpau > 100 ? "text-amber-600 dark:text-amber-400" : "text-foreground"}`}>
+                  ${cpau.toLocaleString()}/mo
+                </p>
+              </div>
+            )}
             {utilRate !== null && (
               <div className="flex flex-col">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Utilization</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Seat Utilization</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full ${utilRate >= 70 ? "bg-emerald-500" : utilRate >= 40 ? "bg-amber-400" : "bg-destructive"}`}
                       style={{ width: `${utilRate}%` }}
@@ -155,25 +176,13 @@ export default function ToolUsageCard({ tool }) {
                 </div>
               </div>
             )}
-            {tool.license_cost_per_month != null && (
-              <div className="flex flex-col">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Seat Cost</p>
-                <p className="text-xs font-semibold mt-0.5 font-mono">${tool.license_cost_per_month}/mo</p>
-              </div>
-            )}
-            {tool.days_active_last_30 != null && (
-              <div className="flex flex-col">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Active Days (30d)</p>
-                <p className="text-xs font-semibold mt-0.5">{tool.days_active_last_30} / 30</p>
-              </div>
-            )}
           </div>
         )}
 
         {wastedCost && (
           <div className="mt-2 flex items-center gap-1.5 text-xs text-destructive">
             <DollarSign className="w-3 h-3" />
-            <span>~${Math.round(wastedCost)}/mo potentially wasted</span>
+            <span>~${Math.round(wastedCost).toLocaleString()}/mo total spend at risk</span>
           </div>
         )}
 

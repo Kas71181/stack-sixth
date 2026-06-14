@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import ToolUsageCard from "@/components/usage/ToolUsageCard";
+import UsageInsightsBar from "@/components/usage/UsageInsightsBar";
 
 export default function UsageAnalytics({ syncKey = 0 }) {
   const qc = useQueryClient();
@@ -27,6 +28,12 @@ export default function UsageAnalytics({ syncKey = 0 }) {
   const { data: integrations = [] } = useQuery({
     queryKey: ["integrations", user?.id],
     queryFn: () => base44.entities.SaasIntegration.filter({ created_by_id: user?.id }),
+    enabled: !!user?.id,
+  });
+
+  const { data: contracts = [] } = useQuery({
+    queryKey: ["contracts-usage", user?.id],
+    queryFn: () => base44.entities.Contract.filter({ created_by_id: user?.id }),
     enabled: !!user?.id,
   });
 
@@ -119,16 +126,34 @@ export default function UsageAnalytics({ syncKey = 0 }) {
   const statusMap = { Healthy: "Active", "At Risk": "Dormant", Wasted: "Inactive" };
 
   const filtered = filter === "All"
-    ? tools
-    : tools.filter((t) => {
+    ? enrichedTools
+    : enrichedTools.filter((t) => {
         if (filter === "Wasted") return t.status === "Inactive" || t.status === "Never Logged In";
         return t.status === statusMap[filter];
       });
 
   const wasted = tools.filter((t) => t.wasted_cost_flag);
-  const totalWaste = wasted.reduce((s, t) => s + (t.license_cost_per_month || 0), 0);
+  const totalWaste = wasted.reduce((s, t) => {
+    const seats = t.licensed_seats > 0 ? t.licensed_seats : 1;
+    return s + (t.license_cost_per_month || 0) * seats;
+  }, 0);
   const avgScore = tools.length ? Math.round(tools.reduce((s, t) => s + (t.activity_score || 0), 0) / tools.length) : 0;
   const healthyCount = tools.filter((t) => t.status === "Active").length;
+
+  // Enrich each tool with CPAU
+  const enrichedTools = tools.map((t) => {
+    const activeCount = t.liveUsers?.length > 0
+      ? t.liveUsers.filter((u) => u.status === "Active").length
+      : t.active_users || 0;
+    const totalCost = t.licensed_seats > 0
+      ? t.license_cost_per_month * t.licensed_seats
+      : t.license_cost_per_month || 0;
+    const cpau = activeCount > 0 && totalCost > 0 ? Math.round(totalCost / activeCount) : null;
+    const utilRate = t.licensed_seats > 0
+      ? Math.round((activeCount / t.licensed_seats) * 100)
+      : null;
+    return { ...t, cpau, utilRate };
+  });
 
   return (
     <div className="space-y-5">
@@ -165,6 +190,11 @@ export default function UsageAnalytics({ syncKey = 0 }) {
             <p className="text-xs text-muted-foreground mt-0.5">Wasted / Month</p>
           </div>
         </div>
+      )}
+
+      {/* Derived insights row */}
+      {enrichedTools.length > 0 && (
+        <UsageInsightsBar tools={enrichedTools} contracts={contracts} />
       )}
 
       {/* Live data nudge */}
