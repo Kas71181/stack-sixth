@@ -109,6 +109,34 @@ const API_KEY_CONNECTORS = [
       { key: "realm_id", label: "Company ID (Realm ID)", placeholder: "e.g. 9341452234567890" },
     ],
   },
+  {
+    id: "bamboohr",
+    functionName: "getBambooHRHeadcount",
+    label: "BambooHR",
+    description: "True headcount — employee list & departments",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/BambooHR_logo.svg/2560px-BambooHR_logo.svg.png",
+    setupUrl: "https://app.bamboohr.com/settings/account/apikeys",
+    setupLabel: "Generate BambooHR API Key →",
+    hrisTag: true,
+    fields: [
+      { key: "api_key", label: "API Key", placeholder: "Your BambooHR API key" },
+      { key: "subdomain", label: "Subdomain", placeholder: "e.g. 'acme' for acme.bamboohr.com" },
+    ],
+  },
+  {
+    id: "google_workspace",
+    functionName: "getGoogleWorkspaceApps",
+    label: "Google Workspace",
+    description: "Auto-discover all OAuth apps org-wide",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/2048px-Google_%22G%22_Logo.svg.png",
+    setupUrl: "https://console.cloud.google.com/iam-admin/serviceaccounts",
+    setupLabel: "Create Service Account →",
+    discoveryTag: true,
+    fields: [
+      { key: "api_key", label: "Service Account JSON", placeholder: '{"type":"service_account","project_id":"..."}' },
+      { key: "admin_email", label: "Admin Email", placeholder: "admin@yourcompany.com" },
+    ],
+  },
 ];
 
 function ConnectorCard({ connector, onSynced, inStack = false }) {
@@ -744,9 +772,25 @@ export default function LiveConnectPanel({ onSynced, integrations = [] }) {
 
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">API Key — Requires setup</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {API_KEY_CONNECTORS.map((c) => (
+        {API_KEY_CONNECTORS.filter((c) => !c.hrisTag && !c.discoveryTag).map((c) => (
           <ApiKeyConnectorCard key={c.id} connector={c} onSynced={onSynced} inStack={integrations.some((i) => matchesConnector(i.tool_name, c))} />
         ))}
+      </div>
+
+      {/* HRIS + Passive Discovery — competitive parity section */}
+      <div className="mt-5 pt-5 border-t border-border/40">
+        <div className="flex items-center gap-2 mb-1">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">HRIS & Passive Discovery</p>
+          <span className="text-[9px] font-bold bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400 px-2 py-0.5 rounded-full">ENTERPRISE TIER</span>
+        </div>
+        <p className="text-[11px] text-muted-foreground mb-3">
+          <strong>BambooHR</strong> gives true headcount for accurate seat-vs-employee analysis. <strong>Google Workspace</strong> auto-discovers every OAuth app installed across your org — no browser extension needed.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {API_KEY_CONNECTORS.filter((c) => c.hrisTag || c.discoveryTag).map((c) => (
+            <ApiKeyConnectorCard key={c.id} connector={c} onSynced={onSynced} inStack={integrations.some((i) => matchesConnector(i.tool_name, c))} />
+          ))}
+        </div>
       </div>
 
       {/* Stack tools without any connector */}
