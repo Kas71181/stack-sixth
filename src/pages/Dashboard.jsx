@@ -60,12 +60,6 @@ export default function Dashboard() {
     enabled: !!user?.id,
   });
 
-  const { data: contractsDash = [] } = useQuery({
-    queryKey: ["contracts-dash2", user?.id],
-    queryFn: () => base44.entities.Contract.filter({ created_by_id: user?.id }),
-    enabled: !!user?.id,
-  });
-
   const completedAudits = audits?.filter((a) => a.status === "completed") || [];
   const hasData = completedAudits.length > 0;
 
@@ -143,8 +137,10 @@ export default function Dashboard() {
   const firstName = user?.full_name?.split(" ")[0] || "there";
   const openRecs = (recommendations || []).filter((r) => r.status === "Open");
   const totalSavings = openRecs.reduce((s, r) => s + (r.estimated_monthly_savings || 0), 0);
-  const totalSpend = completedAudits.reduce((s, a) => s + (a.monthly_budget || 0), 0);
-  const totalTools = completedAudits.reduce((s, a) => s + (a.existing_software?.length || 0), 0);
+  // Use the most recent audit as the source of truth to avoid double-counting
+  const latestAudit = completedAudits[0];
+  const totalSpend = latestAudit?.monthly_budget || 0;
+  const totalTools = latestAudit?.existing_software?.length || 0;
   const urgentRenewals = (monitorReports || []).flatMap((r) =>
     (r.tools_snapshot || []).filter((t) => {
       if (!t.renewal_date) return false;
@@ -264,7 +260,7 @@ export default function Dashboard() {
           recommendations={recommendations}
           monitorReports={monitorReports}
           userActivity={userActivity}
-          contracts={contractsDash}
+          contracts={contracts}
         />
       </motion.div>
 
