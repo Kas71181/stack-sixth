@@ -36,8 +36,13 @@ Deno.serve(async (req) => {
     );
 
     if (!tokenRes.ok) {
-      const err = await tokenRes.json();
-      return Response.json({ success: false, error: `Zoom auth failed: ${err.reason || err.message || tokenRes.status}` }, { status: 200 });
+      const err = await tokenRes.json().catch(() => ({}));
+      const hint = tokenRes.status === 401
+        ? 'Invalid Client ID or Secret. Double-check your Server-to-Server OAuth app credentials.'
+        : tokenRes.status === 403
+        ? 'Missing required admin scopes. In Zoom Marketplace, enable: user:read:admin, user:read:list_users:admin'
+        : `Status ${tokenRes.status}`;
+      return Response.json({ success: false, error: `Zoom auth failed: ${hint}` }, { status: 200 });
     }
 
     const { access_token } = await tokenRes.json();
@@ -48,8 +53,11 @@ Deno.serve(async (req) => {
     });
 
     if (!usersRes.ok) {
-      const err = await usersRes.json();
-      return Response.json({ success: false, error: err.message || 'Zoom API error fetching users' }, { status: 200 });
+      const err = await usersRes.json().catch(() => ({}));
+      const hint = usersRes.status === 401 ? 'Token expired or invalid.'
+        : usersRes.status === 4700 ? 'Missing scope: user:read:admin. Add it in your Zoom Server-to-Server app scopes.'
+        : err.message || `HTTP ${usersRes.status}`;
+      return Response.json({ success: false, error: `Zoom users fetch failed: ${hint}` }, { status: 200 });
     }
 
     const usersData = await usersRes.json();

@@ -228,6 +228,29 @@ export default function Results() {
         </div>
       </motion.div>
 
+      {/* Viral share nudge — shown when total savings > $500/mo */}
+      {(result.recommendations?.reduce((s, r) => s + (r.estimated_savings_opportunity || 0), 0) || 0) > 500 && !copied && (
+        <motion.div {...fade(0.01)} className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700/40 rounded-2xl p-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-800/40 flex items-center justify-center flex-shrink-0">
+              <Share2 className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-300">
+                You found ${(result.recommendations?.reduce((s, r) => s + (r.estimated_savings_opportunity || 0), 0) || 0).toLocaleString()}/mo in savings 🎉
+              </p>
+              <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-0.5">Share this read-only report with your CFO or finance team.</p>
+            </div>
+          </div>
+          <button
+            onClick={handleShare}
+            className="flex-shrink-0 px-3.5 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 transition-colors"
+          >
+            Share Report →
+          </button>
+        </motion.div>
+      )}
+
       {/* Post-audit monitoring prompt */}
       {showMonitorPrompt && (
         <motion.div {...fade(0.02)} className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-center justify-between gap-4">
@@ -449,6 +472,22 @@ export default function Results() {
           />
         </motion.div>
       )}
+
+      {/* Refresh Analysis nudge — bottom of page */}
+      <motion.div {...fade(0.35)} className="glass-card p-4 flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold">Stack changed since this audit?</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Re-run the analysis to get updated recommendations with your latest data.</p>
+        </div>
+        <button
+          onClick={handleRetry}
+          disabled={retrying}
+          className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-border/60 bg-card text-sm font-medium hover:border-primary/40 hover:text-primary transition-all disabled:opacity-50"
+        >
+          {retrying ? <div className="w-3.5 h-3.5 border-2 border-current/30 border-t-current rounded-full animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+          Refresh Analysis
+        </button>
+      </motion.div>
 
       {/* Assumptions */}
       {result.assumptions?.length > 0 && (

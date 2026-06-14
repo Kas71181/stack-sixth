@@ -60,6 +60,12 @@ export default function Dashboard() {
     enabled: !!user?.id,
   });
 
+  const { data: contractsDash = [] } = useQuery({
+    queryKey: ["contracts-dash2", user?.id],
+    queryFn: () => base44.entities.Contract.filter({ created_by_id: user?.id }),
+    enabled: !!user?.id,
+  });
+
   const completedAudits = audits?.filter((a) => a.status === "completed") || [];
   const hasData = completedAudits.length > 0;
 
@@ -249,6 +255,17 @@ export default function Dashboard() {
             <p className="text-[10px] text-muted-foreground">next 30 days</p>
           </div>
         </div>
+      </motion.div>
+
+      {/* Onboarding checklist — shown until all steps done or dismissed */}
+      <motion.div {...fade(0.08)}>
+        <OnboardingChecklist
+          audits={audits}
+          recommendations={recommendations}
+          monitorReports={monitorReports}
+          userActivity={userActivity}
+          contracts={contractsDash}
+        />
       </motion.div>
 
       {/* Action Queue + Renewal Timeline side by side on larger screens */}

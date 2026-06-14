@@ -1,5 +1,16 @@
 import { useState } from "react";
-import { RefreshCw, ChevronDown, ChevronUp, AlertTriangle, CheckCircle2, Clock, TrendingUp } from "lucide-react";
+import { RefreshCw, ChevronDown, ChevronUp, AlertTriangle, CheckCircle2, Clock, TrendingUp, Flame } from "lucide-react";
+
+function timeAgo(dateStr) {
+  if (!dateStr) return null;
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  if (days === 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 7) return `${days}d ago`;
+  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  return `${Math.floor(days / 30)}mo ago`;
+}
 
 function formatCurrency(val) {
   if (!val) return "—";
@@ -30,10 +41,23 @@ export default function MonitorCard({ audit, reports, isGenerating, onGenerate, 
               </span>
             )}
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {audit.team_size} people · ${audit.monthly_budget?.toLocaleString()}/mo budget
-            {latest ? ` · Last report: ${latest.report_period}` : " · No reports yet"}
-          </p>
+          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+            <p className="text-xs text-muted-foreground">
+              {audit.team_size} people · ${audit.monthly_budget?.toLocaleString()}/mo budget
+            </p>
+            {latest ? (
+              <span className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                timeAgo(latest.updated_date) === "today" || timeAgo(latest.updated_date) === "yesterday"
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  : "bg-muted text-muted-foreground border border-border/50"
+              }`}>
+                <Flame className="w-2.5 h-2.5" />
+                Last run: {timeAgo(latest.updated_date) || latest.report_period}
+              </span>
+            ) : (
+              <span className="text-[10px] text-amber-600 font-medium">No reports yet — run your first report</span>
+            )}
+          </div>
         </div>
 
         {/* Stats from latest */}

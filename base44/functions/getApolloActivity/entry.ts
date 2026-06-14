@@ -13,20 +13,20 @@ Deno.serve(async (req) => {
     }
     if (!apiKey) return Response.json({ success: false, not_configured: true, error: 'APOLLO_API_KEY not configured' }, { status: 200 });
 
-    // Fetch users from Apollo.io (v1 API with header-based auth)
-    const usersRes = await fetch('https://api.apollo.io/api/v1/users/search?page=1&per_page=200', {
-      method: 'GET',
+    // Apollo v1 API — must be POST with JSON body
+    const usersRes = await fetch('https://api.apollo.io/api/v1/users/search', {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
         'Cache-Control': 'no-cache',
         'accept': 'application/json',
       },
+      body: JSON.stringify({ api_key: apiKey, page: 1, per_page: 200 }),
     });
 
     if (!usersRes.ok) {
       const err = await usersRes.json().catch(() => ({}));
-      return Response.json({ success: false, error: `Apollo API error (${usersRes.status}): ${err.message || err.error || 'Check your API key'}` }, { status: 200 });
+      return Response.json({ success: false, error: `Apollo API error (${usersRes.status}): ${err.message || err.error || 'Check your API key and ensure it has team member read access'}` }, { status: 200 });
     }
 
     const data = await usersRes.json();
