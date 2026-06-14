@@ -163,6 +163,32 @@ export default function Dashboard() {
           </Link>
         </div>
 
+        {/* Live coverage nudge — shown when activity data is mostly estimated */}
+        {(() => {
+          const liveCount = [...new Set((userActivity || []).filter((a) => a.source === "live").map((a) => a.tool_name))].length;
+          const totalCount = [...new Set((userActivity || []).map((a) => a.tool_name))].length;
+          const pct = totalCount > 0 ? Math.round((liveCount / totalCount) * 100) : 0;
+          if (pct >= 80 || totalCount === 0) return null;
+          return (
+            <div className="mb-5 glass-card border-primary/20 bg-primary/5 flex items-center gap-3 px-4 py-3 rounded-xl">
+              <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center flex-shrink-0">
+                <Zap className="w-4 h-4 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold">
+                  {pct}% live data coverage — connect more tools for accurate savings numbers
+                </p>
+                <p className="text-[11px] text-muted-foreground">Your recommendations are {pct < 40 ? "mostly" : "partly"} based on estimates.</p>
+              </div>
+              <Link to="/data-coverage" className="flex-shrink-0">
+                <Button size="sm" variant="outline" className="gap-1.5 text-primary border-primary/30 hover:bg-primary/5 text-xs">
+                  Improve Coverage <ArrowRight className="w-3 h-3" />
+                </Button>
+              </Link>
+            </div>
+          );
+        })()}
+
         {/* Big 4 KPI cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {/* Monthly Spend */}

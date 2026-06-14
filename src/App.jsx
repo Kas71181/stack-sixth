@@ -16,6 +16,7 @@ import Monitoring from './pages/Monitoring';
 import ContractIntelligence from './pages/ContractIntelligence';
 import SwitchPlanner from './pages/SwitchPlanner';
 import SettingsPage from './pages/SettingsPage';
+import DataCoverageSetup from './pages/DataCoverageSetup';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -62,6 +63,7 @@ const AuthenticatedApp = () => {
         <Route path="/contracts" element={<ContractIntelligence />} />
         <Route path="/switch-planner" element={<SwitchPlanner />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/data-coverage" element={<DataCoverageSetup />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
 
