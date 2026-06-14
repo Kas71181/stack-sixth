@@ -56,12 +56,11 @@ export default function Results() {
   };
 
   const handleShare = async () => {
-    const url = window.location.href.split("?")[0];
+    const shareUrl = `${window.location.origin}/shared-report?id=${id}`;
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(shareUrl);
     } catch {
-      // Fallback for browsers that block clipboard access
-      prompt("Copy this link:", url);
+      prompt("Copy this shareable link:", shareUrl);
       return;
     }
     setCopied(true);

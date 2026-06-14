@@ -1,16 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
+import { useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { TrendingUp, Users, DollarSign, Award } from "lucide-react";
 
 export default function BenchmarkPanel({ integrations = [] }) {
   const { user } = useAuth();
 
-  const { data: benchmarks = [] } = useQuery({
+  const { data: benchmarks = [], refetch } = useQuery({
     queryKey: ["benchmarks"],
     queryFn: () => base44.entities.BenchmarkData.list("-sample_count", 50),
   });
+
+  // Seed AI benchmarks on first load if empty
+  useEffect(() => {
+    if (benchmarks.length === 0) {
+      base44.functions.invoke("seedBenchmarks", {}).then(() => refetch()).catch(() => {});
+    }
+  }, [benchmarks.length]);
 
   // Match user's tools against benchmark data
   const comparisons = integrations

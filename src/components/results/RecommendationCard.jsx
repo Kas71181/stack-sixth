@@ -1,9 +1,11 @@
-import { ChevronDown, ArrowRight, Link2, Star, Clock, AlertTriangle, CheckCircle2, ShoppingCart, Check, ExternalLink, ShieldCheck, SendHorizonal, GitBranch, Calendar, FileOutput, UserCircle } from "lucide-react";
+import { ChevronDown, ArrowRight, Link2, Star, Clock, AlertTriangle, CheckCircle2, ShoppingCart, Check, ExternalLink, ShieldCheck, SendHorizonal, GitBranch, Calendar, FileOutput, UserCircle, Ticket } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/components/cart/CartContext";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useAuth } from "@/lib/AuthContext";
+import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 
 function ToolLogo({ name, index }) {
   const [imgError, setImgError] = useState(false);
@@ -68,6 +70,32 @@ export default function RecommendationCard({ rec, index, auditName = "", onUpdat
   const [assignee, setAssignee] = useState(rec.assignee || "");
   const [dueDate, setDueDate] = useState(rec.due_date || "");
   const [saving, setSaving] = useState(false);
+  const [creatingIssue, setCreatingIssue] = useState(false);
+  const [issueUrl, setIssueUrl] = useState(null);
+
+  const handleCreateLinearIssue = async (e) => {
+    e.stopPropagation();
+    setCreatingIssue(true);
+    try {
+      const res = await base44.functions.invoke("createLinearIssue", {
+        title: `[Stack Sixth] ${rec.name} — ${rec.category}`,
+        description: `**Recommendation from Stack Sixth**\n\n${rec.savings_or_roi_note || ""}\n\n**Why it fits:**\n${(rec.why_it_fits || []).map((w) => `- ${w}`).join("\n")}\n\nPriority: ${rec.implementation_priority}\nEstimated savings: $${rec.estimated_savings_opportunity || 0}/mo`,
+        priority: rec.implementation_priority === "high" ? 1 : rec.implementation_priority === "medium" ? 2 : 3,
+      });
+      if (res.data?.success) {
+        setIssueUrl(res.data.issue?.url);
+        toast.success(`Linear issue created: ${res.data.issue?.identifier}`);
+      } else if (res.data?.not_configured) {
+        toast.error("Add your Linear API key in Settings → API Credentials");
+      } else {
+        toast.error(res.data?.error || "Failed to create issue");
+      }
+    } catch (err) {
+      toast.error("Failed to create Linear issue");
+    } finally {
+      setCreatingIssue(false);
+    }
+  };
 
   const { addItem, items } = useCart();
   const { getUrl } = useAffiliateLinks();
@@ -285,6 +313,22 @@ export default function RecommendationCard({ rec, index, auditName = "", onUpdat
                 )}
               </div>
             )}
+
+            {/* Linear issue */}
+            <div className="mt-3 pt-3 border-t border-border/40">
+              {issueUrl ? (
+                <a href={issueUrl} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
+                  <Ticket className="w-3.5 h-3.5" /> View in Linear →
+                </a>
+              ) : (
+                <button type="button" onClick={handleCreateLinearIssue} disabled={creatingIssue}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-50 text-violet-700 border border-violet-200 text-xs font-semibold hover:bg-violet-100 transition-colors disabled:opacity-50">
+                  {creatingIssue ? <Clock className="w-3.5 h-3.5 animate-spin" /> : <Ticket className="w-3.5 h-3.5" />}
+                  Create Linear Issue
+                </button>
+              )}
+            </div>
 
             <div className="mt-3 pt-3 border-t border-border/40 flex flex-wrap items-center gap-2">
               {approvalStatus === "none" && (
