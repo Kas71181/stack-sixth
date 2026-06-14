@@ -9,6 +9,7 @@ import GlobalSearch from "@/components/GlobalSearch";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import OnboardingChecklist from "@/components/dashboard/OnboardingChecklist";
 
 const navItems = [
   { path: "/", label: "Dashboard", icon: Home },
@@ -190,8 +191,19 @@ export default function Layout() {
         </div>
       </header>
 
+      {/* Onboarding checklist — persistent banner across all pages until dismissed */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5">
+        <OnboardingChecklist
+          audits={audits}
+          recommendations={recommendations}
+          monitorReports={monitorReports}
+          userActivity={userActivity}
+          contracts={contracts}
+        />
+      </div>
+
       {/* Page content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-28 sm:pb-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28 sm:pb-10">
         <Outlet />
       </main>
 

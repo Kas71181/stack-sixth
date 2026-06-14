@@ -11,7 +11,6 @@ import SpendByCategoryChart from "@/components/dashboard/SpendByCategoryChart";
 import MonthlySpendTrendChart from "@/components/dashboard/MonthlySpendTrendChart";
 import QuickScan from "@/components/dashboard/QuickScan";
 import SavingsScoreboard from "@/components/dashboard/SavingsScoreboard";
-import OnboardingChecklist from "@/components/dashboard/OnboardingChecklist";
 import RenewalTimeline from "@/components/dashboard/RenewalTimeline";
 import SpendHistoryChart from "@/components/dashboard/SpendHistoryChart";
 
@@ -251,17 +250,6 @@ export default function Dashboard() {
             <p className="text-[10px] text-muted-foreground">next 30 days</p>
           </div>
         </div>
-      </motion.div>
-
-      {/* Onboarding checklist — shown until all steps done or dismissed */}
-      <motion.div {...fade(0.08)}>
-        <OnboardingChecklist
-          audits={audits}
-          recommendations={recommendations}
-          monitorReports={monitorReports}
-          userActivity={userActivity}
-          contracts={contracts}
-        />
       </motion.div>
 
       {/* Action Queue + Renewal Timeline side by side on larger screens */}
