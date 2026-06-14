@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { motion } from "framer-motion";
-import { AlertTriangle, RefreshCw, Activity, Plug } from "lucide-react";
+import { AlertTriangle, RefreshCw, Activity, Plug, ArrowRight, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
@@ -16,7 +16,6 @@ export default function UsageAnalytics({ syncKey = 0 }) {
   const [syncing, setSyncing] = useState(false);
   const [filter, setFilter] = useState("All");
 
-  // Re-fetch when a live sync happens from Integrations tab
   const { data: activities = [], isLoading, refetch } = useQuery({
     queryKey: ["user-activity", user?.id],
     queryFn: () => base44.entities.UserActivity.list(),
@@ -37,24 +36,20 @@ export default function UsageAnalytics({ syncKey = 0 }) {
     enabled: !!user?.id,
   });
 
-  // Step 1: Separate live individual records from estimated/aggregate records
-  const liveUsersMap = {}; // toolName -> live user records
-  const estimatedMap = {}; // toolName -> aggregate/estimated record
+  // ── Build per-tool display records ──────────────────────────────────────────
+  const liveUsersMap = {};
+  const estimatedMap = {};
 
   activities.forEach((a) => {
     if (a.source === "live" && a.user_email !== "aggregate@placeholder") {
       if (!liveUsersMap[a.tool_name]) liveUsersMap[a.tool_name] = [];
       liveUsersMap[a.tool_name].push(a);
     } else {
-      // Keep most recent estimated/aggregate record per tool
       if (!estimatedMap[a.tool_name]) estimatedMap[a.tool_name] = a;
     }
   });
 
-  // Step 2: Build one display record per tool
   const toolMap = {};
-
-  // Add all tools that have live data — synthesize a clean summary
   Object.keys(liveUsersMap).forEach((toolName) => {
     const users = liveUsersMap[toolName];
     const avg = (key) => Math.round(users.reduce((s, u) => s + (u[key] || 0), 0) / users.length);
@@ -71,14 +66,9 @@ export default function UsageAnalytics({ syncKey = 0 }) {
       liveUsers: users,
     };
   });
-
-  // Add estimated tools that have no live data
   Object.keys(estimatedMap).forEach((toolName) => {
-    if (!toolMap[toolName]) {
-      toolMap[toolName] = { ...estimatedMap[toolName], liveUsers: [] };
-    }
+    if (!toolMap[toolName]) toolMap[toolName] = { ...estimatedMap[toolName], liveUsers: [] };
   });
-
   integrations.forEach((i) => {
     if (toolMap[i.tool_name]) {
       toolMap[i.tool_name].category = i.category;
@@ -86,8 +76,53 @@ export default function UsageAnalytics({ syncKey = 0 }) {
       toolMap[i.tool_name].active_users = i.active_users;
     }
   });
+
   const tools = Object.values(toolMap);
 
+  // ── Enrich with CPAU + utilRate ──────────────────────────────────────────────
+  const enrichedTools = tools.map((t) => {
+    const activeCount = t.liveUsers?.length > 0
+      ? t.liveUsers.filter((u) => u.status === "Active").length
+      : t.active_users || 0;
+    const totalCost = t.licensed_seats > 0
+      ? t.license_cost_per_month * t.licensed_seats
+      : t.license_cost_per_month || 0;
+    const cpau = activeCount > 0 && totalCost > 0 ? Math.round(totalCost / activeCount) : null;
+    const utilRate = t.licensed_seats > 0
+      ? Math.round((activeCount / t.licensed_seats) * 100)
+      : null;
+    return { ...t, cpau, utilRate };
+  });
+
+  // ── Coverage stats ───────────────────────────────────────────────────────────
+  const liveToolNames = new Set(Object.keys(liveUsersMap));
+  const totalToolCount = enrichedTools.length;
+  const liveToolCount = enrichedTools.filter((t) => t.source === "live").length;
+  const estToolCount = totalToolCount - liveToolCount;
+  const coveragePct = totalToolCount > 0 ? Math.round((liveToolCount / totalToolCount) * 100) : 0;
+  const coverageColor = coveragePct >= 80 ? "bg-emerald-500" : coveragePct >= 50 ? "bg-amber-400" : "bg-primary";
+
+  // ── Summary stats ────────────────────────────────────────────────────────────
+  const wasted = enrichedTools.filter((t) => t.wasted_cost_flag);
+  const totalWaste = wasted.reduce((s, t) => {
+    const seats = t.licensed_seats > 0 ? t.licensed_seats : 1;
+    return s + (t.license_cost_per_month || 0) * seats;
+  }, 0);
+  const avgScore = tools.length ? Math.round(tools.reduce((s, t) => s + (t.activity_score || 0), 0) / tools.length) : 0;
+  const healthyCount = tools.filter((t) => t.status === "Active").length;
+
+  // ── Filtering ────────────────────────────────────────────────────────────────
+  const FILTERS = ["All", "Healthy", "At Risk", "Wasted"];
+  const statusMap = { Healthy: "Active", "At Risk": "Dormant", Wasted: "Inactive" };
+
+  const filtered = filter === "All"
+    ? enrichedTools
+    : enrichedTools.filter((t) => {
+        if (filter === "Wasted") return t.status === "Inactive" || t.status === "Never Logged In";
+        return t.status === statusMap[filter];
+      });
+
+  // ── Sync from stack ──────────────────────────────────────────────────────────
   const handleSyncFromStack = async () => {
     if (!integrations.length) return toast.error("No tools found in your stack.");
     setSyncing(true);
@@ -122,39 +157,6 @@ export default function UsageAnalytics({ syncKey = 0 }) {
     setSyncing(false);
   };
 
-  const FILTERS = ["All", "Healthy", "At Risk", "Wasted"];
-  const statusMap = { Healthy: "Active", "At Risk": "Dormant", Wasted: "Inactive" };
-
-  const filtered = filter === "All"
-    ? enrichedTools
-    : enrichedTools.filter((t) => {
-        if (filter === "Wasted") return t.status === "Inactive" || t.status === "Never Logged In";
-        return t.status === statusMap[filter];
-      });
-
-  const wasted = tools.filter((t) => t.wasted_cost_flag);
-  const totalWaste = wasted.reduce((s, t) => {
-    const seats = t.licensed_seats > 0 ? t.licensed_seats : 1;
-    return s + (t.license_cost_per_month || 0) * seats;
-  }, 0);
-  const avgScore = tools.length ? Math.round(tools.reduce((s, t) => s + (t.activity_score || 0), 0) / tools.length) : 0;
-  const healthyCount = tools.filter((t) => t.status === "Active").length;
-
-  // Enrich each tool with CPAU
-  const enrichedTools = tools.map((t) => {
-    const activeCount = t.liveUsers?.length > 0
-      ? t.liveUsers.filter((u) => u.status === "Active").length
-      : t.active_users || 0;
-    const totalCost = t.licensed_seats > 0
-      ? t.license_cost_per_month * t.licensed_seats
-      : t.license_cost_per_month || 0;
-    const cpau = activeCount > 0 && totalCost > 0 ? Math.round(totalCost / activeCount) : null;
-    const utilRate = t.licensed_seats > 0
-      ? Math.round((activeCount / t.licensed_seats) * 100)
-      : null;
-    return { ...t, cpau, utilRate };
-  });
-
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -174,20 +176,66 @@ export default function UsageAnalytics({ syncKey = 0 }) {
         </Button>
       </div>
 
-      {/* Summary stats */}
-      {tools.length > 0 && (
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-card border border-border/60 rounded-2xl p-4 text-center">
-            <p className="text-2xl font-extrabold text-primary">{avgScore}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Avg Health Score</p>
+      {/* ── Consolidated Coverage + Stats row ─────────────────────────────── */}
+      {totalToolCount > 0 && (
+        <div className="glass-card p-4 space-y-3">
+          {/* Coverage bar */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold">Live Data Coverage</span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    coveragePct >= 80 ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700/40"
+                    : coveragePct >= 50 ? "bg-amber-50 text-amber-700 border border-amber-200"
+                    : "bg-primary/10 text-primary border border-primary/20"
+                  }`}>
+                    {coveragePct}%
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                    {liveToolCount} live
+                  </span>
+                  {estToolCount > 0 && (
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
+                      {estToolCount} estimated
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ${coverageColor}`}
+                  style={{ width: `${coveragePct}%` }}
+                />
+              </div>
+            </div>
+            {coveragePct < 80 && (
+              <Link to="/data-coverage" className="flex-shrink-0">
+                <Button size="sm" variant="outline" className="gap-1 text-xs border-primary/30 text-primary hover:bg-primary/5 h-7 px-2.5">
+                  <Zap className="w-3 h-3" /> Improve <ArrowRight className="w-3 h-3" />
+                </Button>
+              </Link>
+            )}
           </div>
-          <div className="bg-card border border-border/60 rounded-2xl p-4 text-center">
-            <p className="text-2xl font-extrabold text-emerald-600">{healthyCount}/{tools.length}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Tools Healthy</p>
-          </div>
-          <div className="bg-card border border-border/60 rounded-2xl p-4 text-center">
-            <p className="text-2xl font-extrabold text-destructive">${Math.round(totalWaste).toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Wasted / Month</p>
+
+          {/* KPI strip */}
+          <div className="grid grid-cols-3 gap-2 pt-1 border-t border-border/40">
+            <div className="text-center">
+              <p className="text-xl font-extrabold text-primary tabular-nums">{avgScore}</p>
+              <p className="text-[10px] text-muted-foreground">Avg Health Score</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xl font-extrabold text-emerald-600 tabular-nums">{healthyCount}/{tools.length}</p>
+              <p className="text-[10px] text-muted-foreground">Tools Healthy</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xl font-extrabold text-destructive tabular-nums">${Math.round(totalWaste).toLocaleString()}</p>
+              <p className="text-[10px] text-muted-foreground">Wasted / Month</p>
+            </div>
           </div>
         </div>
       )}
@@ -197,28 +245,13 @@ export default function UsageAnalytics({ syncKey = 0 }) {
         <UsageInsightsBar tools={enrichedTools} contracts={contracts} />
       )}
 
-      {/* Live data nudge */}
-      {tools.length > 0 && tools.every((t) => t.source !== "live") && (
-        <div className="flex items-center justify-between gap-3 bg-primary/5 border border-primary/20 rounded-2xl px-4 py-3">
-          <div className="flex items-center gap-2">
-            <Plug className="w-4 h-4 text-primary flex-shrink-0" />
-            <p className="text-sm text-foreground">All data is estimated. Connect live sources to get real utilization.</p>
-          </div>
-          <Link to="/it-dashboard" state={{ tab: "integrations" }}>
-            <Button size="sm" variant="outline" className="gap-1.5 flex-shrink-0">
-              <Plug className="w-3.5 h-3.5" /> Connect Sources
-            </Button>
-          </Link>
-        </div>
-      )}
-
       {/* Waste callout */}
       {wasted.length > 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
+          className="flex items-center gap-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-2xl px-4 py-3">
           <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-          <p className="text-sm text-amber-800">
-            <strong>{wasted.length} tool{wasted.length > 1 ? "s" : ""}</strong> with low adoption detected — these scores will be flagged in your next monitoring report.
+          <p className="text-sm text-amber-800 dark:text-amber-400">
+            <strong>{wasted.length} tool{wasted.length > 1 ? "s" : ""}</strong> with low adoption — flagged for your next monitoring report.
           </p>
         </motion.div>
       )}
@@ -239,8 +272,8 @@ export default function UsageAnalytics({ syncKey = 0 }) {
             {f !== "All" && (
               <span className="ml-1.5 opacity-70">
                 ({f === "Wasted"
-                  ? tools.filter((t) => t.status === "Inactive" || t.status === "Never Logged In").length
-                  : tools.filter((t) => t.status === statusMap[f]).length})
+                  ? enrichedTools.filter((t) => t.status === "Inactive" || t.status === "Never Logged In").length
+                  : enrichedTools.filter((t) => t.status === statusMap[f]).length})
               </span>
             )}
           </button>
