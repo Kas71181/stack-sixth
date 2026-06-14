@@ -1,25 +1,23 @@
 import { useState, useMemo } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
-import { CheckCircle2, Clock, Zap, Activity, Search, ArrowRight } from "lucide-react";
+import { CheckCircle2, Clock, Zap, Search, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ConnectToolModal from "@/components/integrations/ConnectToolModal";
 import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 import { useAuth } from "@/lib/AuthContext";
 import { useWizardImport } from "@/hooks/useWizardImport";
-import LiveConnectPanel from "@/components/usage/LiveConnectPanel";
+import { Link } from "react-router-dom";
 import { TOOL_CATALOG } from "@/lib/toolCatalog";
 
 export default function IntegrationsPage({ onLiveSynced, onGoToUsage }) {
   const { user } = useAuth();
-  const qc = useQueryClient();
   const [selectedTool, setSelectedTool] = useState(null);
   const [catFilter, setCatFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [showWizard, setShowWizard] = useState(false);
-  const [activeSection, setActiveSection] = useState("tools"); // "tools" | "live-data"
 
   // Build grouped catalog from TOOL_CATALOG
   const allCategories = useMemo(() => [...new Set(TOOL_CATALOG.map((t) => t.category))].sort(), []);
@@ -68,41 +66,19 @@ export default function IntegrationsPage({ onLiveSynced, onGoToUsage }) {
         </div>
       </div>
 
-      {/* Section tabs */}
-      <div className="flex gap-1.5">
-        <button
-          onClick={() => setActiveSection("tools")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border transition-all ${activeSection === "tools" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border/60 text-muted-foreground hover:text-foreground"}`}
-        >
-          <Zap className="w-3.5 h-3.5" /> Tool Stack
-        </button>
-        <button
-          onClick={() => setActiveSection("live-data")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border transition-all ${activeSection === "live-data" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border/60 text-muted-foreground hover:text-foreground"}`}
-        >
-          <Activity className="w-3.5 h-3.5" /> Live Usage Data
-          <span className="text-[10px] bg-primary/20 text-primary font-bold px-1.5 py-0.5 rounded-full">BETA</span>
-        </button>
+      {/* Live data coverage nudge */}
+      <div className="glass-card border-primary/20 bg-primary/5 flex items-center gap-3 px-4 py-3 rounded-xl">
+        <Zap className="w-4 h-4 text-primary flex-shrink-0" />
+        <p className="text-sm flex-1">Want live per-user activity data? Use the <strong>Data Coverage Setup</strong> wizard to connect API sources.</p>
+        <Link to="/data-coverage">
+          <Button size="sm" variant="outline" className="gap-1.5 text-primary border-primary/30 hover:bg-primary/5 flex-shrink-0">
+            Set Up Coverage <ArrowRight className="w-3.5 h-3.5" />
+          </Button>
+        </Link>
       </div>
 
-      {/* Live Data section */}
-      {activeSection === "live-data" && (
-        <div className="space-y-3">
-          <div className="bg-accent/40 border border-primary/10 rounded-xl px-4 py-3">
-            <p className="text-sm text-foreground">Connect your tools below to pull <strong>real per-user activity data</strong> into Usage Health. Connected sources replace estimates with live utilization scores that feed directly into your monitoring reports.</p>
-          </div>
-          <LiveConnectPanel
-            integrations={integrations}
-            onSynced={() => {
-              qc.invalidateQueries({ queryKey: ["user-activity"] });
-              onLiveSynced?.();
-            }}
-          />
-        </div>
-      )}
-
-      {/* Tool Stack section */}
-      {activeSection === "tools" && (
+      {/* Tool Stack */}
+      {(
         <>
           {/* Search + filter bar */}
           <div className="flex flex-col sm:flex-row gap-2">
