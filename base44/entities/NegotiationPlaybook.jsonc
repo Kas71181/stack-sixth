@@ -1,0 +1,83 @@
+{
+  "name": "NegotiationPlaybook",
+  "type": "object",
+  "properties": {
+    "contract_id": {
+      "type": "string",
+      "title": "Contract ID"
+    },
+    "vendor_name": {
+      "type": "string",
+      "title": "Vendor Name"
+    },
+    "competitor_alternatives": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Competitor Alternatives to Mention"
+    },
+    "usage_leverage": {
+      "type": "string",
+      "title": "Usage / Utilization Leverage"
+    },
+    "budget_constraint": {
+      "type": "string",
+      "title": "Budget Constraint to Cite"
+    },
+    "target_discount_pct": {
+      "type": "number",
+      "title": "Target Discount %"
+    },
+    "walk_away_price": {
+      "type": "number",
+      "title": "Walk-Away Monthly Price"
+    },
+    "talking_points": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Talking Points"
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "won",
+        "lost",
+        "in_progress"
+      ],
+      "default": "pending",
+      "title": "Negotiation Outcome"
+    },
+    "actual_discount_pct": {
+      "type": "number",
+      "title": "Actual Discount Achieved %"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "vendor_name"
+  ],
+  "rls": {
+    "enabled": true,
+    "rules": {
+      "read": {
+        "type": "owner"
+      },
+      "create": {
+        "type": "authenticated"
+      },
+      "update": {
+        "type": "owner"
+      },
+      "delete": {
+        "type": "owner"
+      }
+    }
+  }
+}

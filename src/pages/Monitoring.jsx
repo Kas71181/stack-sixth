@@ -9,6 +9,7 @@ import MonitorCard from "../components/monitoring/MonitorCard";
 import MonitorSetupModal from "../components/monitoring/MonitorSetupModal";
 import MonitorReportDetail from "../components/monitoring/MonitorReportDetail";
 import SpendTrendChart from "../components/monitoring/SpendTrendChart";
+import AuditTrailPanel from "../components/audit/AuditTrailPanel";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -172,6 +173,17 @@ export default function Monitoring() {
           {selectedReport && (
             <motion.div {...fade(0.05)}>
               <MonitorReportDetail report={selectedReport} onClose={() => setSelectedReport(null)} />
+            </motion.div>
+          )}
+
+          {/* Audit trail */}
+          {reports.length > 0 && (
+            <motion.div {...fade(0.12)} className="glass-card p-5">
+              <AuditTrailPanel
+                entityType="ToolMonitor"
+                entityId={reports[0]?.audit_id}
+                title="Change History"
+              />
             </motion.div>
           )}
         </>

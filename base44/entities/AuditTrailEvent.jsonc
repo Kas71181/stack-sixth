@@ -1,0 +1,74 @@
+{
+  "name": "AuditTrailEvent",
+  "type": "object",
+  "properties": {
+    "entity_type": {
+      "type": "string",
+      "title": "Entity Type (e.g. Recommendation, Contract, ToolMonitor)"
+    },
+    "entity_id": {
+      "type": "string",
+      "title": "Entity ID"
+    },
+    "entity_label": {
+      "type": "string",
+      "title": "Human-readable label (tool name, vendor, etc.)"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "created",
+        "updated",
+        "status_changed",
+        "assigned",
+        "approved",
+        "rejected",
+        "comment_added",
+        "deleted"
+      ],
+      "title": "Action"
+    },
+    "actor_name": {
+      "type": "string",
+      "title": "Actor (user name)"
+    },
+    "actor_email": {
+      "type": "string",
+      "title": "Actor Email"
+    },
+    "old_value": {
+      "type": "string",
+      "title": "Previous Value"
+    },
+    "new_value": {
+      "type": "string",
+      "title": "New Value"
+    },
+    "note": {
+      "type": "string",
+      "title": "Note / Comment"
+    }
+  },
+  "required": [
+    "entity_type",
+    "entity_id",
+    "action"
+  ],
+  "rls": {
+    "enabled": true,
+    "rules": {
+      "read": {
+        "type": "owner"
+      },
+      "create": {
+        "type": "authenticated"
+      },
+      "update": {
+        "type": "owner"
+      },
+      "delete": {
+        "type": "owner"
+      }
+    }
+  }
+}

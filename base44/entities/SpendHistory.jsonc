@@ -1,0 +1,74 @@
+{
+  "name": "SpendHistory",
+  "type": "object",
+  "properties": {
+    "period": {
+      "type": "string",
+      "title": "Period (YYYY-MM)"
+    },
+    "total_spend": {
+      "type": "number",
+      "title": "Total Monthly Spend"
+    },
+    "tool_count": {
+      "type": "number",
+      "title": "Number of Tools"
+    },
+    "active_users": {
+      "type": "number",
+      "title": "Active Users"
+    },
+    "wasted_spend": {
+      "type": "number",
+      "title": "Wasted Spend"
+    },
+    "savings_captured": {
+      "type": "number",
+      "title": "Savings Captured This Period"
+    },
+    "snapshot": {
+      "type": "array",
+      "title": "Tool Breakdown",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tool_name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "monthly_cost": {
+            "type": "number"
+          },
+          "active_users": {
+            "type": "number"
+          },
+          "licensed_seats": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "period"
+  ],
+  "rls": {
+    "enabled": true,
+    "rules": {
+      "read": {
+        "type": "owner"
+      },
+      "create": {
+        "type": "authenticated"
+      },
+      "update": {
+        "type": "owner"
+      },
+      "delete": {
+        "type": "owner"
+      }
+    }
+  }
+}

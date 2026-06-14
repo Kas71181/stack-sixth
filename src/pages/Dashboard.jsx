@@ -13,6 +13,7 @@ import QuickScan from "@/components/dashboard/QuickScan";
 import SavingsScoreboard from "@/components/dashboard/SavingsScoreboard";
 import OnboardingChecklist from "@/components/dashboard/OnboardingChecklist";
 import RenewalTimeline from "@/components/dashboard/RenewalTimeline";
+import SpendHistoryChart from "@/components/dashboard/SpendHistoryChart";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -50,6 +51,12 @@ export default function Dashboard() {
   const { data: contracts } = useQuery({
     queryKey: ["contracts-dash", user?.id],
     queryFn: () => base44.entities.Contract.filter({ created_by_id: user?.id }),
+    enabled: !!user?.id,
+  });
+
+  const { data: integrations = [] } = useQuery({
+    queryKey: ["integrations-dash", user?.id],
+    queryFn: () => base44.entities.SaasIntegration.filter({ created_by_id: user?.id }),
     enabled: !!user?.id,
   });
 
@@ -315,6 +322,11 @@ export default function Dashboard() {
           <SpendByCategoryChart audits={completedAudits} />
         </motion.div>
       )}
+
+      {/* Spend History — data moat */}
+      <motion.div {...fade(0.22)}>
+        <SpendHistoryChart integrations={integrations} userActivity={userActivity || []} />
+      </motion.div>
     </div>
   );
 }

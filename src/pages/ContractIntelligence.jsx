@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
 import ContractUploader from "@/components/contracts/ContractUploader";
 import ContractCard from "@/components/contracts/ContractCard";
+import AuditTrailPanel from "@/components/audit/AuditTrailPanel";
 
 export default function ContractIntelligence() {
   const { user } = useAuth();
@@ -83,6 +84,13 @@ export default function ContractIntelligence() {
             <strong>{expiringSoon.length} contract{expiringSoon.length > 1 ? "s" : ""}</strong> renewing within 60 days —{" "}
             {expiringSoon.map(c => c.vendor_name).join(", ")}
           </p>
+        </div>
+      )}
+
+      {/* Audit Trail — recent playbook activity */}
+      {contracts.length > 0 && (
+        <div className="glass-card p-5">
+          <AuditTrailPanel entityType="NegotiationPlaybook" entityId={contracts[0]?.id} title="Recent Negotiation Activity" />
         </div>
       )}
 

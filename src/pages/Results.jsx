@@ -76,6 +76,16 @@ export default function Results() {
     queryKey: ["audit", id],
     queryFn: () => base44.entities.SoftwareAudit.get(id),
     enabled: !!user,
+    onSuccess: async (data) => {
+      // Auto-submit benchmark data on first view of a completed audit
+      if (data?.status === "completed" && data.existing_software?.length > 0) {
+        const sizeRange = data.team_size <= 10 ? "1-10" : data.team_size <= 50 ? "11-50" : data.team_size <= 200 ? "51-200" : data.team_size <= 500 ? "201-500" : "500+";
+        base44.functions.invoke("submitBenchmark", {
+          integrations: data.existing_software.map((s) => ({ tool_name: s.name, category: s.category, monthly_cost: s.monthly_cost })),
+          company_size: sizeRange,
+        }).catch(() => {}); // Fire-and-forget, silent failure ok
+      }
+    },
   });
 
   const handleRetry = async () => {

@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Calendar, User, MessageSquare, ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function RecommendationActions({ rec, auditId }) {
   const qc = useQueryClient();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [assignee, setAssignee] = useState(rec.assignee || "");
   const [dueDate, setDueDate] = useState(rec.due_date || "");
@@ -16,6 +18,22 @@ export default function RecommendationActions({ rec, auditId }) {
   const handleSave = async () => {
     setSaving(true);
     await base44.entities.Recommendation.update(rec.id, { assignee, due_date: dueDate, notes });
+
+    // Log to audit trail
+    const changes = [];
+    if (assignee !== rec.assignee) changes.push({ action: "assigned", old_value: rec.assignee, new_value: assignee });
+    if (notes !== rec.notes) changes.push({ action: "comment_added", note: notes });
+    for (const change of changes) {
+      await base44.entities.AuditTrailEvent.create({
+        entity_type: "Recommendation",
+        entity_id: rec.id,
+        entity_label: rec.tool_name,
+        actor_name: user?.full_name || "",
+        actor_email: user?.email || "",
+        ...change,
+      });
+    }
+
     qc.invalidateQueries({ queryKey: ["recommendations", auditId] });
     setSaving(false);
     setOpen(false);

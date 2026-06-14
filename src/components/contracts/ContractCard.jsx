@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Calendar, DollarSign, Users, AlertTriangle, CheckCircle2, Clock, ChevronDown, ChevronUp, Trash2, TrendingDown } from "lucide-react";
+import { Calendar, DollarSign, Users, AlertTriangle, CheckCircle2, Clock, ChevronDown, ChevronUp, Trash2, TrendingDown, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format, differenceInDays } from "date-fns";
+import NegotiationPlaybookModal from "./NegotiationPlaybookModal";
 
 const STATUS_STYLE = {
   "Active": "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -14,6 +15,7 @@ const STATUS_STYLE = {
 export default function ContractCard({ contract, onDeleted }) {
   const [expanded, setExpanded] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showPlaybook, setShowPlaybook] = useState(false);
 
   const daysUntilRenewal = contract.renewal_date
     ? differenceInDays(new Date(contract.renewal_date), new Date())
@@ -72,6 +74,15 @@ export default function ContractCard({ contract, onDeleted }) {
         </div>
       )}
 
+      {/* Playbook CTA */}
+      <button
+        onClick={() => setShowPlaybook(true)}
+        className="w-full flex items-center gap-2 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+      >
+        <BookOpen className="w-3.5 h-3.5" />
+        Negotiation Playbook
+      </button>
+
       {/* Expand/collapse */}
       <button
         onClick={() => setExpanded(!expanded)}
@@ -128,6 +139,9 @@ export default function ContractCard({ contract, onDeleted }) {
             {deleting ? "Deleting..." : "Delete Contract"}
           </Button>
         </div>
+      )}
+      {showPlaybook && (
+        <NegotiationPlaybookModal contract={contract} onClose={() => setShowPlaybook(false)} />
       )}
     </div>
   );

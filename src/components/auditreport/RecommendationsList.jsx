@@ -41,7 +41,19 @@ export default function RecommendationsList({ auditId }) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, status }) => base44.entities.Recommendation.update(id, { status }),
+    mutationFn: async ({ id, status, tool_name, oldStatus }) => {
+      await base44.entities.Recommendation.update(id, { status });
+      await base44.entities.AuditTrailEvent.create({
+        entity_type: "Recommendation",
+        entity_id: id,
+        entity_label: tool_name,
+        action: "status_changed",
+        actor_name: user?.full_name || "",
+        actor_email: user?.email || "",
+        old_value: oldStatus,
+        new_value: status,
+      });
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["recommendations", auditId] }),
   });
 
@@ -71,7 +83,7 @@ export default function RecommendationsList({ auditId }) {
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <select
                 value={rec.status}
-                onChange={(e) => updateMutation.mutate({ id: rec.id, status: e.target.value })}
+                onChange={(e) => updateMutation.mutate({ id: rec.id, status: e.target.value, tool_name: rec.tool_name, oldStatus: rec.status })}
                 className={`h-8 w-full sm:w-auto rounded-lg border border-input bg-background px-3 text-xs ${STATUS_STYLES[rec.status] || ""}`}
               >
                 {(isAdmin ? STATUS_OPTIONS_ADMIN : STATUS_OPTIONS_USER).map((s) => (
@@ -80,7 +92,7 @@ export default function RecommendationsList({ auditId }) {
               </select>
               {rec.status === "Pending Approval" && isAdmin && (
                 <button
-                  onClick={() => updateMutation.mutate({ id: rec.id, status: "Completed" })}
+                  onClick={() => updateMutation.mutate({ id: rec.id, status: "Completed", tool_name: rec.tool_name, oldStatus: rec.status })}
                   className="flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors w-full sm:w-auto"
                 >
                   <ShieldCheck className="w-3.5 h-3.5" /> Approve & Complete
