@@ -4,26 +4,25 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Fetch all companies with weekly digest enabled
-    const allCompanies = await base44.asServiceRole.entities.Company.list();
-    const companies = allCompanies.filter((c) => c.notif_weekly_digest !== false);
-
-    if (companies.length === 0) {
-      return Response.json({ success: true, message: 'No companies with digest enabled', sent: 0 });
-    }
-
-    // Fetch all users to email
+    // Fetch all users to email — one digest per user based on their own data
     const allUsers = await base44.asServiceRole.entities.User.list();
 
     let sent = 0;
 
-    for (const company of companies) {
-      // Gather data for this company
+    for (const user of allUsers) {
+      if (!user.email) continue;
+
+      // Find this user's company (most recent)
+      const userCompanies = await base44.asServiceRole.entities.Company.filter({ created_by_id: user.id });
+      const company = userCompanies[0];
+      if (!company || company.notif_weekly_digest === false) continue;
+
+      // Gather data scoped to this user
       const [integrations, recommendations, contracts, userActivity] = await Promise.all([
-        base44.asServiceRole.entities.SaasIntegration.filter({ company_id: company.id }),
-        base44.asServiceRole.entities.Recommendation.filter({ company_id: company.id }),
-        base44.asServiceRole.entities.Contract.filter({ company_id: company.id }),
-        base44.asServiceRole.entities.UserActivity.list(),
+        base44.asServiceRole.entities.SaasIntegration.filter({ created_by_id: user.id }),
+        base44.asServiceRole.entities.Recommendation.filter({ created_by_id: user.id }),
+        base44.asServiceRole.entities.Contract.filter({ created_by_id: user.id }),
+        base44.asServiceRole.entities.UserActivity.filter({ created_by_id: user.id }),
       ]);
 
       // Key metrics
@@ -141,16 +140,13 @@ Deno.serve(async (req) => {
 </body>
 </html>`;
 
-      // Send to all app users
-      for (const user of allUsers) {
-        if (!user.email) continue;
-        await base44.asServiceRole.integrations.Core.SendEmail({
-          to: user.email,
-          subject: `📊 Your Weekly SaaS Digest — ${company.name}`,
-          body: emailBody,
-        });
-        sent++;
-      }
+      // Send one email to this user
+      await base44.asServiceRole.integrations.Core.SendEmail({
+        to: user.email,
+        subject: `📊 Your Weekly SaaS Digest — ${company.name}`,
+        body: emailBody,
+      });
+      sent++;
     }
 
     return Response.json({ success: true, sent, companies: companies.length });
