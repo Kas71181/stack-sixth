@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Loader2, Sparkles, Globe, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import StepCompanyInfo from "../components/audit/StepCompanyInfo";
 import StepProcesses from "../components/audit/StepProcesses";
 import StepExistingSoftware from "../components/audit/StepExistingSoftware";
@@ -37,19 +38,42 @@ Now generate the JSON response from the input context.`;
 
 export default function AuditForm() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(""); // "icp" | "analysis"
+
+  // Seed from URL params (website referral) first, then fall back to last audit
+  const urlParams = new URLSearchParams(window.location.search);
   const [formData, setFormData] = useState({
-    company_name: "",
-    company_website: "",
-    user_type: "",
-    team_size: "",
-    monthly_budget: "",
+    company_name: urlParams.get("company_name") || "",
+    company_website: urlParams.get("website") || "",
+    user_type: urlParams.get("type") || "",
+    team_size: urlParams.get("team_size") ? parseInt(urlParams.get("team_size")) : "",
+    monthly_budget: urlParams.get("budget") ? parseInt(urlParams.get("budget")) : "",
     business_processes: [],
     pain_points: [],
     existing_software: [],
   });
+
+  // Pre-fill from the user's most recent completed audit if fields still empty
+  useEffect(() => {
+    if (!user?.id) return;
+    base44.entities.SoftwareAudit.filter({ created_by_id: user.id }, "-created_date", 1).then((audits) => {
+      const last = audits?.[0];
+      if (!last) return;
+      setFormData((prev) => ({
+        company_name: prev.company_name || last.company_name || "",
+        company_website: prev.company_website || last.company_website || "",
+        user_type: prev.user_type || last.user_type || "",
+        team_size: prev.team_size || last.team_size || "",
+        monthly_budget: prev.monthly_budget || last.monthly_budget || "",
+        business_processes: prev.business_processes.length ? prev.business_processes : (last.business_processes || []),
+        pain_points: prev.pain_points.length ? prev.pain_points : (last.pain_points || []),
+        existing_software: prev.existing_software.length ? prev.existing_software : (last.existing_software || []),
+      }));
+    });
+  }, [user?.id]);
 
   const update = (patch) => setFormData((prev) => ({ ...prev, ...patch }));
 
