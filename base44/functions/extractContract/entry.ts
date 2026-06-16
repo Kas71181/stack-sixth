@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
       else if (daysUntil <= 60) status = 'Expiring Soon';
     }
 
-    const contract = await base44.asServiceRole.entities.Contract.create({
+    const contract = await base44.entities.Contract.create({
       ...extracted,
       file_url,
       status,

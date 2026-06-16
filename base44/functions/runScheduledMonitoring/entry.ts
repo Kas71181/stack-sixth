@@ -5,6 +5,16 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
+    // Guard: only allow authenticated admins to invoke this directly
+    const isAuth = await base44.auth.isAuthenticated();
+    if (isAuth) {
+      const user = await base44.auth.me();
+      if (!user || user.role !== 'admin') {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
+    // If not authenticated at all, it's a scheduled platform call — allow through
+
     // Get all active monitors
     const monitors = await base44.asServiceRole.entities.ToolMonitor.filter({ is_active: true });
     const now = new Date();

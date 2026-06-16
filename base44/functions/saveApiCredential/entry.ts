@@ -9,8 +9,8 @@ Deno.serve(async (req) => {
     const { service, api_key, extra_fields } = await req.json();
     if (!service) return Response.json({ error: 'service is required' }, { status: 400 });
 
-    // Upsert: one credential record per service (scoped to the user via created_by_id)
-    const existing = await base44.entities.ApiCredential.filter({ service });
+    // Upsert: one credential record per service per user
+    const existing = await base44.entities.ApiCredential.filter({ service, created_by_id: user.id });
     if (existing.length > 0) {
       await base44.entities.ApiCredential.update(existing[0].id, { service, api_key, extra_fields });
     } else {

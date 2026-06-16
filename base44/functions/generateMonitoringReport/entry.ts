@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
 
     const audit = await base44.entities.SoftwareAudit.get(audit_id);
     if (!audit) return Response.json({ error: 'Audit not found' }, { status: 404 });
-    if (audit.created_by !== user.email) return Response.json({ error: 'Forbidden' }, { status: 403 });
+    if (audit.created_by_id !== user.id) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     const recommendations = audit.analysis_result?.recommendations || [];
     const existingSoftware = audit.existing_software || [];
