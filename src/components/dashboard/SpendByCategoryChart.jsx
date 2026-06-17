@@ -22,12 +22,18 @@ const CustomTooltip = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
-    <div className="bg-card border border-border/60 rounded-xl px-4 py-3 shadow-lg text-sm">
+    <div style={{
+      background: 'var(--glass-bg-strong)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      border: '1px solid var(--glass-border-subtle)',
+      boxShadow: 'var(--glass-shadow)',
+    }} className="rounded-xl px-4 py-3 text-sm">
       <p className="font-semibold mb-1">{d.category}</p>
-      <p className="text-muted-foreground">{d.count} tool{d.count !== 1 ? "s" : ""}</p>
-      <p className="font-mono font-bold text-primary">{formatCurrency(d.spend)}/mo</p>
+      <p className="text-muted-foreground text-xs">{d.count} tool{d.count !== 1 ? "s" : ""}</p>
+      <p className="font-mono font-bold text-primary mt-0.5">{formatCurrency(d.spend)}/mo</p>
       {d.savings > 0 && (
-        <p className="text-emerald-600 text-xs mt-1">Save ~{formatCurrency(d.savings)}/mo</p>
+        <p className="text-emerald-500 text-xs mt-1">Save ~{formatCurrency(d.savings)}/mo</p>
       )}
     </div>
   );
@@ -113,7 +119,7 @@ export default function SpendByCategoryChart({ audits }) {
               tickLine={false}
               width={52}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: "hsl(220 14% 96%)" }} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
             <Bar dataKey="spend" radius={[6, 6, 0, 0]}>
               {data.map((entry, i) => (
                 <Cell key={entry.category} fill={COLORS[i % COLORS.length]} />
