@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { ArrowLeft, Building2, Users, Info, Zap, Globe, Target, LayoutList, Columns2, Tag, RefreshCw, Activity, Share2, Check, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BudgetSummary from "../components/results/BudgetSummary";
 import ROISimulator from "../components/results/ROISimulator";
 import RecommendationCard from "../components/results/RecommendationCard";
@@ -63,6 +63,7 @@ export default function Results() {
       prompt("Copy this shareable link:", shareUrl);
       return;
     }
+    base44.analytics.track({ eventName: "report_shared", properties: { audit_id: id } });
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -70,6 +71,13 @@ export default function Results() {
   // Check if this is a freshly completed audit
   const isNew = new URLSearchParams(window.location.search).get("new") === "1";
   const [showMonitorPrompt, setShowMonitorPrompt] = useState(isNew);
+
+  // Track results view once audit loads
+  useEffect(() => {
+    if (!audit) return;
+    const totalSavings = audit.analysis_result?.recommendations?.reduce((s, r) => s + (r.estimated_savings_opportunity || 0), 0) || 0;
+    base44.analytics.track({ eventName: "results_viewed", properties: { audit_id: id, tool_count: audit.existing_software?.length || 0, total_savings: totalSavings, is_new: isNew } });
+  }, [audit?.id]);
 
   const { data: audit, isLoading } = useQuery({
     queryKey: ["audit", id],

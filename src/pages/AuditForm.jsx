@@ -77,6 +77,12 @@ export default function AuditForm() {
 
   const update = (patch) => setFormData((prev) => ({ ...prev, ...patch }));
 
+  // Track funnel step views
+  useEffect(() => {
+    const stepNames = ["audit_step_company_info", "audit_step_processes", "audit_step_software"];
+    base44.analytics.track({ eventName: stepNames[step], properties: { step } });
+  }, [step]);
+
   const canProceed = () => {
     if (step === 0) return formData.company_name && formData.user_type && formData.team_size;
     if (step === 1) return formData.business_processes.length > 0;
@@ -85,6 +91,7 @@ export default function AuditForm() {
 
   const handleSubmit = async () => {
     setLoading(true);
+    base44.analytics.track({ eventName: "audit_submitted", properties: { user_type: formData.user_type, team_size: formData.team_size, tool_count: formData.existing_software.length } });
 
     // Step 1: Fetch ICP from website if provided
     let icpProfile = null;
@@ -173,6 +180,7 @@ Return a structured ICP profile with: industry, business_model (B2B/B2C/B2B2C), 
 
     setLoading(false);
     setLoadingStep("");
+    base44.analytics.track({ eventName: "audit_completed", properties: { user_type: formData.user_type, tool_count: formData.existing_software.length } });
     navigate(`/results/${audit.id}?new=1`);
   };
 

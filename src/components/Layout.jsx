@@ -2,6 +2,7 @@ import { Outlet, Link, useLocation } from "react-router-dom";
 import { BarChart3, History, Home, Monitor, ShoppingCart, LogOut, User, Activity, ArrowLeftRight, Settings, ChevronDown } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useState, useRef, useEffect } from "react";
+import { base44 as analyticsClient } from "@/api/base44Client";
 import { useCart } from "@/components/cart/CartContext";
 import CartDrawer from "@/components/cart/CartDrawer";
 import AssistantChat from "@/components/assistant/AssistantChat";
@@ -22,6 +23,23 @@ const navItems = [
 export default function Layout() {
   const location = useLocation();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  // Track page views on every route change
+  useEffect(() => {
+    const pageNames = {
+      "/": "dashboard",
+      "/audit": "audit_form",
+      "/history": "history",
+      "/it-dashboard": "it_manager",
+      "/monitoring": "monitoring",
+      "/switch-planner": "switch_planner",
+      "/contracts": "contracts",
+      "/settings": "settings",
+      "/data-coverage": "data_coverage",
+    };
+    const page = pageNames[location.pathname] || location.pathname.replace("/", "").replace(/\//g, "_") || "unknown";
+    analyticsClient.analytics.track({ eventName: "page_view", properties: { page } });
+  }, [location.pathname]);
   const userMenuRef = useRef(null);
 
   useEffect(() => {
