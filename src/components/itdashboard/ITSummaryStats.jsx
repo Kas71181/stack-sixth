@@ -10,46 +10,49 @@ export default function ITSummaryStats({ total, pending, approved, rejected, too
       label: "Total Tools",
       value: total,
       icon: Layers,
-      color: "text-slate-500",
-      iconBg: "bg-slate-100",
-      border: "border-slate-200",
-      bg: "bg-white",
+      accent: "hsl(220 9% 46%)",
+      iconBg: "bg-muted",
+      iconColor: "text-muted-foreground",
     },
     {
       label: "Awaiting Review",
       value: pending,
       icon: Clock,
-      color: "text-amber-600",
-      iconBg: "bg-amber-100",
-      border: "border-amber-200",
-      bg: "bg-amber-50/50",
+      iconBg: "bg-amber-500/15",
+      iconColor: "text-amber-500",
+      valueColor: "text-amber-500",
+      glowColor: "rgba(245,158,11,0.08)",
+      borderColor: "rgba(245,158,11,0.18)",
     },
     {
       label: "Approved",
       value: approved,
       icon: CheckCircle2,
-      color: "text-emerald-600",
-      iconBg: "bg-emerald-100",
-      border: "border-emerald-200",
-      bg: "bg-emerald-50/50",
+      iconBg: "bg-emerald-500/15",
+      iconColor: "text-emerald-500",
+      valueColor: "text-emerald-500",
+      glowColor: "rgba(16,185,129,0.08)",
+      borderColor: "rgba(16,185,129,0.18)",
     },
     {
       label: "Rejected",
       value: rejected,
       icon: XCircle,
-      color: "text-red-500",
-      iconBg: "bg-red-100",
-      border: "border-red-200",
-      bg: "bg-red-50/50",
+      iconBg: "bg-red-500/15",
+      iconColor: "text-red-500",
+      valueColor: "text-red-500",
+      glowColor: "rgba(239,68,68,0.08)",
+      borderColor: "rgba(239,68,68,0.18)",
     },
     {
       label: "Approved Savings/mo",
       value: `$${totalSavings.toLocaleString()}`,
       icon: TrendingDown,
-      color: "text-primary",
-      iconBg: "bg-primary/10",
-      border: "border-primary/20",
-      bg: "bg-primary/5",
+      iconBg: "bg-primary/15",
+      iconColor: "text-primary",
+      valueColor: "text-primary",
+      glowColor: "hsl(var(--primary) / 0.08)",
+      borderColor: "hsl(var(--primary) / 0.20)",
       highlight: true,
     },
   ];
@@ -59,15 +62,21 @@ export default function ITSummaryStats({ total, pending, approved, rejected, too
       {stats.map((s) => (
         <div
           key={s.label}
-          className={`rounded-2xl p-4 border shadow-sm ${s.bg} ${s.border} transition-all hover:shadow-md`}
+          className="glass-card hover-lift rounded-2xl p-4"
+          style={s.borderColor ? {
+            borderColor: s.borderColor,
+            background: s.glowColor
+              ? `color-mix(in srgb, var(--glass-bg) 85%, ${s.glowColor})`
+              : undefined,
+          } : {}}
         >
-          <div className={`w-8 h-8 rounded-lg ${s.iconBg} flex items-center justify-center mb-3`}>
-            <s.icon className={`w-4 h-4 ${s.color}`} />
+          <div className={`w-8 h-8 rounded-xl ${s.iconBg} flex items-center justify-center mb-3`}>
+            <s.icon className={`w-4 h-4 ${s.iconColor}`} />
           </div>
-          <p className={`text-2xl font-bold ${s.highlight ? "text-primary" : "text-foreground"}`}>
+          <p className={`text-2xl font-extrabold font-mono tabular-nums ${s.valueColor || "text-foreground"}`}>
             {s.value}
           </p>
-          <p className="text-xs text-muted-foreground mt-1 leading-tight">{s.label}</p>
+          <p className="text-xs text-muted-foreground mt-1 leading-tight font-medium">{s.label}</p>
         </div>
       ))}
     </div>
