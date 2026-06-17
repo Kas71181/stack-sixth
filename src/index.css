@@ -122,35 +122,29 @@ body::before {
   z-index: -2;
   pointer-events: none;
 
-  /* Light mode: soft blue top-left, teal bottom-right, violet center, warm accent off-center */
+  /* Light mode — vivid enough to show through white glass cards */
   background:
-    /* Orb 1 — primary blue, top-left corner */
-    radial-gradient(ellipse 70% 55% at -5% 0%,   hsl(217 91% 60% / 0.18) 0%, transparent 60%),
-    /* Orb 2 — cyan/teal, bottom-right */
-    radial-gradient(ellipse 65% 50% at 105% 105%, hsl(199 89% 52% / 0.14) 0%, transparent 58%),
-    /* Orb 3 — violet, upper-right */
-    radial-gradient(ellipse 50% 40% at 88% 8%,   hsl(262 52% 62% / 0.10) 0%, transparent 55%),
-    /* Orb 4 — warm amber accent, lower-left */
-    radial-gradient(ellipse 45% 35% at 5% 92%,   hsl(27 87% 65% / 0.07)  0%, transparent 52%),
-    /* Central depth orb — subtle indigo wash */
-    radial-gradient(ellipse 80% 60% at 50% 48%,  hsl(230 60% 58% / 0.045) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 50% at -5% 2%,    hsl(217 91% 55% / 0.28) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 45% at 102% 100%,  hsl(199 89% 52% / 0.22) 0%, transparent 62%),
+    radial-gradient(ellipse 45% 38% at 90% 5%,    hsl(262 60% 62% / 0.18) 0%, transparent 58%),
+    radial-gradient(ellipse 40% 32% at 4%  94%,   hsl(27  90% 62% / 0.14) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 55% at 50% 50%,   hsl(230 65% 58% / 0.08) 0%, transparent 68%),
     hsl(var(--background));
 }
 
-/* Dark mode overrides — increase orb intensity so glass cards pop */
 .dark body::before,
 .dark::before {
   background:
-    radial-gradient(ellipse 70% 55% at -5% 0%,   hsl(217 89% 62% / 0.22) 0%, transparent 60%),
-    radial-gradient(ellipse 65% 50% at 105% 105%, hsl(199 89% 52% / 0.16) 0%, transparent 58%),
-    radial-gradient(ellipse 50% 40% at 88% 8%,   hsl(262 52% 62% / 0.14) 0%, transparent 55%),
-    radial-gradient(ellipse 45% 35% at 5% 92%,   hsl(27 87% 65% / 0.08)  0%, transparent 52%),
-    radial-gradient(ellipse 80% 60% at 50% 48%,  hsl(230 60% 58% / 0.06)  0%, transparent 65%),
+    radial-gradient(ellipse 60% 50% at -5% 2%,    hsl(217 89% 62% / 0.38) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 45% at 102% 100%,  hsl(199 89% 52% / 0.28) 0%, transparent 62%),
+    radial-gradient(ellipse 45% 38% at 90% 5%,    hsl(262 60% 62% / 0.24) 0%, transparent 58%),
+    radial-gradient(ellipse 40% 32% at 4%  94%,   hsl(27  90% 62% / 0.16) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 55% at 50% 50%,   hsl(230 65% 58% / 0.10) 0%, transparent 68%),
     hsl(var(--background));
 }
 
 /* ─────────────────────────────────────────────────
-   BACKGROUND LAYER 2 — Noise + fine dot grid overlay
+   BACKGROUND LAYER 2 — Dot grid (own layer, own opacity)
    ───────────────────────────────────────────────── */
 body::after {
   content: '';
@@ -158,22 +152,14 @@ body::after {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-
-  /* Noise texture at ~4% opacity — removes the "plastic" flat look */
-  background-image:
-    /* Dot grid — very faint 60px spacing for SaaS structure */
-    radial-gradient(circle, hsl(var(--foreground) / 0.055) 1px, transparent 1px),
-    /* Noise via SVG feTurbulence */
-    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-
-  background-size: 60px 60px, 180px 180px;
-  opacity: 0.038;
+  background-image: radial-gradient(circle, hsl(var(--foreground) / 0.12) 1px, transparent 1px);
+  background-size: 56px 56px;
+  opacity: 0.45;
 }
 
-/* In dark mode, slightly raise noise + grid visibility */
 .dark body::after,
 .dark::after {
-  opacity: 0.055;
+  opacity: 0.30;
 }
 
 @layer components {
