@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CheckCircle2, Loader2, Plug, RefreshCw, AlertCircle, Zap, ExternalLink, Key, PlayCircle, PencilLine, Users, Activity, TrendingUp, X } from "lucide-react";
 import { toast } from "sonner";
+import DataPrivacyModal from "@/components/usage/DataPrivacyModal";
 
 const CONNECTORS = [
   {
@@ -143,6 +144,7 @@ function ConnectorCard({ connector, onSynced, inStack = false }) {
   const [status, setStatus] = useState("idle"); // idle | connecting | connected | syncing | done | error | needs_setup
   const [stats, setStats] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
+  const [showPrivacy, setShowPrivacy] = useState(false);
 
   useEffect(() => {
     checkConnection();
@@ -302,10 +304,17 @@ function ConnectorCard({ connector, onSynced, inStack = false }) {
       {/* Action */}
       <div>
         {(status === "idle" || status === "error") && (
-          <Button size="sm" className="w-full gap-2" onClick={handleConnect}>
+          <Button size="sm" className="w-full gap-2" onClick={() => setShowPrivacy(true)}>
             <Plug className="w-3.5 h-3.5" />
             Connect {connector.label}
           </Button>
+        )}
+        {showPrivacy && (
+          <DataPrivacyModal
+            connector={connector}
+            onConfirm={() => { setShowPrivacy(false); handleConnect(); }}
+            onCancel={() => setShowPrivacy(false)}
+          />
         )}
         {status === "needs_setup" && (
           <Button size="sm" variant="outline" className="w-full gap-2 text-amber-700 border-amber-300 hover:bg-amber-50" onClick={handleConnect}>
