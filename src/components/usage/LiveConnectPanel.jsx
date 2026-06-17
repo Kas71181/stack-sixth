@@ -351,6 +351,7 @@ function ApiKeyConnectorCard({ connector, onSynced, inStack = false }) {
   const [errorMsg, setErrorMsg] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [fields, setFields] = useState({});
+  const [showPrivacy, setShowPrivacy] = useState(false);
 
   useEffect(() => {
     checkAndSync();
@@ -565,10 +566,17 @@ function ApiKeyConnectorCard({ connector, onSynced, inStack = false }) {
       {/* Actions */}
       <div className="flex gap-2">
         {!showForm && status !== "done" && (status === "idle" || status === "error") && (
-          <Button size="sm" className="w-full gap-2" onClick={() => setShowForm(true)}>
+          <Button size="sm" className="w-full gap-2" onClick={() => setShowPrivacy(true)}>
             <Key className="w-3.5 h-3.5" />
             Connect {connector.label}
           </Button>
+        )}
+        {showPrivacy && (
+          <DataPrivacyModal
+            connector={connector}
+            onConfirm={() => { setShowPrivacy(false); setShowForm(true); }}
+            onCancel={() => setShowPrivacy(false)}
+          />
         )}
         {showForm && status !== "syncing" && status !== "saving" && (
           <>
