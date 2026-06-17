@@ -10,10 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import AddToolModal from "@/components/stack/AddToolModal";
 
 const STATUS_COLORS = {
-  Connected: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  "Manual Upload": "bg-blue-50 text-blue-700 border-blue-200",
-  Pending: "bg-amber-50 text-amber-700 border-amber-200",
-  Failed: "bg-red-50 text-red-700 border-red-200",
+  Connected: "bg-emerald-500/12 text-emerald-500 border-emerald-500/25",
+  "Manual Upload": "bg-primary/10 text-primary border-primary/20",
+  Pending: "bg-amber-500/12 text-amber-500 border-amber-500/25",
+  Failed: "bg-red-500/12 text-red-500 border-red-500/25",
 };
 
 const CATEGORIES = ["All", "Communication", "Project Management", "CRM & Sales", "Productivity & Docs", "Analytics & BI", "Marketing", "Customer Support", "Identity & Security", "Dev Tools", "Finance & HR"];
@@ -195,7 +195,7 @@ export default function ToolStack() {
                   <span className="text-xs font-semibold w-8">{util}%</span>
                 </div>
                 {tool.last_synced && <span className="text-[10px] text-muted-foreground hidden md:block">{tool.last_synced}</span>}
-                {inactive > 0 && <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">{inactive} idle</span>}
+                {inactive > 0 && <span className="text-[10px] text-amber-500 bg-amber-500/10 border border-amber-500/25 px-2 py-0.5 rounded-full">{inactive} idle</span>}
                 {/* Actions */}
                 <div className="flex items-center gap-1 ml-auto">
                   <button

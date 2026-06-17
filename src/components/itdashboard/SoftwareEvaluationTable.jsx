@@ -1,32 +1,32 @@
 import { CheckCircle2, XCircle, Clock, ChevronRight, TrendingDown, Sparkles } from "lucide-react";
 
 const PRIORITY_STYLES = {
-  High: "bg-red-100 text-red-700 border border-red-200",
-  Medium: "bg-amber-100 text-amber-700 border border-amber-200",
-  Low: "bg-slate-100 text-slate-600 border border-slate-200",
+  High: "bg-red-500/12 text-red-500 border border-red-500/25",
+  Medium: "bg-amber-500/12 text-amber-500 border border-amber-500/25",
+  Low: "bg-muted text-muted-foreground border border-border/60",
 };
 
 const DecisionBadge = ({ decision }) => {
   if (decision === "approve")
     return (
-      <span className="flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-full">
+      <span className="flex items-center gap-1 text-xs font-semibold text-emerald-500 bg-emerald-500/12 border border-emerald-500/25 px-2.5 py-1 rounded-full">
         <CheckCircle2 className="w-3 h-3" /> Approved
       </span>
     );
   if (decision === "reject")
     return (
-      <span className="flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-100 border border-red-200 px-2.5 py-1 rounded-full">
+      <span className="flex items-center gap-1 text-xs font-semibold text-red-500 bg-red-500/12 border border-red-500/25 px-2.5 py-1 rounded-full">
         <XCircle className="w-3 h-3" /> Rejected
       </span>
     );
   if (decision === "defer")
     return (
-      <span className="flex items-center gap-1 text-xs font-semibold text-amber-600 bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-full">
+      <span className="flex items-center gap-1 text-xs font-semibold text-amber-500 bg-amber-500/12 border border-amber-500/25 px-2.5 py-1 rounded-full">
         <Clock className="w-3 h-3" /> Deferred
       </span>
     );
   return (
-    <span className="flex items-center gap-1 text-xs font-medium text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-full">
+    <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground bg-muted border border-border/60 px-2.5 py-1 rounded-full">
       <Clock className="w-3 h-3" /> Pending
     </span>
   );
@@ -38,7 +38,7 @@ const MatchScoreRing = ({ score }) => {
   return (
     <div className="relative w-10 h-10 flex-shrink-0">
       <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
-        <circle cx="18" cy="18" r="15" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+        <circle cx="18" cy="18" r="15" fill="none" stroke="hsl(var(--border))" strokeWidth="3" />
         <circle
           cx="18" cy="18" r="15" fill="none"
           stroke={color} strokeWidth="3"

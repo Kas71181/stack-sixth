@@ -103,7 +103,7 @@ export default function IntegrationsPage({ onLiveSynced, onGoToUsage }) {
 
           {Object.entries(groupedTools).map(([cat, tools], ci) => (
             <motion.div key={cat} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: ci * 0.03 }}
-              className="bg-card border border-border/60 rounded-2xl p-5">
+              className="glass-card rounded-2xl p-5">
               <h2 className="text-sm font-bold mb-3">{cat} <span className="text-muted-foreground font-normal">({tools.length})</span></h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
                 {tools.map((tool) => {
@@ -111,15 +111,25 @@ export default function IntegrationsPage({ onLiveSynced, onGoToUsage }) {
                   const integration = integrations.find((i) => i.tool_name === tool.name);
                   return (
                     <button key={tool.name} onClick={() => setSelectedTool({ name: tool.name, category: cat })}
-                      className={`flex flex-col items-center gap-2 p-3 rounded-xl border text-center transition-all hover:shadow-md ${connected ? "border-emerald-200 bg-emerald-50/50" : "border-border/60 bg-muted/30 hover:bg-card"}`}>
-                      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-lg font-bold text-muted-foreground">
+                      className={`flex flex-col items-center gap-2 p-3 rounded-xl border text-center transition-all hover-lift ${
+                        connected
+                          ? "border-emerald-500/25 bg-emerald-500/8 hover:border-emerald-500/40"
+                          : "border-border/50 bg-transparent hover:bg-white/5 dark:hover:bg-white/4 hover:border-border"
+                      }`}>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-colors ${
+                        connected ? "bg-emerald-500/15 text-emerald-400" : "bg-muted/60 text-muted-foreground"
+                      }`}>
                         {tool.name.charAt(0)}
                       </div>
-                      <p className="text-xs font-medium leading-tight">{tool.name}</p>
+                      <p className="text-xs font-semibold leading-tight text-foreground">{tool.name}</p>
                       {connected ? (
-                        <span className="flex items-center gap-0.5 text-[10px] text-emerald-700"><CheckCircle2 className="w-3 h-3" />Connected</span>
+                        <span className="flex items-center gap-0.5 text-[10px] font-medium text-emerald-500">
+                          <CheckCircle2 className="w-3 h-3" />Connected
+                        </span>
                       ) : (
-                        <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground"><Clock className="w-3 h-3" />Connect</span>
+                        <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                          <Clock className="w-3 h-3" />Connect
+                        </span>
                       )}
                       {tool.avg_monthly_cost > 0 && !connected && (
                         <span className="text-[10px] font-mono text-muted-foreground">~${tool.avg_monthly_cost}/mo</span>
