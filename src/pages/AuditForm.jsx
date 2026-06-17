@@ -183,30 +183,32 @@ Return a structured ICP profile with: industry, business_model (B2B/B2C/B2B2C), 
         {STEPS.map((s, i) => (
           <div key={s.key} className="flex items-center gap-2 flex-1">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
-                i <= step
-                  ? "bg-primary text-primary-foreground"
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all duration-200 flex-shrink-0 ${
+                i < step
+                  ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
+                  : i === step
+                  ? "bg-primary text-primary-foreground shadow-glow-sm"
                   : "bg-muted text-muted-foreground"
               }`}
             >
               {i + 1}
             </div>
             <span
-              className={`text-sm font-medium hidden sm:inline ${
+              className={`text-sm font-medium hidden sm:inline transition-colors ${
                 i <= step ? "text-foreground" : "text-muted-foreground"
               }`}
             >
               {s.title}
             </span>
             {i < STEPS.length - 1 && (
-              <div className={`flex-1 h-px ${i < step ? "bg-primary" : "bg-border"}`} />
+              <div className={`flex-1 h-px transition-all duration-300 ${i < step ? "bg-primary" : "bg-border"}`} />
             )}
           </div>
         ))}
       </div>
 
       {/* Step Content */}
-      <div className="bg-card border border-border/60 rounded-2xl p-6 sm:p-8">
+      <div className="glass-card border border-border/50 rounded-2xl p-6 sm:p-8">
         <div className="mb-6">
           <h2 className="text-xl font-bold">{STEPS[step].title}</h2>
           <p className="text-sm text-muted-foreground mt-0.5">{STEPS[step].subtitle}</p>

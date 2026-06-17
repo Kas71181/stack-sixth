@@ -80,17 +80,16 @@ export default function Dashboard() {
           {/* Hero glow */}
           <div className="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 w-[700px] h-64 rounded-full bg-primary/10 blur-3xl -z-10" />
 
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-card text-xs font-semibold text-primary mb-7 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-card text-xs font-semibold text-primary mb-8 border border-primary/15">
             <Sparkles className="w-3.5 h-3.5" />
             AI-Powered SaaS Spend Management
           </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight mb-5">
+          <h1 className="text-[2.6rem] sm:text-[3.25rem] font-extrabold tracking-tight leading-[1.1] mb-5">
             Take charge of your{" "}
             <span className="text-gradient">software spend</span>
           </h1>
-          <p className="text-muted-foreground text-lg leading-relaxed mb-8 max-w-lg mx-auto">
-            SMBs waste <strong className="text-foreground font-semibold">30–40%</strong> of their SaaS budget on duplicate tools, idle licenses, and overpriced plans.
-            Stack Sixth finds it — in minutes.
+          <p className="text-muted-foreground text-base sm:text-lg leading-relaxed mb-8 max-w-[460px] mx-auto">
+            SMBs waste <strong className="text-foreground font-semibold">30–40%</strong> of their SaaS budget on duplicate tools, idle licenses, and overpriced plans. Stack Sixth finds it — in minutes.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
             <Link to="/audit">
@@ -118,8 +117,8 @@ export default function Dashboard() {
               { emoji: "💡", title: "Get a savings plan", desc: "AI ranks your biggest opportunities with estimated monthly savings." },
               { emoji: "📈", title: "Track & act", desc: "Assign actions, monitor renewals, and measure savings over time." },
             ].map(({ emoji, title, desc }, i) => (
-              <motion.div key={title} {...fade(0.1 + i * 0.06)} className="glass-card hover-lift p-5 group cursor-default">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center mb-4 text-lg">
+              <motion.div key={title} {...fade(0.1 + i * 0.06)} className="glass-card hover-lift p-5 group cursor-default border border-border/60">
+                <div className="w-10 h-10 rounded-xl bg-primary/8 border border-primary/12 flex items-center justify-center mb-4 text-lg">
                   {emoji}
                 </div>
                 <p className="font-semibold text-sm mb-1.5">{title}</p>
@@ -155,13 +154,13 @@ export default function Dashboard() {
         {/* Radial hero glow */}
         <div className="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 w-[700px] h-56 rounded-full bg-primary/8 blur-3xl -z-10 dark:bg-primary/12" />
 
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-7">
           <div>
-            <p className="text-xs font-semibold text-primary/70 uppercase tracking-widest mb-1">Command Center</p>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight">
+            <p className="text-[11px] font-semibold text-primary/60 uppercase tracking-[0.1em] mb-1.5">Command Center</p>
+            <h1 className="text-2xl sm:text-[2rem] font-extrabold tracking-tight leading-tight">
               Good {getTimeOfDay()}, {firstName} 👋
             </h1>
-            <p className="text-sm text-muted-foreground mt-1.5">Your stack health at a glance.</p>
+            <p className="text-sm text-muted-foreground mt-1.5 font-medium">Your stack health at a glance.</p>
           </div>
           <Link to="/audit">
             <Button className="gap-2 flex-shrink-0 shadow-md shadow-primary/20 btn-glow active:scale-[0.97]" size="sm">
@@ -269,7 +268,7 @@ export default function Dashboard() {
       {/* Recent Audits */}
       <motion.div {...fade(0.15)}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-bold tracking-tight">Recent Audits</h2>
+          <h2 className="text-base font-bold tracking-tight text-foreground">Recent Audits</h2>
           <Link to="/history" className="text-xs text-primary font-semibold hover:text-primary/80 transition-colors flex items-center gap-1">
             View all <ArrowRight className="w-3 h-3" />
           </Link>
@@ -283,7 +282,7 @@ export default function Dashboard() {
               <motion.div key={audit.id} {...fade(0.15 + i * 0.04)}>
                 <Link
                   to={`/results/${audit.id}`}
-                  className="flex items-center justify-between glass-card hover-lift rounded-xl px-5 py-3.5 hover:border-primary/25 active:scale-[0.99] group block"
+                  className="flex items-center justify-between glass-card hover-lift rounded-xl px-5 py-4 hover:border-primary/20 active:scale-[0.99] group block border border-border/50"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/15 transition-colors">
