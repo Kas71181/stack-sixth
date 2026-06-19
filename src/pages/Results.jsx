@@ -46,15 +46,6 @@ export default function Results() {
   const [retryError, setRetryError] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const handleUpdateRec = async (index, updates) => {
-    const recs = [...(audit.analysis_result?.recommendations || [])];
-    recs[index] = { ...recs[index], ...updates };
-    await base44.entities.SoftwareAudit.update(audit.id, {
-      analysis_result: { ...audit.analysis_result, recommendations: recs },
-    });
-    queryClient.invalidateQueries({ queryKey: ["audit", id] });
-  };
-
   const handleShare = async () => {
     const shareUrl = `${window.location.origin}/shared-report?id=${id}`;
     try {
@@ -79,6 +70,15 @@ export default function Results() {
     // Poll every 3s while the analysis is still running
     refetchInterval: (query) => query.state.data?.status === "pending" ? 3000 : false,
   });
+
+  const handleUpdateRec = async (index, updates) => {
+    const recs = [...(audit?.analysis_result?.recommendations || [])];
+    recs[index] = { ...recs[index], ...updates };
+    await base44.entities.SoftwareAudit.update(audit.id, {
+      analysis_result: { ...audit.analysis_result, recommendations: recs },
+    });
+    queryClient.invalidateQueries({ queryKey: ["audit", id] });
+  };
 
   // Analytics + benchmark on first completed load
   useEffect(() => {
