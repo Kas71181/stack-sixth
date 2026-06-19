@@ -72,13 +72,6 @@ export default function Results() {
   const isNew = new URLSearchParams(window.location.search).get("new") === "1";
   const [showMonitorPrompt, setShowMonitorPrompt] = useState(isNew);
 
-  // Track results view once audit loads
-  useEffect(() => {
-    if (!audit) return;
-    const totalSavings = audit.analysis_result?.recommendations?.reduce((s, r) => s + (r.estimated_savings_opportunity || 0), 0) || 0;
-    base44.analytics.track({ eventName: "results_viewed", properties: { audit_id: id, tool_count: audit.existing_software?.length || 0, total_savings: totalSavings, is_new: isNew } });
-  }, [audit?.id]);
-
   const { data: audit, isLoading } = useQuery({
     queryKey: ["audit", id],
     queryFn: () => base44.entities.SoftwareAudit.get(id),
@@ -87,16 +80,19 @@ export default function Results() {
     refetchInterval: (query) => query.state.data?.status === "pending" ? 3000 : false,
   });
 
-  // Fire-and-forget benchmark submission once completed
+  // Analytics + benchmark on first completed load
   useEffect(() => {
-    if (audit?.status === "completed" && audit.existing_software?.length > 0) {
+    if (!audit || audit.status !== "completed") return;
+    const totalSavings = audit.analysis_result?.recommendations?.reduce((s, r) => s + (r.estimated_savings_opportunity || 0), 0) || 0;
+    base44.analytics.track({ eventName: "results_viewed", properties: { audit_id: id, tool_count: audit.existing_software?.length || 0, total_savings: totalSavings, is_new: isNew } });
+    if (audit.existing_software?.length > 0) {
       const sizeRange = audit.team_size <= 10 ? "1-10" : audit.team_size <= 50 ? "11-50" : audit.team_size <= 200 ? "51-200" : audit.team_size <= 500 ? "201-500" : "500+";
       base44.functions.invoke("submitBenchmark", {
         integrations: audit.existing_software.map((s) => ({ tool_name: s.name, category: s.category, monthly_cost: s.monthly_cost })),
         company_size: sizeRange,
       }).catch(() => {});
     }
-  }, [audit?.status]);
+  }, [audit?.id, audit?.status]);
 
   const handleRetry = async () => {
     setRetrying(true);
