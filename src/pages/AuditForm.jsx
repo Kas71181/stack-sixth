@@ -138,50 +138,55 @@ Return a structured ICP profile with: industry, business_model (B2B/B2C/B2B2C), 
       status: "pending",
     });
 
-    const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `${SYSTEM_PROMPT}\n\nInput:\n${JSON.stringify(input, null, 2)}`,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          summary: { type: "string" },
-          budget_fit: { type: "string" },
-          suggested_stack_total: { type: "number" },
-          quick_wins: { type: "array", items: { type: "string" } },
-          assumptions: { type: "array", items: { type: "string" } },
-          recommendations: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                name: { type: "string" },
-                category: { type: "string" },
-                estimated_monthly_cost: { type: "number" },
-                match_score: { type: "number" },
-                why_it_fits: { type: "array", items: { type: "string" } },
-                integration_notes: { type: "array", items: { type: "string" } },
-                savings_or_roi_note: { type: "string" },
-                implementation_priority: { type: "string" },
-                adopt_now_or_later: { type: "string" },
-                replacement_candidate_for: { type: "string" },
-                estimated_savings_opportunity: { type: "number" },
-                migration_risk: { type: "string" },
+    // Navigate immediately — Results page will poll until completed
+    setLoading(false);
+    setLoadingStep("");
+    navigate(`/results/${audit.id}?new=1`);
+
+    // Run analysis in background
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `${SYSTEM_PROMPT}\n\nInput:\n${JSON.stringify(input, null, 2)}`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            summary: { type: "string" },
+            budget_fit: { type: "string" },
+            suggested_stack_total: { type: "number" },
+            quick_wins: { type: "array", items: { type: "string" } },
+            assumptions: { type: "array", items: { type: "string" } },
+            recommendations: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  category: { type: "string" },
+                  estimated_monthly_cost: { type: "number" },
+                  match_score: { type: "number" },
+                  why_it_fits: { type: "array", items: { type: "string" } },
+                  integration_notes: { type: "array", items: { type: "string" } },
+                  savings_or_roi_note: { type: "string" },
+                  implementation_priority: { type: "string" },
+                  adopt_now_or_later: { type: "string" },
+                  replacement_candidate_for: { type: "string" },
+                  estimated_savings_opportunity: { type: "number" },
+                  migration_risk: { type: "string" },
+                },
               },
             },
           },
         },
-      },
-    });
-
-    await base44.entities.SoftwareAudit.update(audit.id, {
-      analysis_result: result,
-      icp_profile: icpProfile || null,
-      status: "completed",
-    });
-
-    setLoading(false);
-    setLoadingStep("");
-    base44.analytics.track({ eventName: "audit_completed", properties: { user_type: formData.user_type, tool_count: formData.existing_software.length } });
-    navigate(`/results/${audit.id}?new=1`);
+      });
+      await base44.entities.SoftwareAudit.update(audit.id, {
+        analysis_result: result,
+        icp_profile: icpProfile || null,
+        status: "completed",
+      });
+      base44.analytics.track({ eventName: "audit_completed", properties: { user_type: formData.user_type, tool_count: formData.existing_software.length } });
+    } catch {
+      await base44.entities.SoftwareAudit.update(audit.id, { status: "error" });
+    }
   };
 
   return (
