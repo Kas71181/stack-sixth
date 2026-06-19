@@ -83,17 +83,20 @@ export default function Results() {
     queryKey: ["audit", id],
     queryFn: () => base44.entities.SoftwareAudit.get(id),
     enabled: !!user,
-    onSuccess: async (data) => {
-      // Auto-submit benchmark data on first view of a completed audit
-      if (data?.status === "completed" && data.existing_software?.length > 0) {
-        const sizeRange = data.team_size <= 10 ? "1-10" : data.team_size <= 50 ? "11-50" : data.team_size <= 200 ? "51-200" : data.team_size <= 500 ? "201-500" : "500+";
-        base44.functions.invoke("submitBenchmark", {
-          integrations: data.existing_software.map((s) => ({ tool_name: s.name, category: s.category, monthly_cost: s.monthly_cost })),
-          company_size: sizeRange,
-        }).catch(() => {}); // Fire-and-forget, silent failure ok
-      }
-    },
+    // Poll every 3s while the analysis is still running
+    refetchInterval: (query) => query.state.data?.status === "pending" ? 3000 : false,
   });
+
+  // Fire-and-forget benchmark submission once completed
+  useEffect(() => {
+    if (audit?.status === "completed" && audit.existing_software?.length > 0) {
+      const sizeRange = audit.team_size <= 10 ? "1-10" : audit.team_size <= 50 ? "11-50" : audit.team_size <= 200 ? "51-200" : audit.team_size <= 500 ? "201-500" : "500+";
+      base44.functions.invoke("submitBenchmark", {
+        integrations: audit.existing_software.map((s) => ({ tool_name: s.name, category: s.category, monthly_cost: s.monthly_cost })),
+        company_size: sizeRange,
+      }).catch(() => {});
+    }
+  }, [audit?.status]);
 
   const handleRetry = async () => {
     setRetrying(true);
@@ -155,6 +158,18 @@ export default function Results() {
     return (
       <div className="flex items-center justify-center py-32">
         <div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (audit?.status === "pending") {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 gap-4 text-center">
+        <div className="w-12 h-12 border-4 border-muted border-t-primary rounded-full animate-spin" />
+        <div>
+          <p className="font-bold text-lg">Analyzing your stack…</p>
+          <p className="text-sm text-muted-foreground mt-1">Our AI is generating your recommendations. This usually takes 15–30 seconds.</p>
+        </div>
       </div>
     );
   }
