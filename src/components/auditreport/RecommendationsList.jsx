@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { TrendingDown, ShieldCheck } from "lucide-react";
+import { TrendingDown, ShieldCheck, ShoppingCart, Check } from "lucide-react";
 import RecommendationActions from "./RecommendationActions";
 import { useAuth } from "@/lib/AuthContext";
+import { useCart } from "@/components/cart/CartContext";
 
 const CAT_COLORS = {
   "Remove Tool": "bg-red-50 text-red-700 border-red-200",
@@ -33,6 +34,7 @@ const STATUS_STYLES = {
 export default function RecommendationsList({ auditId }) {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
+  const { addItem, items } = useCart();
   const qc = useQueryClient();
   const { data: recs = [] } = useQuery({
     queryKey: ["recommendations", auditId],
@@ -77,7 +79,21 @@ export default function RecommendationsList({ auditId }) {
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${PRIORITY_COLORS[rec.priority] || ""}`}>{rec.priority}</span>
                 <span className="font-semibold text-sm">{rec.tool_name}</span>
               </div>
-              <span className="text-sm font-bold text-emerald-600 font-mono">${rec.estimated_monthly_savings || 0}/mo</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-emerald-600 font-mono">${rec.estimated_monthly_savings || 0}/mo</span>
+                {(() => {
+                  const inCart = items.some((i) => i.name === rec.tool_name);
+                  return (
+                    <button
+                      onClick={() => { if (!inCart) addItem({ name: rec.tool_name, category: rec.category, estimated_savings_opportunity: rec.estimated_monthly_savings }, auditId); }}
+                      className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border font-medium transition-all ${inCart ? "bg-emerald-50 text-emerald-700 border-emerald-200 cursor-default" : "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"}`}
+                    >
+                      {inCart ? <Check className="w-3 h-3" /> : <ShoppingCart className="w-3 h-3" />}
+                      {inCart ? "Added" : "Add to Cart"}
+                    </button>
+                  );
+                })()}
+              </div>
             </div>
             <p className="text-sm text-muted-foreground mb-3">{rec.description}</p>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
