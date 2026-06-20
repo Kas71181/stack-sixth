@@ -62,16 +62,26 @@ export default function AuditForm() {
     base44.entities.SoftwareAudit.filter({ created_by_id: user.id }, "-created_date", 1).then((audits) => {
       const last = audits?.[0];
       if (!last) return;
-      setFormData((prev) => ({
-        company_name: prev.company_name || last.company_name || "",
-        company_website: prev.company_website || last.company_website || "",
-        user_type: prev.user_type || last.user_type || "",
-        team_size: prev.team_size || last.team_size || "",
-        monthly_budget: prev.monthly_budget || last.monthly_budget || "",
-        business_processes: prev.business_processes.length ? prev.business_processes : (last.business_processes || []),
-        pain_points: prev.pain_points.length ? prev.pain_points : (last.pain_points || []),
-        existing_software: prev.existing_software.length ? prev.existing_software : (last.existing_software || []),
-      }));
+      setFormData((prev) => {
+        const rawSoftware = prev.existing_software.length ? prev.existing_software : (last.existing_software || []);
+        const seen = new Set();
+        const dedupedSoftware = rawSoftware.filter((s) => {
+          const key = s.name?.toLowerCase().trim();
+          if (!key || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        return {
+          company_name: prev.company_name || last.company_name || "",
+          company_website: prev.company_website || last.company_website || "",
+          user_type: prev.user_type || last.user_type || "",
+          team_size: prev.team_size || last.team_size || "",
+          monthly_budget: prev.monthly_budget || last.monthly_budget || "",
+          business_processes: prev.business_processes.length ? prev.business_processes : (last.business_processes || []),
+          pain_points: prev.pain_points.length ? prev.pain_points : (last.pain_points || []),
+          existing_software: dedupedSoftware,
+        };
+      });
     });
   }, [user?.id]);
 
@@ -121,6 +131,14 @@ Return a structured ICP profile with: industry, business_model (B2B/B2C/B2B2C), 
     }
 
     setLoadingStep("analysis");
+    const seen = new Set();
+    const dedupedSoftware = formData.existing_software.filter((s) => {
+      const key = s.name?.toLowerCase().trim();
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
     const input = {
       company_name: formData.company_name,
       company_website: formData.company_website || null,
@@ -129,7 +147,7 @@ Return a structured ICP profile with: industry, business_model (B2B/B2C/B2B2C), 
       monthly_budget: formData.monthly_budget || null,
       business_processes: formData.business_processes,
       pain_points: formData.pain_points,
-      existing_software: formData.existing_software,
+      existing_software: dedupedSoftware,
       icp_profile: icpProfile || null,
     };
 
