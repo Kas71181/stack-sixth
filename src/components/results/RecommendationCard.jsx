@@ -144,14 +144,14 @@ export default function RecommendationCard({ rec, index, auditName = "", onUpdat
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); if (!inCart) addItem(rec, auditName); }}
-                className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg border font-medium transition-all ${
+                className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border font-medium transition-all ${
                   inCart
                     ? "bg-emerald-50 text-emerald-700 border-emerald-200 cursor-default"
                     : "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
                 }`}
               >
                 {inCart ? <Check className="w-3 h-3" /> : <ShoppingCart className="w-3 h-3" />}
-                <span className="hidden sm:inline">{inCart ? "Added" : "Add"}</span>
+                {inCart ? "Added" : "Add to Cart"}
               </button>
               {buyUrl && (
                 <a
