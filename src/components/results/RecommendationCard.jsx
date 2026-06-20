@@ -141,18 +141,20 @@ export default function RecommendationCard({ rec, index, auditName = "", onUpdat
               {rec.estimated_monthly_cost != null && (
                 <span className="hidden sm:block text-sm font-mono font-medium">${rec.estimated_monthly_cost}/mo</span>
               )}
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); if (!inCart) addItem(rec, auditName); }}
-                className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border font-medium transition-all ${
-                  inCart
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 cursor-default"
-                    : "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
-                }`}
-              >
-                {inCart ? <Check className="w-3 h-3" /> : <ShoppingCart className="w-3 h-3" />}
-                {inCart ? "Added" : "Add to Cart"}
-              </button>
+              {(approvalStatus === "approved" || inCart) && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); if (!inCart) addItem(rec, auditName); }}
+                  className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border font-medium transition-all ${
+                    inCart
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 cursor-default"
+                      : "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
+                  }`}
+                >
+                  {inCart ? <Check className="w-3 h-3" /> : <ShoppingCart className="w-3 h-3" />}
+                  {inCart ? "Added" : "Add to Cart"}
+                </button>
+              )}
               {buyUrl && (
                 <a
                   href={buyUrl}
