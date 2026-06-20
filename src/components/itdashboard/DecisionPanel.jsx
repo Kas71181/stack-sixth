@@ -1,5 +1,6 @@
-import { CheckCircle2, XCircle, Clock, X, Loader2, AlertTriangle, Info, DollarSign, Link2, TrendingDown, ArrowRight } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, X, Loader2, AlertTriangle, Info, DollarSign, Link2, TrendingDown, ArrowRight, ShoppingCart, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useCart } from "@/components/cart/CartContext";
 
 const RISK_CONFIG = {
   Low: { color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200", dot: "bg-emerald-500" },
@@ -15,6 +16,8 @@ const Section = ({ title, children }) => (
 );
 
 export default function DecisionPanel({ tool, onDecision, isSaving, onClose }) {
+  const { addItem, items } = useCart();
+
   if (!tool) {
     return (
       <div className="bg-card border border-border/60 rounded-2xl p-8 flex flex-col items-center justify-center h-full min-h-[300px] text-center">
@@ -157,8 +160,24 @@ export default function DecisionPanel({ tool, onDecision, isSaving, onClose }) {
         </div>
       </div>
 
+      {/* Add to Cart */}
+      <div className="px-5 pt-4 border-t border-border/40">
+        {(() => {
+          const inCart = items.some((i) => i.name === tool.name);
+          return (
+            <button
+              onClick={() => { if (!inCart) addItem({ name: tool.name, category: tool.category, estimated_monthly_cost: tool.estimated_monthly_cost, estimated_savings_opportunity: tool.estimated_savings_opportunity, match_score: tool.match_score }, tool._auditName); }}
+              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border transition-all ${inCart ? "bg-emerald-50 text-emerald-700 border-emerald-200 cursor-default" : "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"}`}
+            >
+              {inCart ? <Check className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
+              {inCart ? "Added to Cart" : "Add to Cart"}
+            </button>
+          );
+        })()}
+      </div>
+
       {/* Decision buttons */}
-      <div className="px-5 py-4 border-t border-border/40 bg-muted/20">
+      <div className="px-5 py-4 bg-muted/20">
         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Make a Decision</p>
         <div className="grid grid-cols-3 gap-2">
           <button
