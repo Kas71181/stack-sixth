@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { BarChart3, History, Home, Monitor, ShoppingCart, LogOut, User, Activity, ArrowLeftRight, Settings, ChevronDown } from "lucide-react";
+import { BarChart3, History, Home, Monitor, ShoppingCart, LogOut, User, Activity, ArrowLeftRight, Settings, ChevronDown, ClipboardList } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useState, useRef, useEffect } from "react";
 import { base44 as analyticsClient } from "@/api/base44Client";
@@ -18,6 +18,7 @@ const navItems = [
   { path: "/it-dashboard", label: "IT Manager", icon: Monitor },
   { path: "/monitoring", label: "Monitor", icon: Activity },
   { path: "/switch-planner", label: "Switch Planner", icon: ArrowLeftRight },
+  { path: "/purchase-requests", label: "Requests", icon: ClipboardList },
 ];
 
 export default function Layout() {
@@ -33,6 +34,7 @@ export default function Layout() {
       "/it-dashboard": "it_manager",
       "/monitoring": "monitoring",
       "/switch-planner": "switch_planner",
+      "/purchase-requests": "purchase_requests",
       "/contracts": "contracts",
       "/settings": "settings",
       "/data-coverage": "data_coverage",

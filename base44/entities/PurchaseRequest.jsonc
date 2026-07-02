@@ -1,0 +1,126 @@
+{
+  "name": "PurchaseRequest",
+  "type": "object",
+  "properties": {
+    "requester_name": {
+      "type": "string",
+      "title": "Requester Name"
+    },
+    "requester_email": {
+      "type": "string",
+      "title": "Requester Email"
+    },
+    "tool_name": {
+      "type": "string",
+      "title": "Tool Name"
+    },
+    "vendor_url": {
+      "type": "string",
+      "title": "Vendor URL"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Communication",
+        "Project Management",
+        "CRM & Sales",
+        "Productivity & Docs",
+        "Analytics & BI",
+        "Marketing",
+        "Customer Support",
+        "Identity & Security",
+        "Dev Tools",
+        "Finance & HR"
+      ],
+      "title": "Category"
+    },
+    "estimated_monthly_cost": {
+      "type": "number",
+      "title": "Estimated Monthly Cost ($)"
+    },
+    "requested_seats": {
+      "type": "number",
+      "title": "Requested Seats"
+    },
+    "team_affected": {
+      "type": "string",
+      "title": "Team / Department Affected"
+    },
+    "justification": {
+      "type": "string",
+      "title": "Business Justification"
+    },
+    "use_case": {
+      "type": "string",
+      "title": "Primary Use Case"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "auto_approved",
+        "approved",
+        "rejected",
+        "deferred",
+        "provisioned"
+      ],
+      "default": "pending",
+      "title": "Status"
+    },
+    "decision_reason": {
+      "type": "string",
+      "title": "AI Decision Reason"
+    },
+    "conflict_flags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Conflict Flags"
+    },
+    "redundancy_warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Redundancy Warnings"
+    },
+    "budget_impact_pct": {
+      "type": "number",
+      "title": "Budget Impact (%)"
+    },
+    "ai_recommendation": {
+      "type": "string",
+      "enum": [
+        "approve",
+        "reject",
+        "needs_review"
+      ],
+      "title": "AI Recommendation"
+    },
+    "reviewer": {
+      "type": "string",
+      "title": "Reviewer"
+    },
+    "reviewer_note": {
+      "type": "string",
+      "title": "Reviewer Note"
+    }
+  },
+  "required": [
+    "tool_name",
+    "category"
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

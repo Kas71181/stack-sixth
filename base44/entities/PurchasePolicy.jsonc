@@ -1,0 +1,64 @@
+{
+  "name": "PurchasePolicy",
+  "type": "object",
+  "properties": {
+    "rule_name": {
+      "type": "string",
+      "title": "Rule Name"
+    },
+    "max_auto_approve_cost": {
+      "type": "number",
+      "title": "Max Cost for Auto-Approve ($)",
+      "description": "Requests at or below this monthly cost are eligible for auto-approval"
+    },
+    "requires_manual_above": {
+      "type": "number",
+      "title": "Requires Manual Approval Above ($)",
+      "description": "Requests above this cost always need human review"
+    },
+    "blocked_categories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Blocked Categories"
+    },
+    "auto_approve_categories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Auto-Approve Categories"
+    },
+    "max_budget_pct_per_request": {
+      "type": "number",
+      "title": "Max Budget % Per Request",
+      "description": "A single request cannot consume more than this % of monthly SaaS budget"
+    },
+    "block_redundant_tools": {
+      "type": "boolean",
+      "title": "Block Redundant Tools",
+      "default": true
+    },
+    "is_active": {
+      "type": "boolean",
+      "title": "Active",
+      "default": true
+    }
+  },
+  "required": [
+    "rule_name"
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}
