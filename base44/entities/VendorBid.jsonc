@@ -1,0 +1,98 @@
+{
+  "name": "VendorBid",
+  "type": "object",
+  "properties": {
+    "tool_name": {
+      "type": "string",
+      "title": "Tool Name"
+    },
+    "vendor_name": {
+      "type": "string",
+      "title": "Vendor Name"
+    },
+    "vendor_email": {
+      "type": "string",
+      "title": "Vendor Contact Email"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Communication",
+        "Project Management",
+        "CRM & Sales",
+        "Productivity & Docs",
+        "Analytics & BI",
+        "Marketing",
+        "Customer Support",
+        "Identity & Security",
+        "Dev Tools",
+        "Finance & HR"
+      ],
+      "title": "Category"
+    },
+    "proposed_monthly_cost": {
+      "type": "number",
+      "title": "Proposed Monthly Cost ($)"
+    },
+    "proposed_seats": {
+      "type": "number",
+      "title": "Proposed Seats"
+    },
+    "discount_pct": {
+      "type": "number",
+      "title": "Discount Offered (%)"
+    },
+    "contract_term_months": {
+      "type": "number",
+      "title": "Contract Term (months)"
+    },
+    "pitch": {
+      "type": "string",
+      "title": "Vendor Pitch"
+    },
+    "key_differentiators": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Key Differentiators"
+    },
+    "demo_url": {
+      "type": "string",
+      "title": "Demo / Landing Page URL"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "submitted",
+        "shortlisted",
+        "selected",
+        "rejected"
+      ],
+      "default": "submitted",
+      "title": "Bid Status"
+    },
+    "rfq_id": {
+      "type": "string",
+      "title": "RFQ ID (links to the request)"
+    }
+  },
+  "required": [
+    "tool_name",
+    "vendor_name",
+    "category",
+    "proposed_monthly_cost"
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}
