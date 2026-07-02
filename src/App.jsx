@@ -19,6 +19,7 @@ import SettingsPage from './pages/SettingsPage';
 import DataCoverageSetup from './pages/DataCoverageSetup';
 import SharedReport from './pages/SharedReport';
 import PurchaseRequests from './pages/PurchaseRequests';
+import LifecycleGovernance from './pages/LifecycleGovernance';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -68,6 +69,7 @@ const AuthenticatedApp = () => {
         <Route path="/data-coverage" element={<DataCoverageSetup />} />
         <Route path="/shared-report" element={<SharedReport />} />
         <Route path="/purchase-requests" element={<PurchaseRequests />} />
+        <Route path="/lifecycle" element={<LifecycleGovernance />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
 
