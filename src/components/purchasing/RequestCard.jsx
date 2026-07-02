@@ -11,7 +11,7 @@ const STATUS_STYLES = {
   provisioned: { label: "Provisioned", cls: "bg-primary/10 text-primary border-primary/20", icon: CheckCircle2 },
 };
 
-export default function RequestCard({ request, onDecision, isSaving, onProvisioned }) {
+export default function RequestCard({ request, onDecision, isSaving, onProvisioned, isAdmin = false }) {
   const [expanded, setExpanded] = useState(false);
   const [showProvision, setShowProvision] = useState(false);
   const [reviewerNote, setReviewerNote] = useState(request.reviewer_note || "");
@@ -112,8 +112,8 @@ export default function RequestCard({ request, onDecision, isSaving, onProvision
             </div>
           )}
 
-          {/* Decision actions — only for pending/auto_approved that need review */}
-          {(request.status === "pending" || request.status === "auto_approved") && onDecision && (
+          {/* Decision actions — admin only for pending/auto_approved */}
+          {(request.status === "pending" || request.status === "auto_approved") && onDecision && isAdmin ? (
             <div className="pt-2 border-t border-border/40 space-y-2">
               <input
                 type="text"
@@ -146,6 +146,12 @@ export default function RequestCard({ request, onDecision, isSaving, onProvision
                 </button>
               </div>
             </div>
+          ) : (request.status === "pending" || request.status === "auto_approved") && !isAdmin && (
+            <div className="pt-2 border-t border-border/40">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                <Clock className="w-3.5 h-3.5" /> Awaiting IT manager review
+              </div>
+            </div>
           )}
 
           {request.status === "approved" && (
@@ -153,12 +159,14 @@ export default function RequestCard({ request, onDecision, isSaving, onProvision
               <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-medium mb-2">
                 <ShieldCheck className="w-3.5 h-3.5" /> Approved{request.reviewer ? ` by ${request.reviewer}` : ""}
               </div>
-              <button
-                onClick={(e) => { e.stopPropagation(); setShowProvision(true); }}
-                className="flex items-center gap-1.5 px-3 py-2 w-full justify-center rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-              >
-                <Rocket className="w-3.5 h-3.5" /> Provision Tool
-              </button>
+              {isAdmin && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowProvision(true); }}
+                  className="flex items-center gap-1.5 px-3 py-2 w-full justify-center rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  <Rocket className="w-3.5 h-3.5" /> Provision Tool
+                </button>
+              )}
             </div>
           )}
 
