@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
       sent++;
     }
 
-    return Response.json({ success: true, sent, companies: companies.length });
+    return Response.json({ success: true, sent });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
