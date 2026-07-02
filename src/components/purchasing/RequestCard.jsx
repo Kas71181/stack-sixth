@@ -1,5 +1,6 @@
-import { CheckCircle2, XCircle, Clock, AlertTriangle, TrendingDown, Sparkles, ExternalLink, ShieldCheck } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, AlertTriangle, TrendingDown, Sparkles, ExternalLink, ShieldCheck, Rocket } from "lucide-react";
 import { useState } from "react";
+import ProvisioningModal from "@/components/purchasing/ProvisioningModal";
 
 const STATUS_STYLES = {
   pending: { label: "Pending", cls: "bg-amber-50 text-amber-700 border-amber-200", icon: Clock },
@@ -10,8 +11,9 @@ const STATUS_STYLES = {
   provisioned: { label: "Provisioned", cls: "bg-primary/10 text-primary border-primary/20", icon: CheckCircle2 },
 };
 
-export default function RequestCard({ request, onDecision, isSaving }) {
+export default function RequestCard({ request, onDecision, isSaving, onProvisioned }) {
   const [expanded, setExpanded] = useState(false);
+  const [showProvision, setShowProvision] = useState(false);
   const [reviewerNote, setReviewerNote] = useState(request.reviewer_note || "");
   const status = STATUS_STYLES[request.status] || STATUS_STYLES.pending;
   const StatusIcon = status.icon;
@@ -147,11 +149,33 @@ export default function RequestCard({ request, onDecision, isSaving }) {
           )}
 
           {request.status === "approved" && (
-            <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-medium pt-1">
-              <ShieldCheck className="w-3.5 h-3.5" /> Approved{request.reviewer ? ` by ${request.reviewer}` : ""}
+            <div className="pt-2 border-t border-border/40">
+              <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-medium mb-2">
+                <ShieldCheck className="w-3.5 h-3.5" /> Approved{request.reviewer ? ` by ${request.reviewer}` : ""}
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowProvision(true); }}
+                className="flex items-center gap-1.5 px-3 py-2 w-full justify-center rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                <Rocket className="w-3.5 h-3.5" /> Provision Tool
+              </button>
+            </div>
+          )}
+
+          {request.status === "provisioned" && (
+            <div className="flex items-center gap-1.5 text-xs text-primary font-medium pt-1">
+              <Rocket className="w-3.5 h-3.5" /> Provisioned — added to your stack
             </div>
           )}
         </div>
+      )}
+
+      {showProvision && (
+        <ProvisioningModal
+          request={request}
+          onClose={() => setShowProvision(false)}
+          onProvisioned={onProvisioned}
+        />
       )}
     </div>
   );

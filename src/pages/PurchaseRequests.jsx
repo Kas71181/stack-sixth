@@ -170,7 +170,7 @@ export default function PurchaseRequests() {
               </h2>
               <div className="space-y-3">
                 {pending.map((r) => (
-                  <RequestCard key={r.id} request={r} onDecision={handleDecision} isSaving={savingId === r.id} />
+                  <RequestCard key={r.id} request={r} onDecision={handleDecision} isSaving={savingId === r.id} onProvisioned={() => queryClient.invalidateQueries({ queryKey: ["purchase-requests", user?.id] })} />
                 ))}
               </div>
             </div>
@@ -185,7 +185,7 @@ export default function PurchaseRequests() {
               </h2>
               <div className="space-y-3">
                 {resolved.map((r) => (
-                  <RequestCard key={r.id} request={r} />
+                  <RequestCard key={r.id} request={r} onProvisioned={() => queryClient.invalidateQueries({ queryKey: ["purchase-requests", user?.id] })} />
                 ))}
               </div>
             </div>
