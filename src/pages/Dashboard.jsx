@@ -13,6 +13,7 @@ import QuickScan from "@/components/dashboard/QuickScan";
 import SavingsScoreboard from "@/components/dashboard/SavingsScoreboard";
 import RenewalTimeline from "@/components/dashboard/RenewalTimeline";
 import SpendHistoryChart from "@/components/dashboard/SpendHistoryChart";
+import DailyPulse from "@/components/dashboard/DailyPulse";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -56,6 +57,12 @@ export default function Dashboard() {
   const { data: integrations = [] } = useQuery({
     queryKey: ["integrations-dash", user?.id],
     queryFn: () => base44.entities.SaasIntegration.filter({ created_by_id: user?.id }),
+    enabled: !!user?.id,
+  });
+
+  const { data: purchaseRequests = [] } = useQuery({
+    queryKey: ["purchase-requests-dash", user?.id],
+    queryFn: () => base44.entities.PurchaseRequest.filter({ status: "pending" }, "-created_date", 20),
     enabled: !!user?.id,
   });
 
@@ -146,9 +153,18 @@ export default function Dashboard() {
       return days >= 0 && days <= 30;
     })
   );
+  const dormantTools = (userActivity || []).filter((a) => a.status === "Dormant" || a.status === "Inactive");
 
   return (
     <div className="space-y-8">
+      {/* Daily Pulse — morning briefing strip */}
+      <DailyPulse
+        pendingRequests={purchaseRequests}
+        urgentRenewals={urgentRenewals}
+        openRecs={openRecs}
+        dormantTools={dormantTools}
+      />
+
       {/* Hero command center */}
       <motion.div {...fade()} className="relative">
         {/* Radial hero glow */}
