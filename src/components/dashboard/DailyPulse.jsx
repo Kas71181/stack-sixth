@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ClipboardList, RefreshCw, TrendingUp, Moon, CheckCircle2 } from "lucide-react";
+import { ClipboardList, RefreshCw, TrendingUp, Moon, CheckCircle2, Ghost } from "lucide-react";
 
 /**
  * Slim "morning briefing" strip — surfaces what needs attention today.
@@ -11,6 +11,7 @@ export default function DailyPulse({
   urgentRenewals = [],
   openRecs = [],
   dormantTools = [],
+  shadowTools = [],
 }) {
   const totalSavings = openRecs.reduce((s, r) => s + (r.estimated_monthly_savings || 0), 0);
 
@@ -40,6 +41,15 @@ export default function DailyPulse({
       label: `${dormantTools.length} dormant tool${dormantTools.length > 1 ? "s" : ""} wasting licenses`,
       to: "/monitoring",
       tone: "violet",
+    });
+  }
+
+  if (shadowTools.length > 0) {
+    alerts.push({
+      icon: Ghost,
+      label: `${shadowTools.length} shadow IT tool${shadowTools.length > 1 ? "s" : ""} detected`,
+      to: "/data-coverage",
+      tone: "rose",
     });
   }
 
@@ -77,6 +87,7 @@ export default function DailyPulse({
     amber: "bg-amber-500/8 border-amber-500/20 text-amber-700 dark:text-amber-400 hover:bg-amber-500/12",
     violet: "bg-violet-500/8 border-violet-500/20 text-violet-700 dark:text-violet-400 hover:bg-violet-500/12",
     emerald: "bg-emerald-500/8 border-emerald-500/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/12",
+    rose: "bg-rose-500/8 border-rose-500/20 text-rose-700 dark:text-rose-400 hover:bg-rose-500/12",
   };
 
   return (

@@ -14,6 +14,7 @@ import SavingsScoreboard from "@/components/dashboard/SavingsScoreboard";
 import RenewalTimeline from "@/components/dashboard/RenewalTimeline";
 import SpendHistoryChart from "@/components/dashboard/SpendHistoryChart";
 import DailyPulse from "@/components/dashboard/DailyPulse";
+import StackScore from "@/components/dashboard/StackScore";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -155,6 +156,20 @@ export default function Dashboard() {
   );
   const dormantTools = (userActivity || []).filter((a) => a.status === "Dormant" || a.status === "Inactive");
 
+  // Shadow IT: tools with activity but no registered SaasIntegration
+  const integrationNames = new Set(
+    (integrations || []).map((i) => i.tool_name?.toLowerCase().trim()).filter(Boolean)
+  );
+  const auditedToolNames = new Set(
+    (latestAudit?.existing_software || []).map((s) => s.name?.toLowerCase().trim()).filter(Boolean)
+  );
+  const knownTools = new Set([...integrationNames, ...auditedToolNames]);
+  const shadowTools = [...new Set(
+    (userActivity || [])
+      .map((a) => a.tool_name)
+      .filter((name) => name && !knownTools.has(name.toLowerCase().trim()))
+  )];
+
   return (
     <div className="space-y-8">
       {/* Daily Pulse — morning briefing strip */}
@@ -163,6 +178,7 @@ export default function Dashboard() {
         urgentRenewals={urgentRenewals}
         openRecs={openRecs}
         dormantTools={dormantTools}
+        shadowTools={shadowTools}
       />
 
       {/* Hero command center */}
@@ -265,6 +281,19 @@ export default function Dashboard() {
             <p className="text-[10px] text-muted-foreground">next 30 days</p>
           </div>
         </div>
+      </motion.div>
+
+      {/* Stack Score */}
+      <motion.div {...fade(0.08)}>
+        <StackScore
+          totalSpend={totalSpend}
+          totalSavings={totalSavings}
+          totalTools={totalTools}
+          dormantTools={dormantTools}
+          urgentRenewals={urgentRenewals}
+          openRecs={openRecs}
+          userActivity={userActivity || []}
+        />
       </motion.div>
 
       {/* Action Queue + Renewal Timeline side by side on larger screens */}
