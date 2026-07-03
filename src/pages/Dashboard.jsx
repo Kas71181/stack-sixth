@@ -265,46 +265,41 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* Recent Audits */}
+      {/* Recent Audits — compact list */}
       <motion.div {...fade(0.15)}>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-bold tracking-tight text-foreground">Recent Audits</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-bold tracking-tight text-foreground">Recent Audits</h2>
           <Link to="/history" className="text-xs text-primary font-semibold hover:text-primary/80 transition-colors flex items-center gap-1">
             View all <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
-        <div className="space-y-2">
+        <div className="glass-card rounded-xl divide-y divide-border/40 overflow-hidden border border-border/50">
           {completedAudits.slice(0, 3).map((audit, i) => {
             const savings = audit.analysis_result?.recommendations?.reduce(
               (s, r) => s + (r.estimated_savings_opportunity || 0), 0
             ) || 0;
             return (
-              <motion.div key={audit.id} {...fade(0.15 + i * 0.04)}>
-                <Link
-                  to={`/results/${audit.id}`}
-                  className="flex items-center justify-between glass-card hover-lift rounded-xl px-5 py-4 hover:border-primary/20 active:scale-[0.99] group block border border-border/50"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/15 transition-colors">
-                      <Sparkles className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm">{audit.company_name}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {audit.existing_software?.length || 0} tools · {audit.team_size} people
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {savings > 0 && (
-                      <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-700/40 px-2.5 py-0.5 rounded-full">
-                        ${savings.toLocaleString()}/mo
-                      </span>
-                    )}
-                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-                  </div>
-                </Link>
-              </motion.div>
+              <Link
+                key={audit.id}
+                to={`/results/${audit.id}`}
+                className="flex items-center justify-between px-4 py-2.5 hover:bg-primary/5 active:scale-[0.99] transition-all group"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Sparkles className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                  <p className="font-medium text-sm truncate">{audit.company_name}</p>
+                  <span className="text-xs text-muted-foreground flex-shrink-0 hidden sm:inline">
+                    {audit.existing_software?.length || 0} tools
+                  </span>
+                </div>
+                <div className="flex items-center gap-2.5 flex-shrink-0">
+                  {savings > 0 && (
+                    <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                      ${savings.toLocaleString()}/mo
+                    </span>
+                  )}
+                  <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                </div>
+              </Link>
             );
           })}
         </div>
