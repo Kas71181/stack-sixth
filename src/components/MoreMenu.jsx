@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Layers } from "lucide-react";
 
-export default function MoreMenu({ items }) {
+export default function MoreMenu({ items, label = "My Stack" }) {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const ref = useRef(null);
@@ -32,7 +32,8 @@ export default function MoreMenu({ items }) {
             : "text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/6"
         }`}
       >
-        <span className="hidden lg:inline">More</span>
+        <Layers className="w-3.5 h-3.5" />
+        <span className="hidden lg:inline">{label}</span>
         <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (

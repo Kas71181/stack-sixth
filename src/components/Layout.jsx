@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { BarChart3, History, Home, Monitor, ShoppingCart, LogOut, User, Activity, ArrowLeftRight, Settings, ChevronDown, ClipboardList, ShieldCheck, Store } from "lucide-react";
+import { BarChart3, History, Home, Monitor, ShoppingCart, LogOut, User, Activity, ArrowLeftRight, Settings, ChevronDown, ClipboardList, ShieldCheck, Store, Layers } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import MoreMenu from "@/components/MoreMenu";
 import { useState, useRef, useEffect } from "react";
@@ -12,21 +12,21 @@ import { useAuth } from "@/lib/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 
-// Primary nav — shown directly in the top bar
+// Primary nav — the only 3 things users see in the top bar
 const primaryNav = [
   { path: "/", label: "Dashboard", icon: Home },
   { path: "/audit", label: "New Audit", icon: BarChart3 },
-  { path: "/history", label: "History", icon: History },
   { path: "/it-dashboard", label: "IT Manager", icon: Monitor },
 ];
 
-// Secondary nav — grouped under "More" dropdown
+// Secondary nav — grouped under "My Stack" dropdown
 const secondaryNav = [
-  { path: "/monitoring", label: "Monitor", icon: Activity },
-  { path: "/switch-planner", label: "Switch Planner", icon: ArrowLeftRight },
-  { path: "/purchase-requests", label: "Requests", icon: ClipboardList },
-  { path: "/lifecycle", label: "Lifecycle", icon: ShieldCheck },
-  { path: "/marketplace", label: "Marketplace", icon: Store },
+  { path: "/history", label: "Audit History", icon: History },
+  { path: "/monitoring", label: "Monitoring", icon: Activity },
+  { path: "/lifecycle", label: "Renewals", icon: ShieldCheck },
+  { path: "/switch-planner", label: "Switch Tools", icon: ArrowLeftRight },
+  { path: "/purchase-requests", label: "Purchase Requests", icon: ClipboardList },
+  { path: "/marketplace", label: "Vendor Bids", icon: Store },
 ];
 
 const navItems = [...primaryNav, ...secondaryNav];
@@ -270,8 +270,8 @@ export default function Layout() {
             {secondaryNav.some(({ path }) => location.pathname === path) && (
               <div className="absolute w-8 h-0.5 bg-primary rounded-full -top-0.5 shadow-[0_0_8px_hsl(var(--primary)/0.8)]" />
             )}
-            <Settings className="w-5 h-5 flex-shrink-0" />
-            <span className="text-[9px] font-medium truncate w-full text-center">More</span>
+            <Layers className="w-5 h-5 flex-shrink-0" />
+            <span className="text-[9px] font-medium truncate w-full text-center">Stack</span>
           </button>
         </div>
       </nav>
