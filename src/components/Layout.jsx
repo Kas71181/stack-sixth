@@ -1,6 +1,7 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { BarChart3, History, Home, Monitor, ShoppingCart, LogOut, User, Activity, ArrowLeftRight, Settings, ChevronDown, ClipboardList, ShieldCheck, Store } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+import MoreMenu from "@/components/MoreMenu";
 import { useState, useRef, useEffect } from "react";
 import { base44 as analyticsClient } from "@/api/base44Client";
 import { useCart } from "@/components/cart/CartContext";
@@ -11,11 +12,16 @@ import { useAuth } from "@/lib/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 
-const navItems = [
+// Primary nav — shown directly in the top bar
+const primaryNav = [
   { path: "/", label: "Dashboard", icon: Home },
   { path: "/audit", label: "New Audit", icon: BarChart3 },
   { path: "/history", label: "History", icon: History },
   { path: "/it-dashboard", label: "IT Manager", icon: Monitor },
+];
+
+// Secondary nav — grouped under "More" dropdown
+const secondaryNav = [
   { path: "/monitoring", label: "Monitor", icon: Activity },
   { path: "/switch-planner", label: "Switch Planner", icon: ArrowLeftRight },
   { path: "/purchase-requests", label: "Requests", icon: ClipboardList },
@@ -23,9 +29,12 @@ const navItems = [
   { path: "/marketplace", label: "Marketplace", icon: Store },
 ];
 
+const navItems = [...primaryNav, ...secondaryNav];
+
 export default function Layout() {
   const location = useLocation();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
 
   // Track page views on every route change
   useEffect(() => {
@@ -121,7 +130,7 @@ export default function Layout() {
 
             {/* Nav links */}
             <nav className="flex items-center gap-0.5">
-              {navItems.filter(({ adminOnly }) => !adminOnly || user?.role === "admin").map(({ path, label, icon: Icon }) => {
+              {primaryNav.map(({ path, label, icon: Icon }) => {
                 const isActive = location.pathname === path;
                 return (
                   <Link
@@ -138,6 +147,9 @@ export default function Layout() {
                   </Link>
                 );
               })}
+
+              {/* Secondary items in "More" dropdown */}
+              <MoreMenu items={secondaryNav} />
 
               {/* Cart */}
               <button
@@ -230,7 +242,7 @@ export default function Layout() {
           }}
         />
         <div className="relative flex items-center justify-around px-1 py-2">
-          {navItems.map(({ path, label, icon: Icon }) => {
+          {primaryNav.map(({ path, label, icon: Icon }) => {
             const isActive = location.pathname === path;
             return (
               <Link
@@ -248,10 +260,64 @@ export default function Layout() {
               </Link>
             );
           })}
+          {/* More button on mobile — opens bottom sheet */}
+          <button
+            onClick={() => setMobileMoreOpen(true)}
+            className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-0 flex-1 active:scale-95 ${
+              secondaryNav.some(({ path }) => location.pathname === path) ? "text-primary" : "text-muted-foreground"
+            }`}
+          >
+            {secondaryNav.some(({ path }) => location.pathname === path) && (
+              <div className="absolute w-8 h-0.5 bg-primary rounded-full -top-0.5 shadow-[0_0_8px_hsl(var(--primary)/0.8)]" />
+            )}
+            <Settings className="w-5 h-5 flex-shrink-0" />
+            <span className="text-[9px] font-medium truncate w-full text-center">More</span>
+          </button>
         </div>
       </nav>
 
       <AssistantChat audits={audits} recommendations={recommendations} monitorReports={monitorReports} contracts={contracts} userActivity={userActivity} />
+
+      {/* Mobile "More" bottom sheet */}
+      {mobileMoreOpen && (
+        <div className="sm:hidden fixed inset-0 z-[60]">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in"
+            onClick={() => setMobileMoreOpen(false)}
+          />
+          <div className="absolute bottom-0 left-0 right-0 glass-strong rounded-t-2xl p-4 pb-8 animate-slide-up">
+            <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mx-auto mb-4" />
+            <div className="grid grid-cols-3 gap-3">
+              {secondaryNav.map(({ path, label, icon: Icon }) => {
+                const isActive = location.pathname === path;
+                return (
+                  <Link
+                    key={path}
+                    to={path}
+                    onClick={() => setMobileMoreOpen(false)}
+                    className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-colors ${
+                      isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-black/5 dark:hover:bg-white/6"
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="text-xs font-medium text-center">{label}</span>
+                  </Link>
+                );
+              })}
+              <Link
+                to="/settings"
+                onClick={() => setMobileMoreOpen(false)}
+                className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-colors ${
+                  location.pathname === "/settings" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-black/5 dark:hover:bg-white/6"
+                }`}
+              >
+                <Settings className="w-5 h-5" />
+                <span className="text-xs font-medium text-center">Settings</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
