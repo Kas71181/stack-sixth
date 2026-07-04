@@ -160,14 +160,17 @@ export default function DataPrivacyModal({ connector, onConfirm, onCancel }) {
 
         {/* Footer */}
         <div className="border-t border-border/40 px-5 py-3 flex items-center justify-between">
-          <p className="text-[10px] text-muted-foreground">Data is stored only in your Stack Sixth account.</p>
+          <div className="flex items-center gap-1.5">
+            <Shield className="w-3 h-3 text-emerald-500" />
+            <p className="text-[10px] text-muted-foreground">SOC 2 · ISO 27001 · Encrypted</p>
+          </div>
           <a
-            href="https://www.stacksixth.com/privacy"
+            href="https://base44.com/security"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1 text-[10px] text-primary hover:underline"
           >
-            Privacy Policy <ExternalLink className="w-2.5 h-2.5" />
+            Trust Center <ExternalLink className="w-2.5 h-2.5" />
           </a>
         </div>
       </div>

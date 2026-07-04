@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Shield, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Lock } from "lucide-react";
+import { Shield, CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, Lock, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -207,6 +207,23 @@ export default function DataPrivacySection() {
         All data is stored exclusively in your Stack Sixth account and never shared with third parties.{" "}
         <a href="https://www.stacksixth.com/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Privacy Policy →</a>
       </p>
+
+      {/* Platform trust & compliance */}
+      <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-muted/20 px-4 py-3">
+        <Shield className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] font-semibold text-foreground">Secured by Base44</p>
+          <p className="text-[10px] text-muted-foreground">SOC 2 Type II · ISO 27001 · GDPR · Encryption at rest & in transit</p>
+        </div>
+        <a
+          href="https://base44.com/security"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1 text-[11px] font-medium text-primary hover:underline flex-shrink-0"
+        >
+          Trust Center <ExternalLink className="w-3 h-3" />
+        </a>
+      </div>
     </div>
   );
 }
