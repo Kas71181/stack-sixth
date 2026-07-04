@@ -23,7 +23,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: usersData.message || 'Failed to fetch Notion users' }, { status: 400 });
     }
 
-    const realUsers = usersData.results.filter((u) => u.type === 'person');
+    const allRealUsers = usersData.results.filter((u) => u.type === 'person');
+
+    // Auto-detect team: filter to members sharing the authenticated user's email domain
+    const userDomain = (user.email || '').split('@')[1]?.toLowerCase();
+    const freeProviders = ['gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com', 'aol.com', 'proton.me', 'protonmail.com'];
+    const shouldFilter = userDomain && !freeProviders.includes(userDomain);
+    const realUsers = shouldFilter
+      ? allRealUsers.filter((u) => {
+          const email = u.person?.email?.toLowerCase();
+          return email && email.endsWith('@' + userDomain);
+        })
+      : allRealUsers;
 
     // 2. Search for recently edited pages to build per-user last-active signals
     const searchRes = await fetch('https://api.notion.com/v1/search', {
@@ -114,7 +125,8 @@ Deno.serve(async (req) => {
     const existing = await base44.asServiceRole.entities.UserActivity.filter({ tool_name: 'Notion', created_by_id: user.id });
     const existingByEmail = new Map(existing.map((e) => [e.user_email, e.id]));
 
-    let created = 0, updated = 0;
+    let created = 0, updated = 0, deleted = 0;
+    const syncedEmails = new Set(userActivity.map((ua) => ua.user_email));
     for (const ua of userActivity) {
       if (existingByEmail.has(ua.user_email)) {
         await base44.asServiceRole.entities.UserActivity.update(existingByEmail.get(ua.user_email), ua);
@@ -124,8 +136,15 @@ Deno.serve(async (req) => {
         created++;
       }
     }
+    // Clean up records for members no longer in the filtered team
+    for (const old of existing) {
+      if (!syncedEmails.has(old.user_email)) {
+        await base44.asServiceRole.entities.UserActivity.delete(old.id);
+        deleted++;
+      }
+    }
 
-    return Response.json({ success: true, total: userActivity.length, created, updated, users: userActivity });
+    return Response.json({ success: true, total: userActivity.length, created, updated, deleted, users: userActivity });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

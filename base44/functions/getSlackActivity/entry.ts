@@ -16,9 +16,20 @@ Deno.serve(async (req) => {
     const membersData = await membersRes.json();
     if (!membersData.ok) return Response.json({ error: membersData.error }, { status: 400 });
 
-    const realMembers = (membersData.members || []).filter(
+    const allRealMembers = (membersData.members || []).filter(
       (m) => !m.is_bot && !m.deleted && m.id !== 'USLACKBOT'
     );
+
+    // Auto-detect team: filter to members sharing the authenticated user's email domain
+    const userDomain = (user.email || '').split('@')[1]?.toLowerCase();
+    const freeProviders = ['gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com', 'aol.com', 'proton.me', 'protonmail.com'];
+    const shouldFilter = userDomain && !freeProviders.includes(userDomain);
+    const realMembers = shouldFilter
+      ? allRealMembers.filter((m) => {
+          const email = m.profile?.email?.toLowerCase();
+          return email && email.endsWith('@' + userDomain);
+        })
+      : allRealMembers;
 
     // Build user map: id -> member
     const memberMap = new Map(realMembers.map((m) => [m.id, m]));
@@ -116,7 +127,8 @@ Deno.serve(async (req) => {
     const existing = await base44.asServiceRole.entities.UserActivity.filter({ tool_name: 'Slack', created_by_id: user.id });
     const existingByEmail = new Map(existing.map((e) => [e.user_email, e.id]));
 
-    let created = 0, updated = 0;
+    let created = 0, updated = 0, deleted = 0;
+    const syncedEmails = new Set(userActivity.map((ua) => ua.user_email));
     for (const ua of userActivity) {
       if (existingByEmail.has(ua.user_email)) {
         await base44.asServiceRole.entities.UserActivity.update(existingByEmail.get(ua.user_email), ua);
@@ -126,8 +138,15 @@ Deno.serve(async (req) => {
         created++;
       }
     }
+    // Clean up records for members no longer in the filtered team
+    for (const old of existing) {
+      if (!syncedEmails.has(old.user_email)) {
+        await base44.asServiceRole.entities.UserActivity.delete(old.id);
+        deleted++;
+      }
+    }
 
-    return Response.json({ success: true, total: userActivity.length, created, updated, users: userActivity });
+    return Response.json({ success: true, total: userActivity.length, created, updated, deleted, users: userActivity });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

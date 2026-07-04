@@ -21,6 +21,11 @@ Deno.serve(async (req) => {
 
     let allMembers = [];
 
+    // Auto-detect team: filter to members sharing the authenticated user's email domain
+    const userDomain = (user.email || '').split('@')[1]?.toLowerCase();
+    const freeProviders = ['gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com', 'aol.com', 'proton.me', 'protonmail.com'];
+    const shouldFilter = userDomain && !freeProviders.includes(userDomain);
+
     if (Array.isArray(orgs) && orgs.length > 0) {
       // Use first org
       const org = orgs[0].login;
@@ -65,6 +70,12 @@ Deno.serve(async (req) => {
           // Get user email
           const profileRes = await fetch(`https://api.github.com/users/${member.login}`, { headers });
           const profile = await profileRes.json();
+
+          // Skip members whose email doesn't match the team domain
+          const memberEmail = profile.email?.toLowerCase();
+          if (shouldFilter && (!memberEmail || !memberEmail.endsWith('@' + userDomain))) {
+            continue;
+          }
 
           const pushEvents = recentEvents.filter((e) => e.type === 'PushEvent').length;
           const prEvents = recentEvents.filter((e) => e.type === 'PullRequestEvent').length;
@@ -132,7 +143,8 @@ Deno.serve(async (req) => {
     const existing = await base44.asServiceRole.entities.UserActivity.filter({ tool_name: 'GitHub', created_by_id: user.id });
     const existingByEmail = new Map(existing.map((e) => [e.user_email, e.id]));
 
-    let created = 0, updated = 0;
+    let created = 0, updated = 0, deleted = 0;
+    const syncedEmails = new Set(allMembers.map((ua) => ua.user_email));
     for (const ua of allMembers) {
       if (existingByEmail.has(ua.user_email)) {
         await base44.asServiceRole.entities.UserActivity.update(existingByEmail.get(ua.user_email), ua);
@@ -142,8 +154,15 @@ Deno.serve(async (req) => {
         created++;
       }
     }
+    // Clean up records for members no longer in the filtered team
+    for (const old of existing) {
+      if (!syncedEmails.has(old.user_email)) {
+        await base44.asServiceRole.entities.UserActivity.delete(old.id);
+        deleted++;
+      }
+    }
 
-    return Response.json({ success: true, total: allMembers.length, created, updated, users: allMembers });
+    return Response.json({ success: true, total: allMembers.length, created, updated, deleted, users: allMembers });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
