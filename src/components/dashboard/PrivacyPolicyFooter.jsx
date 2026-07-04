@@ -1,4 +1,5 @@
 import { Shield, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function PrivacyPolicyFooter() {
   return (
@@ -10,14 +11,12 @@ export default function PrivacyPolicyFooter() {
         </p>
       </div>
       <div className="flex items-center gap-3 flex-shrink-0">
-        <a
-          href="https://www.stacksixth.com/privacy"
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          to="/privacy"
           className="flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
         >
-          Privacy Policy <ExternalLink className="w-2.5 h-2.5" />
-        </a>
+          Privacy Policy
+        </Link>
         <a
           href="https://base44.com/security"
           target="_blank"
