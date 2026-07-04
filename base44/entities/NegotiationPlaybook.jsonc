@@ -64,20 +64,15 @@
     "vendor_name"
   ],
   "rls": {
-    "enabled": true,
-    "rules": {
-      "read": {
-        "type": "owner"
-      },
-      "create": {
-        "type": "authenticated"
-      },
-      "update": {
-        "type": "owner"
-      },
-      "delete": {
-        "type": "owner"
-      }
+    "create": null,
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
     }
   }
 }
