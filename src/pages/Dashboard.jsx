@@ -15,6 +15,7 @@ import RenewalTimeline from "@/components/dashboard/RenewalTimeline";
 import SpendHistoryChart from "@/components/dashboard/SpendHistoryChart";
 import DailyPulse from "@/components/dashboard/DailyPulse";
 import StackScore from "@/components/dashboard/StackScore";
+import PrivacyPolicyFooter from "@/components/dashboard/PrivacyPolicyFooter";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -367,6 +368,9 @@ export default function Dashboard() {
       <motion.div {...fade(0.22)}>
         <SpendHistoryChart integrations={integrations} userActivity={userActivity || []} />
       </motion.div>
+
+      {/* Privacy policy footer */}
+      <PrivacyPolicyFooter />
     </div>
   );
 }
