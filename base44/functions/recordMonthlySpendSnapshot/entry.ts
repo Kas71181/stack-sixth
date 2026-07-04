@@ -6,9 +6,10 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
 
-    const integrations = await base44.entities.SaasIntegration.list();
-    const userActivity = await base44.entities.UserActivity.list();
+    const integrations = await base44.entities.SaasIntegration.filter({ created_by_id: user.id });
+    const userActivity = await base44.entities.UserActivity.filter({ created_by_id: user.id });
 
     if (!integrations.length) {
       return Response.json({ skipped: true, reason: 'no integrations' });
@@ -17,7 +18,7 @@ Deno.serve(async (req) => {
     const moment = await import('npm:moment@2.30.1');
     const period = moment.default().format('YYYY-MM');
 
-    const existing = await base44.entities.SpendHistory.filter({ period });
+    const existing = await base44.entities.SpendHistory.filter({ period, created_by_id: user.id });
     const totalSpend = integrations.reduce((s, i) => s + (i.monthly_cost || 0), 0);
     const activeUsers = integrations.reduce((s, i) => s + (i.active_users || 0), 0);
     const wastedTools = userActivity.filter((a) => a.wasted_cost_flag);
