@@ -30,7 +30,15 @@ Deno.serve(async (req) => {
     }
 
     const data = await usersRes.json();
-    const members = data.users || [];
+    const allMembers = data.users || [];
+
+    // Auto-detect team: filter to members sharing the authenticated user's email domain
+    const userDomain = (user.email || '').split('@')[1]?.toLowerCase();
+    const freeProviders = ['gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com', 'aol.com', 'proton.me', 'protonmail.com'];
+    const shouldFilter = userDomain && !freeProviders.includes(userDomain);
+    const members = shouldFilter
+      ? allMembers.filter((m) => m.email?.toLowerCase().endsWith('@' + userDomain))
+      : allMembers;
 
     const now = new Date();
     const activityRecords = members.map((m) => {
@@ -55,7 +63,8 @@ Deno.serve(async (req) => {
     const existing = await base44.asServiceRole.entities.UserActivity.filter({ tool_name: 'Apollo.io' });
     const existingByEmail = new Map(existing.map((r) => [r.user_email, r.id]));
 
-    let created = 0, updated = 0;
+    let created = 0, updated = 0, deleted = 0;
+    const syncedEmails = new Set(activityRecords.map((r) => r.user_email));
     for (const record of activityRecords) {
       if (existingByEmail.has(record.user_email)) {
         await base44.asServiceRole.entities.UserActivity.update(existingByEmail.get(record.user_email), record);
@@ -65,8 +74,15 @@ Deno.serve(async (req) => {
         created++;
       }
     }
+    // Clean up records for members no longer in the filtered team
+    for (const old of existing) {
+      if (!syncedEmails.has(old.user_email)) {
+        await base44.asServiceRole.entities.UserActivity.delete(old.id);
+        deleted++;
+      }
+    }
 
-    return Response.json({ success: true, total: activityRecords.length, created, updated });
+    return Response.json({ success: true, total: activityRecords.length, created, updated, deleted });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

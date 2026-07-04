@@ -39,7 +39,18 @@ Deno.serve(async (req) => {
     }
 
     const data = await queryRes.json();
-    const employees = data?.QueryResponse?.Employee || [];
+    const allEmployees = data?.QueryResponse?.Employee || [];
+
+    // Auto-detect team: filter to members sharing the authenticated user's email domain
+    const userDomain = (user.email || '').split('@')[1]?.toLowerCase();
+    const freeProviders = ['gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com', 'aol.com', 'proton.me', 'protonmail.com'];
+    const shouldFilter = userDomain && !freeProviders.includes(userDomain);
+    const employees = shouldFilter
+      ? allEmployees.filter((emp) => {
+          const email = emp.PrimaryEmailAddr?.Address?.toLowerCase();
+          return email && email.endsWith('@' + userDomain);
+        })
+      : allEmployees;
 
     const now = new Date();
     const activityRecords = employees.map((emp) => {
@@ -65,7 +76,8 @@ Deno.serve(async (req) => {
     const existing = await base44.asServiceRole.entities.UserActivity.filter({ tool_name: 'QuickBooks' });
     const existingByEmail = new Map(existing.map((r) => [r.user_email, r.id]));
 
-    let created = 0, updated = 0;
+    let created = 0, updated = 0, deleted = 0;
+    const syncedEmails = new Set(activityRecords.map((r) => r.user_email));
     for (const record of activityRecords) {
       if (existingByEmail.has(record.user_email)) {
         await base44.asServiceRole.entities.UserActivity.update(existingByEmail.get(record.user_email), record);
@@ -75,8 +87,15 @@ Deno.serve(async (req) => {
         created++;
       }
     }
+    // Clean up records for members no longer in the filtered team
+    for (const old of existing) {
+      if (!syncedEmails.has(old.user_email)) {
+        await base44.asServiceRole.entities.UserActivity.delete(old.id);
+        deleted++;
+      }
+    }
 
-    return Response.json({ success: true, total: activityRecords.length, created, updated });
+    return Response.json({ success: true, total: activityRecords.length, created, updated, deleted });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
