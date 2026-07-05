@@ -2,6 +2,12 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ClipboardList, RefreshCw, TrendingUp, Moon, CheckCircle2, Ghost } from "lucide-react";
 
+function getOrdinal(n) {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return s[(v - 20) % 10] || s[v] || s[0];
+}
+
 /**
  * Slim "morning briefing" strip — surfaces what needs attention today.
  * Sits above the existing dashboard; nothing below changes.
@@ -14,6 +20,10 @@ export default function DailyPulse({
   shadowTools = [],
 }) {
   const totalSavings = openRecs.reduce((s, r) => s + (r.estimated_monthly_savings || 0), 0);
+
+  const today = new Date();
+  const day = today.getDate();
+  const dateStr = `${today.toLocaleDateString("en-US", { weekday: "long" })} ${day}${getOrdinal(day)} ${today.toLocaleDateString("en-US", { month: "long" })}, ${today.getFullYear()}`;
 
   const alerts = [];
 
@@ -75,9 +85,12 @@ export default function DailyPulse({
         <div className="w-8 h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
         </div>
-        <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
-          You're all caught up — nothing needs your attention today.
-        </p>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
+            You're all caught up — nothing needs your attention today.
+          </p>
+          <p className="text-[11px] text-emerald-600/70 dark:text-emerald-400/70 mt-0.5">{dateStr}</p>
+        </div>
       </motion.div>
     );
   }
@@ -99,6 +112,9 @@ export default function DailyPulse({
     >
       <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground mr-1">
         Today's Pulse
+      </span>
+      <span className="text-[11px] text-muted-foreground mr-1 hidden sm:inline">
+        · {dateStr}
       </span>
       {alerts.map((alert, i) => {
         const Icon = alert.icon;
