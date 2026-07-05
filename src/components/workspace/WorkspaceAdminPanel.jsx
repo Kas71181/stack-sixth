@@ -28,10 +28,14 @@ export default function WorkspaceAdminPanel({ onImport }) {
     }
     setLoading(true);
     setError(null);
-    const res = await base44.functions.invoke("getWorkspaceUsers", {
-      access_token: accessToken.trim(),
-      domain: domain.trim(),
-    });
+    // Save credential securely (never pass secrets in request body)
+    const existing = await base44.entities.ApiCredential.filter({ service: 'google_workspace' });
+    if (existing[0]) {
+      await base44.entities.ApiCredential.update(existing[0].id, { api_key: accessToken.trim() });
+    } else {
+      await base44.entities.ApiCredential.create({ service: 'google_workspace', api_key: accessToken.trim() });
+    }
+    const res = await base44.functions.invoke("getWorkspaceUsers", { domain: domain.trim() });
     setLoading(false);
     const result = res.data;
     if (result.error) {

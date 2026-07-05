@@ -8,15 +8,19 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { stripe_key } = await req.json();
-    if (!stripe_key) {
-      return Response.json({ error: 'stripe_key is required' }, { status: 400 });
+    let stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      const stored = await base44.entities.ApiCredential.filter({ service: 'stripe', created_by_id: user.id });
+      stripeKey = stored[0]?.api_key || null;
+    }
+    if (!stripeKey) {
+      return Response.json({ error: 'Stripe API key not configured. Set STRIPE_SECRET_KEY env var or save it in Settings → API Credentials.' }, { status: 400 });
     }
 
     // Fetch active subscriptions from Stripe
     const subsResponse = await fetch('https://api.stripe.com/v1/subscriptions?status=active&limit=100&expand[]=data.items.data.price.product', {
       headers: {
-        'Authorization': `Bearer ${stripe_key}`,
+        'Authorization': `Bearer ${stripeKey}`,
       },
     });
 

@@ -42,7 +42,13 @@ export default function StepConnectSources({ company, onToolsImported, existingT
     if (!creds.stripeKey.trim()) return;
     setStatus((s) => ({ ...s, stripe: "loading" }));
     try {
-      const res = await base44.functions.invoke("getStripeSubscriptions", { stripe_key: creds.stripeKey });
+      const existing = await base44.entities.ApiCredential.filter({ service: 'stripe' });
+      if (existing[0]) {
+        await base44.entities.ApiCredential.update(existing[0].id, { api_key: creds.stripeKey });
+      } else {
+        await base44.entities.ApiCredential.create({ service: 'stripe', api_key: creds.stripeKey });
+      }
+      const res = await base44.functions.invoke("getStripeSubscriptions", {});
       const tools = (res.data?.subscriptions || []).map((sub) => ({
         tool_name: sub.name || sub.product_name || "Unknown",
         category: sub.category || "Other",
@@ -65,11 +71,13 @@ export default function StepConnectSources({ company, onToolsImported, existingT
     if (!creds.gwDomain || !creds.gwAdminEmail || !creds.gwServiceKey) return;
     setStatus((s) => ({ ...s, google: "loading" }));
     try {
-      const res = await base44.functions.invoke("getWorkspaceUsers", {
-        domain: creds.gwDomain,
-        admin_email: creds.gwAdminEmail,
-        service_account_key: creds.gwServiceKey,
-      });
+      const existing = await base44.entities.ApiCredential.filter({ service: 'google_workspace' });
+      if (existing[0]) {
+        await base44.entities.ApiCredential.update(existing[0].id, { api_key: creds.gwServiceKey, extra_fields: { admin_email: creds.gwAdminEmail } });
+      } else {
+        await base44.entities.ApiCredential.create({ service: 'google_workspace', api_key: creds.gwServiceKey, extra_fields: { admin_email: creds.gwAdminEmail } });
+      }
+      const res = await base44.functions.invoke("getWorkspaceUsers", { domain: creds.gwDomain });
       const users = res.data?.users || [];
       const tool = {
         tool_name: "Google Workspace",

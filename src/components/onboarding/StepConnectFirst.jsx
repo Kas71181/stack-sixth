@@ -68,7 +68,13 @@ export default function StepConnectFirst({ onToolsFound, toolsFound }) {
     if (!stripeKey.trim()) return;
     setStripeStatus("loading");
     try {
-      const res = await base44.functions.invoke("getStripeSubscriptions", { stripe_key: stripeKey });
+      const existing = await base44.entities.ApiCredential.filter({ service: 'stripe' });
+      if (existing[0]) {
+        await base44.entities.ApiCredential.update(existing[0].id, { api_key: stripeKey });
+      } else {
+        await base44.entities.ApiCredential.create({ service: 'stripe', api_key: stripeKey });
+      }
+      const res = await base44.functions.invoke("getStripeSubscriptions", {});
       const tools = res.data?.tools || [];
       setStripeTools(tools);
       setStripeStatus("done");

@@ -21,7 +21,14 @@ export default function StripeBillingPanel({ onImport }) {
     }
     setLoading(true);
     setError(null);
-    const res = await base44.functions.invoke("getStripeSubscriptions", { stripe_key: key });
+    // Save credential securely (never pass secrets in request body)
+    const existing = await base44.entities.ApiCredential.filter({ service: 'stripe' });
+    if (existing[0]) {
+      await base44.entities.ApiCredential.update(existing[0].id, { api_key: key });
+    } else {
+      await base44.entities.ApiCredential.create({ service: 'stripe', api_key: key });
+    }
+    const res = await base44.functions.invoke("getStripeSubscriptions", {});
     setLoading(false);
     const data = res.data;
     if (data.error) {

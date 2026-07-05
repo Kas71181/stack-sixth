@@ -8,7 +8,7 @@ Deno.serve(async (req) => {
 
     let apiKey = Deno.env.get("HUBSPOT_API_KEY");
     if (!apiKey) {
-      const stored = await base44.entities.ApiCredential.filter({ service: 'hubspot' });
+      const stored = await base44.entities.ApiCredential.filter({ service: 'hubspot', created_by_id: user.id });
       if (stored[0]) {
         apiKey = stored[0].api_key || null;
       }

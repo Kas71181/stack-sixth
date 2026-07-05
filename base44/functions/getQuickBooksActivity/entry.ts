@@ -6,7 +6,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const stored = await base44.entities.ApiCredential.filter({ service: 'quickbooks' });
+    const stored = await base44.entities.ApiCredential.filter({ service: 'quickbooks', created_by_id: user.id });
     const cred = stored[0];
     const accessToken = cred?.api_key || null;
     const realmId = cred?.extra_fields?.realm_id || null;

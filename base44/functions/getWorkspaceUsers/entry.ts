@@ -8,15 +8,25 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { access_token, domain } = await req.json();
-    if (!access_token || !domain) {
-      return Response.json({ error: 'access_token and domain are required' }, { status: 400 });
+    const { domain } = await req.json().catch(() => ({}));
+    let accessToken = Deno.env.get("GOOGLE_WORKSPACE_ACCESS_TOKEN");
+
+    if (!accessToken) {
+      const stored = await base44.entities.ApiCredential.filter({ service: 'google_workspace', created_by_id: user.id });
+      accessToken = stored[0]?.api_key || null;
+    }
+
+    if (!accessToken) {
+      return Response.json({ error: 'Google Workspace access token not configured. Set GOOGLE_WORKSPACE_ACCESS_TOKEN env var or save it in Settings → API Credentials.' }, { status: 400 });
+    }
+    if (!domain) {
+      return Response.json({ error: 'domain is required' }, { status: 400 });
     }
 
     // Fetch all users from Google Workspace Admin Directory API
     const usersRes = await fetch(
       `https://admin.googleapis.com/admin/directory/v1/users?domain=${encodeURIComponent(domain)}&maxResults=500&projection=full`,
-      { headers: { Authorization: `Bearer ${access_token}` } }
+      { headers: { Authorization: `Bearer ${accessToken}` } }
     );
 
     if (!usersRes.ok) {
