@@ -8,30 +8,61 @@ function getOrdinal(n) {
   return s[(v - 20) % 10] || s[v] || s[0];
 }
 
-// Holidays with date ranges (month is 1-indexed). A holiday is "active" from start through end of end day.
-const HOLIDAYS = [
-  { name: "New Year's Day", emoji: "🎉", start: [1, 1], end: [1, 1] },
-  { name: "Martin Luther King Jr. Day", emoji: "🕊️", start: [1, 19], end: [1, 19] },
-  { name: "Presidents' Day", emoji: "🇺🇸", start: [2, 16], end: [2, 16] },
-  { name: "Memorial Day", emoji: "🇺🇸", start: [5, 25], end: [5, 25] },
-  { name: "Juneteenth", emoji: "✊", start: [6, 19], end: [6, 19] },
-  { name: "Independence Day", emoji: "🇺🇸", start: [7, 4], end: [7, 6] },
-  { name: "Labor Day", emoji: "🔨", start: [9, 7], end: [9, 7] },
-  { name: "Columbus Day", emoji: "⛵", start: [10, 12], end: [10, 12] },
-  { name: "Veterans Day", emoji: "🎖️", start: [11, 11], end: [11, 11] },
-  { name: "Thanksgiving", emoji: "🦃", start: [11, 26], end: [11, 27] },
-  { name: "Christmas", emoji: "🎄", start: [12, 25], end: [12, 26] },
-];
+// ── US Federal Holiday computation ──────────────────────────────────────────
+// Floating holidays (Nth Monday / last Monday / Nth Thursday) are computed
+// dynamically for the given year so they are always correct.
+
+// Returns Date for the Nth occurrence of a given weekday in a month.
+// weekday: 0=Sun, 1=Mon, … 6=Sat.  n: 1st, 2nd, 3rd, 4th, or -1 for last.
+function nthWeekday(year, month, weekday, n) {
+  if (n === -1) {
+    // Last occurrence: start from last day of month, walk backwards
+    const d = new Date(year, month + 1, 0);
+    while (d.getDay() !== weekday) d.setDate(d.getDate() - 1);
+    return d;
+  }
+  const first = new Date(year, month, 1);
+  const offset = (weekday - first.getDay() + 7) % 7;
+  const day = 1 + offset + (n - 1) * 7;
+  return new Date(year, month, day);
+}
+
+function buildHolidays(year) {
+  const mk = (date, name, emoji, extraDays = 0) => {
+    const end = new Date(date);
+    end.setDate(end.getDate() + extraDays);
+    return {
+      name, emoji,
+      start: [date.getMonth() + 1, date.getDate()],
+      end: [end.getMonth() + 1, end.getDate()],
+    };
+  };
+  return [
+    mk(new Date(year, 0, 1), "New Year's Day", "🎉", 0),
+    mk(nthWeekday(year, 0, 1, 3), "Martin Luther King Jr. Day", "🕊️"),
+    mk(nthWeekday(year, 1, 1, 3), "Presidents' Day", "🇺🇸"),
+    mk(nthWeekday(year, 4, 1, -1), "Memorial Day", "🇺🇸"),
+    mk(new Date(year, 5, 19), "Juneteenth", "✊", 0),
+    mk(new Date(year, 6, 4), "Independence Day", "🇺🇸", 2), // through Jul 6
+    mk(nthWeekday(year, 8, 1, 1), "Labor Day", "🔨"),
+    mk(nthWeekday(year, 9, 1, 2), "Columbus Day", "⛵"),
+    mk(new Date(year, 10, 11), "Veterans Day", "🎖️", 0),
+    mk(nthWeekday(year, 10, 4, 4), "Thanksgiving", "🦃", 1), // incl. Black Friday
+    mk(new Date(year, 11, 25), "Christmas", "🎄", 1),
+  ];
+}
 
 function getActiveHoliday(date) {
-  const m = date.getMonth() + 1;
-  const d = date.getDate();
-  for (const h of HOLIDAYS) {
-    const [sm, sd] = h.start;
-    const [em, ed] = h.end;
-    const afterStart = m > sm || (m === sm && d >= sd);
-    const beforeEnd = m < em || (m === em && d <= ed);
-    if (afterStart && beforeEnd) return h;
+  const year = date.getFullYear();
+  // Check current year and adjacent year (for Dec→Jan boundary)
+  for (const y of [year - 1, year, year + 1]) {
+    for (const h of buildHolidays(y)) {
+      const [sm, sd] = h.start;
+      const [em, ed] = h.end;
+      const start = new Date(y, sm - 1, sd);
+      const end = new Date(y, em - 1, ed);
+      if (date >= start && date <= end) return h;
+    }
   }
   return null;
 }
