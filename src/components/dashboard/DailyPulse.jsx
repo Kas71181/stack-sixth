@@ -113,7 +113,7 @@ export default function DailyPulse({
       <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground mr-1">
         Today's Pulse
       </span>
-      <span className="text-[11px] text-muted-foreground mr-1 hidden sm:inline">
+      <span className="text-[11px] text-muted-foreground mr-1">
         · {dateStr}
       </span>
       {alerts.map((alert, i) => {
