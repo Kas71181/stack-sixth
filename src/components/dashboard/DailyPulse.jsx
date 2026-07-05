@@ -8,6 +8,34 @@ function getOrdinal(n) {
   return s[(v - 20) % 10] || s[v] || s[0];
 }
 
+// Holidays with date ranges (month is 1-indexed). A holiday is "active" from start through end of end day.
+const HOLIDAYS = [
+  { name: "New Year's Day", emoji: "🎉", start: [1, 1], end: [1, 1] },
+  { name: "Martin Luther King Jr. Day", emoji: "🕊️", start: [1, 19], end: [1, 19] },
+  { name: "Presidents' Day", emoji: "🇺🇸", start: [2, 16], end: [2, 16] },
+  { name: "Memorial Day", emoji: "🇺🇸", start: [5, 25], end: [5, 25] },
+  { name: "Juneteenth", emoji: "✊", start: [6, 19], end: [6, 19] },
+  { name: "Independence Day", emoji: "🎆", start: [7, 4], end: [7, 6] },
+  { name: "Labor Day", emoji: "🔨", start: [9, 7], end: [9, 7] },
+  { name: "Columbus Day", emoji: "⛵", start: [10, 12], end: [10, 12] },
+  { name: "Veterans Day", emoji: "🎖️", start: [11, 11], end: [11, 11] },
+  { name: "Thanksgiving", emoji: "🦃", start: [11, 26], end: [11, 27] },
+  { name: "Christmas", emoji: "🎄", start: [12, 25], end: [12, 26] },
+];
+
+function getActiveHoliday(date) {
+  const m = date.getMonth() + 1;
+  const d = date.getDate();
+  for (const h of HOLIDAYS) {
+    const [sm, sd] = h.start;
+    const [em, ed] = h.end;
+    const afterStart = m > sm || (m === sm && d >= sd);
+    const beforeEnd = m < em || (m === em && d <= ed);
+    if (afterStart && beforeEnd) return h;
+  }
+  return null;
+}
+
 /**
  * Slim "morning briefing" strip — surfaces what needs attention today.
  * Sits above the existing dashboard; nothing below changes.
@@ -24,6 +52,8 @@ export default function DailyPulse({
   const today = new Date();
   const day = today.getDate();
   const dateStr = `${today.toLocaleDateString("en-US", { weekday: "long" })} ${day}${getOrdinal(day)} ${today.toLocaleDateString("en-US", { month: "long" })}, ${today.getFullYear()}`;
+  const holiday = getActiveHoliday(today);
+  const holidayStr = holiday ? `${holiday.emoji} ${holiday.name}` : null;
 
   const alerts = [];
 
@@ -89,7 +119,9 @@ export default function DailyPulse({
           <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
             You're all caught up — nothing needs your attention today.
           </p>
-          <p className="text-[11px] text-emerald-600/70 dark:text-emerald-400/70 mt-0.5">{dateStr}</p>
+          <p className="text-[11px] text-emerald-600/70 dark:text-emerald-400/70 mt-0.5">
+            {dateStr}{holidayStr ? ` · ${holidayStr}` : ""}
+          </p>
         </div>
       </motion.div>
     );
@@ -114,7 +146,7 @@ export default function DailyPulse({
         Today's Pulse
       </span>
       <span className="text-[11px] text-muted-foreground mr-1">
-        · {dateStr}
+        · {dateStr}{holidayStr ? ` · ${holidayStr}` : ""}
       </span>
       {alerts.map((alert, i) => {
         const Icon = alert.icon;
