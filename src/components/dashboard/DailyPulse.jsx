@@ -15,7 +15,7 @@ const HOLIDAYS = [
   { name: "Presidents' Day", emoji: "🇺🇸", start: [2, 16], end: [2, 16] },
   { name: "Memorial Day", emoji: "🇺🇸", start: [5, 25], end: [5, 25] },
   { name: "Juneteenth", emoji: "✊", start: [6, 19], end: [6, 19] },
-  { name: "Independence Day", emoji: "🎆", start: [7, 4], end: [7, 6] },
+  { name: "Independence Day", emoji: "🇺🇸", start: [7, 4], end: [7, 6] },
   { name: "Labor Day", emoji: "🔨", start: [9, 7], end: [9, 7] },
   { name: "Columbus Day", emoji: "⛵", start: [10, 12], end: [10, 12] },
   { name: "Veterans Day", emoji: "🎖️", start: [11, 11], end: [11, 11] },
