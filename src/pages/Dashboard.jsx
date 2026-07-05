@@ -210,7 +210,7 @@ export default function Dashboard() {
           const pct = totalCount > 0 ? Math.round((liveCount / totalCount) * 100) : 0;
           if (pct >= 80 || totalCount === 0) return null;
           return (
-            <div className="mb-5 glass-card border-primary/20 bg-primary/5 flex items-center gap-3 px-4 py-3 rounded-xl">
+            <div className="mb-5 glass-card border-primary/20 bg-primary/5 hidden sm:flex items-center gap-3 px-4 py-3 rounded-xl">
               <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center flex-shrink-0">
                 <Zap className="w-4 h-4 text-primary" />
               </div>
