@@ -15,9 +15,22 @@ Deno.serve(async (req) => {
     for (const user of allUsers) {
       if (!user.email) continue;
 
-      // Find this user's company (most recent)
-      const userCompanies = await base44.asServiceRole.entities.Company.filter({ created_by_id: user.id });
-      const company = userCompanies[0];
+      // Find this user's company — first by created_by_id, then by email domain match
+      let userCompanies = await base44.asServiceRole.entities.Company.filter({ created_by_id: user.id });
+      let company = userCompanies[0];
+
+      // Fallback: match by email domain if no company was created by this user
+      if (!company) {
+        const userDomain = (user.email || '').split('@')[1]?.toLowerCase().replace(/\.(com|io|net|org|co|inc|llc)$/i, '').replace(/[^a-z0-9]/g, '');
+        if (userDomain) {
+          const allCompanies = await base44.asServiceRole.entities.Company.list();
+          company = allCompanies.find((c) => {
+            const companySlug = (c.name || '').toLowerCase().replace(/\.(com|io|net|org|co|inc|llc)$/i, '').replace(/[^a-z0-9]/g, '');
+            return companySlug && companySlug.includes(userDomain) || (userDomain.includes(companySlug) && companySlug.length > 3);
+          });
+        }
+      }
+
       if (!company || company.notif_weekly_digest === false) continue;
 
       // Gather data scoped to this user
