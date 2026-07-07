@@ -7,7 +7,7 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     // Load credentials — need accountId, clientId, clientSecret for Server-to-Server OAuth
-    const stored = await base44.entities.ApiCredential.filter({ service: 'zoom' });
+    const stored = await base44.entities.ApiCredential.filter({ service: 'zoom', created_by_id: user.id });
     const cred = stored[0];
 
     if (!cred?.api_key) {
@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
     });
 
     // Upsert into UserActivity
-    const existing = await base44.asServiceRole.entities.UserActivity.filter({ tool_name: 'Zoom' });
+    const existing = await base44.asServiceRole.entities.UserActivity.filter({ tool_name: 'Zoom', created_by_id: user.id });
     const existingByEmail = new Map(existing.map((r) => [r.user_email, r.id]));
 
     let created = 0, updated = 0, deleted = 0;
@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.UserActivity.update(existingByEmail.get(record.user_email), record);
         updated++;
       } else {
-        await base44.asServiceRole.entities.UserActivity.create(record);
+        await base44.asServiceRole.entities.UserActivity.create({ ...record, created_by_id: user.id });
         created++;
       }
     }

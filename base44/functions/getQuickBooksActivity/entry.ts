@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
       };
     });
 
-    const existing = await base44.asServiceRole.entities.UserActivity.filter({ tool_name: 'QuickBooks' });
+    const existing = await base44.asServiceRole.entities.UserActivity.filter({ tool_name: 'QuickBooks', created_by_id: user.id });
     const existingByEmail = new Map(existing.map((r) => [r.user_email, r.id]));
 
     let created = 0, updated = 0, deleted = 0;
@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.UserActivity.update(existingByEmail.get(record.user_email), record);
         updated++;
       } else {
-        await base44.asServiceRole.entities.UserActivity.create(record);
+        await base44.asServiceRole.entities.UserActivity.create({ ...record, created_by_id: user.id });
         created++;
       }
     }
