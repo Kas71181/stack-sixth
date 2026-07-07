@@ -22,6 +22,7 @@ import PurchaseRequests from './pages/PurchaseRequests';
 import LifecycleGovernance from './pages/LifecycleGovernance';
 import Marketplace from './pages/Marketplace';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import IntelligenceLibrary from './pages/IntelligenceLibrary';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -74,6 +75,7 @@ const AuthenticatedApp = () => {
         <Route path="/lifecycle" element={<LifecycleGovernance />} />
         <Route path="/marketplace" element={<Marketplace />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/intelligence" element={<IntelligenceLibrary />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
 

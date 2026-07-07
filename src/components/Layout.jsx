@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { BarChart3, History, Home, Monitor, ShoppingCart, LogOut, User, Activity, ArrowLeftRight, Settings, ChevronDown, ClipboardList, ShieldCheck, Store, Layers } from "lucide-react";
+import { BarChart3, History, Home, Monitor, ShoppingCart, LogOut, User, Activity, ArrowLeftRight, Settings, ChevronDown, ClipboardList, ShieldCheck, Store, Layers, Brain } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import MoreMenu from "@/components/MoreMenu";
 import { useState, useRef, useEffect } from "react";
@@ -27,6 +27,7 @@ const secondaryNav = [
   { path: "/switch-planner", label: "Switch Tools", icon: ArrowLeftRight },
   { path: "/purchase-requests", label: "Purchase Requests", icon: ClipboardList },
   { path: "/marketplace", label: "Vendor Bids", icon: Store },
+  { path: "/intelligence", label: "Intelligence", icon: Brain },
 ];
 
 const navItems = [...primaryNav, ...secondaryNav];
@@ -48,6 +49,7 @@ export default function Layout() {
       "/purchase-requests": "purchase_requests",
       "/lifecycle": "lifecycle_governance",
       "/marketplace": "marketplace",
+      "/intelligence": "intelligence_library",
       "/contracts": "contracts",
       "/settings": "settings",
       "/data-coverage": "data_coverage",

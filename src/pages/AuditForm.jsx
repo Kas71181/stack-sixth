@@ -202,6 +202,22 @@ Return a structured ICP profile with: industry, business_model (B2B/B2C/B2B2C), 
         status: "completed",
       });
       base44.analytics.track({ eventName: "audit_completed", properties: { user_type: formData.user_type, tool_count: formData.existing_software.length } });
+
+      // Auto-contribute anonymized data to the benchmark network
+      const teamSize = formData.team_size || 10;
+      const sizeRange = teamSize <= 10 ? "1-10" : teamSize <= 50 ? "11-50" : teamSize <= 200 ? "51-200" : teamSize <= 500 ? "201-500" : "500+";
+      try {
+        await base44.functions.invoke("submitBenchmark", {
+          integrations: dedupedSoftware.map((s) => ({
+            tool_name: s.name,
+            category: s.category || "",
+            monthly_cost: s.monthly_cost || 0,
+            licensed_seats: 0,
+            active_users: 0,
+          })),
+          company_size: sizeRange,
+        });
+      } catch {}
     } catch {
       await base44.entities.SoftwareAudit.update(audit.id, { status: "error" });
     }
