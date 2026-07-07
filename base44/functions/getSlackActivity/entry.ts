@@ -20,14 +20,25 @@ Deno.serve(async (req) => {
       (m) => !m.is_bot && !m.deleted && m.id !== 'USLACKBOT'
     );
 
-    // Auto-detect team: filter to members sharing the authenticated user's email domain
+    // Auto-detect team domain: use user's email domain, or auto-detect from workspace members
     const userDomain = (user.email || '').split('@')[1]?.toLowerCase();
     const freeProviders = ['gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com', 'aol.com', 'proton.me', 'protonmail.com'];
-    const shouldFilter = userDomain && !freeProviders.includes(userDomain);
-    const realMembers = shouldFilter
+    let teamDomain = (userDomain && !freeProviders.includes(userDomain)) ? userDomain : null;
+    if (!teamDomain) {
+      const domainCounts = {};
+      for (const m of allRealMembers) {
+        const email = m.profile?.email?.toLowerCase();
+        if (!email) continue;
+        const domain = email.split('@')[1];
+        if (domain && !freeProviders.includes(domain)) domainCounts[domain] = (domainCounts[domain] || 0) + 1;
+      }
+      const sorted = Object.entries(domainCounts).sort((a, b) => b[1] - a[1]);
+      if (sorted.length > 0) teamDomain = sorted[0][0];
+    }
+    const realMembers = teamDomain
       ? allRealMembers.filter((m) => {
           const email = m.profile?.email?.toLowerCase();
-          return email && email.endsWith('@' + userDomain);
+          return email && email.endsWith('@' + teamDomain);
         })
       : allRealMembers;
 

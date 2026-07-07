@@ -21,10 +21,8 @@ Deno.serve(async (req) => {
 
     let allMembers = [];
 
-    // Auto-detect team: filter to members sharing the authenticated user's email domain
-    const userDomain = (user.email || '').split('@')[1]?.toLowerCase();
+    // Team domain will be auto-detected after collecting member emails
     const freeProviders = ['gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com', 'aol.com', 'proton.me', 'protonmail.com'];
-    const shouldFilter = userDomain && !freeProviders.includes(userDomain);
 
     if (Array.isArray(orgs) && orgs.length > 0) {
       // Use first org
@@ -70,12 +68,6 @@ Deno.serve(async (req) => {
           // Get user email
           const profileRes = await fetch(`https://api.github.com/users/${member.login}`, { headers });
           const profile = await profileRes.json();
-
-          // Skip members whose email doesn't match the team domain
-          const memberEmail = profile.email?.toLowerCase();
-          if (shouldFilter && (!memberEmail || !memberEmail.endsWith('@' + userDomain))) {
-            continue;
-          }
 
           const pushEvents = recentEvents.filter((e) => e.type === 'PushEvent').length;
           const prEvents = recentEvents.filter((e) => e.type === 'PullRequestEvent').length;
@@ -137,6 +129,24 @@ Deno.serve(async (req) => {
         content_created_last_30: pushEvents + prEvents,
         api_calls_last_30: 0,
       });
+    }
+
+    // Auto-detect team domain from collected member emails
+    const userDomain = (user.email || '').split('@')[1]?.toLowerCase();
+    let teamDomain = (userDomain && !freeProviders.includes(userDomain)) ? userDomain : null;
+    if (!teamDomain && allMembers.length > 0) {
+      const domainCounts = {};
+      for (const m of allMembers) {
+        const email = m.user_email?.toLowerCase();
+        if (!email) continue;
+        const domain = email.split('@')[1];
+        if (domain && !freeProviders.includes(domain)) domainCounts[domain] = (domainCounts[domain] || 0) + 1;
+      }
+      const sorted = Object.entries(domainCounts).sort((a, b) => b[1] - a[1]);
+      if (sorted.length > 0) teamDomain = sorted[0][0];
+    }
+    if (teamDomain) {
+      allMembers = allMembers.filter((m) => m.user_email?.toLowerCase().endsWith('@' + teamDomain));
     }
 
     // Upsert into UserActivity

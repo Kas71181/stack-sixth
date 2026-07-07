@@ -36,12 +36,23 @@ Deno.serve(async (req) => {
     const usersData = await usersRes.json();
     const allMembers = usersData.results || [];
 
-    // Auto-detect team: filter to members sharing the authenticated user's email domain
+    // Auto-detect team domain: use user's email domain, or auto-detect from workspace members
     const userDomain = (user.email || '').split('@')[1]?.toLowerCase();
     const freeProviders = ['gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com', 'aol.com', 'proton.me', 'protonmail.com'];
-    const shouldFilter = userDomain && !freeProviders.includes(userDomain);
-    const members = shouldFilter
-      ? allMembers.filter((m) => m.email?.toLowerCase().endsWith('@' + userDomain))
+    let teamDomain = (userDomain && !freeProviders.includes(userDomain)) ? userDomain : null;
+    if (!teamDomain) {
+      const domainCounts = {};
+      for (const m of allMembers) {
+        const email = m.email?.toLowerCase();
+        if (!email) continue;
+        const domain = email.split('@')[1];
+        if (domain && !freeProviders.includes(domain)) domainCounts[domain] = (domainCounts[domain] || 0) + 1;
+      }
+      const sorted = Object.entries(domainCounts).sort((a, b) => b[1] - a[1]);
+      if (sorted.length > 0) teamDomain = sorted[0][0];
+    }
+    const members = teamDomain
+      ? allMembers.filter((m) => m.email?.toLowerCase().endsWith('@' + teamDomain))
       : allMembers;
 
     // Fetch recent activity via CRM engagements v3

@@ -25,14 +25,25 @@ Deno.serve(async (req) => {
 
     const allRealUsers = usersData.results.filter((u) => u.type === 'person');
 
-    // Auto-detect team: filter to members sharing the authenticated user's email domain
+    // Auto-detect team domain: use user's email domain, or auto-detect from workspace members
     const userDomain = (user.email || '').split('@')[1]?.toLowerCase();
     const freeProviders = ['gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com', 'aol.com', 'proton.me', 'protonmail.com'];
-    const shouldFilter = userDomain && !freeProviders.includes(userDomain);
-    const realUsers = shouldFilter
+    let teamDomain = (userDomain && !freeProviders.includes(userDomain)) ? userDomain : null;
+    if (!teamDomain) {
+      const domainCounts = {};
+      for (const u of allRealUsers) {
+        const email = u.person?.email?.toLowerCase();
+        if (!email) continue;
+        const domain = email.split('@')[1];
+        if (domain && !freeProviders.includes(domain)) domainCounts[domain] = (domainCounts[domain] || 0) + 1;
+      }
+      const sorted = Object.entries(domainCounts).sort((a, b) => b[1] - a[1]);
+      if (sorted.length > 0) teamDomain = sorted[0][0];
+    }
+    const realUsers = teamDomain
       ? allRealUsers.filter((u) => {
           const email = u.person?.email?.toLowerCase();
-          return email && email.endsWith('@' + userDomain);
+          return email && email.endsWith('@' + teamDomain);
         })
       : allRealUsers;
 
