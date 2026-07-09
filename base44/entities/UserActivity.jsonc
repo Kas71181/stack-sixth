@@ -54,6 +54,11 @@
       "title": "Wasted Cost Flag",
       "default": false
     },
+    "offboarded_flag": {
+      "type": "boolean",
+      "title": "Offboarded (not in HRIS)",
+      "default": false
+    },
     "source": {
       "type": "string",
       "enum": [

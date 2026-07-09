@@ -3,12 +3,18 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const body = await req.json().catch(() => ({}));
+    let user;
+    if (body._targetUserId) {
+      user = await base44.asServiceRole.entities.User.get(body._targetUserId);
+    } else {
+      user = await base44.auth.me();
+    }
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     let apiKey = Deno.env.get("APOLLO_API_KEY");
     if (!apiKey) {
-      const stored = await base44.entities.ApiCredential.filter({ service: 'apollo', created_by_id: user.id });
+      const stored = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'apollo', created_by_id: user.id });
       apiKey = stored[0]?.api_key || null;
     }
     if (!apiKey) return Response.json({ success: false, not_configured: true, error: 'APOLLO_API_KEY not configured' }, { status: 200 });
@@ -68,6 +74,11 @@ Deno.serve(async (req) => {
         status,
         wasted_cost_flag: activityScore < 40,
         source: 'live',
+        logins_last_30: daysSince <= 30 ? 1 : 0,
+        features_used: 0,
+        transactions_last_30: 0,
+        content_created_last_30: 0,
+        api_calls_last_30: 0,
       };
     });
 

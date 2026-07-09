@@ -6,11 +6,17 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const body = await req.json().catch(() => ({}));
+    let user;
+    if (body._targetUserId) {
+      user = await base44.asServiceRole.entities.User.get(body._targetUserId);
+    } else {
+      user = await base44.auth.me();
+    }
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     // Load stored credentials
-    const stored = await base44.entities.ApiCredential.filter({ service: 'bamboohr', created_by_id: user.id });
+    const stored = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'bamboohr', created_by_id: user.id });
     if (!stored[0]?.api_key || !stored[0]?.extra_fields?.subdomain) {
       return Response.json({ success: false, not_configured: true, error: 'BambooHR credentials not configured' });
     }

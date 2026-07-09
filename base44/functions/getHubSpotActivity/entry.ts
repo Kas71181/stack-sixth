@@ -3,12 +3,18 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const body = await req.json().catch(() => ({}));
+    let user;
+    if (body._targetUserId) {
+      user = await base44.asServiceRole.entities.User.get(body._targetUserId);
+    } else {
+      user = await base44.auth.me();
+    }
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     let apiKey = Deno.env.get("HUBSPOT_API_KEY");
     if (!apiKey) {
-      const stored = await base44.entities.ApiCredential.filter({ service: 'hubspot', created_by_id: user.id });
+      const stored = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'hubspot', created_by_id: user.id });
       if (stored[0]) {
         apiKey = stored[0].api_key || null;
       }
@@ -64,11 +70,13 @@ Deno.serve(async (req) => {
 
     // Build a map of owner id -> last engagement date
     const engagementByOwner = {};
+    const engagementCountByOwner = {};
     for (const eng of recentEngagements) {
       const ownerId = eng.properties?.hubspot_owner_id;
       const ts = eng.properties?.hs_lastmodifieddate;
-      if (ownerId && ts) {
-        if (!engagementByOwner[ownerId] || ts > engagementByOwner[ownerId]) {
+      if (ownerId) {
+        engagementCountByOwner[ownerId] = (engagementCountByOwner[ownerId] || 0) + 1;
+        if (ts && (!engagementByOwner[ownerId] || ts > engagementByOwner[ownerId])) {
           engagementByOwner[ownerId] = ts;
         }
       }
@@ -82,6 +90,7 @@ Deno.serve(async (req) => {
       const activityScore = daysSince <= 7 ? 90 : daysSince <= 14 ? 70 : daysSince <= 30 ? 40 : 10;
       const status = activityScore >= 70 ? 'Active' : activityScore >= 40 ? 'Dormant' : 'Inactive';
 
+      const engCount = engagementCountByOwner[m.id] || 0;
       return {
         tool_name: 'HubSpot',
         user_email: m.email,
@@ -92,6 +101,11 @@ Deno.serve(async (req) => {
         status,
         wasted_cost_flag: activityScore < 40,
         source: 'live',
+        logins_last_30: daysSince <= 30 ? 1 : 0,
+        features_used: engCount > 0 ? Math.min(5, 1 + Math.floor(engCount / 5)) : 0,
+        transactions_last_30: engCount,
+        content_created_last_30: 0,
+        api_calls_last_30: 0,
       };
     });
 

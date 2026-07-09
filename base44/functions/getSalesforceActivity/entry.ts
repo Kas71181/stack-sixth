@@ -3,7 +3,13 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const body = await req.json().catch(() => ({}));
+    let user;
+    if (body._targetUserId) {
+      user = await base44.asServiceRole.entities.User.get(body._targetUserId);
+    } else {
+      user = await base44.auth.me();
+    }
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     let clientId = Deno.env.get("SALESFORCE_CLIENT_ID");
@@ -11,7 +17,7 @@ Deno.serve(async (req) => {
     let instanceUrl = Deno.env.get("SALESFORCE_INSTANCE_URL");
 
     if (!clientId || !clientSecret || !instanceUrl) {
-      const stored = await base44.entities.ApiCredential.filter({ service: 'salesforce', created_by_id: user.id });
+      const stored = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'salesforce', created_by_id: user.id });
       if (stored[0]) {
         clientId = stored[0].api_key || clientId;
         clientSecret = stored[0].extra_fields?.client_secret || clientSecret;
@@ -92,6 +98,11 @@ Deno.serve(async (req) => {
         status,
         wasted_cost_flag: activityScore < 40,
         source: 'live',
+        logins_last_30: daysSince <= 30 ? 1 : 0,
+        features_used: 0,
+        transactions_last_30: 0,
+        content_created_last_30: 0,
+        api_calls_last_30: 0,
       };
     });
 

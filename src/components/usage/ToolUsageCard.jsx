@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { AlertTriangle, CheckCircle2, DollarSign, Users, TrendingUp } from "lucide-react";
+import { AlertTriangle, CheckCircle2, DollarSign, Users, TrendingUp, UserX } from "lucide-react";
+import { calculateConfidence, getStaleness, STALENESS_STYLES, getConfidenceLevel } from "@/lib/confidenceScore";
 import UserActivityDrilldown from "./UserActivityDrilldown";
 
 function HealthGauge({ score }) {
@@ -89,6 +90,19 @@ export default function ToolUsageCard({ tool }) {
     { label: "API Calls", value: sumSig("api_calls_last_30"), icon: "🔌" },
   ].filter((s) => s.value > 0) : [];
 
+  // Data confidence + staleness
+  const latestUpdate = liveUsers.length > 0
+    ? liveUsers.reduce((latest, u) => {
+        if (!u.updated_date) return latest;
+        return !latest || new Date(u.updated_date) > new Date(latest) ? u.updated_date : latest;
+      }, null)
+    : tool.updated_date;
+  const staleness = getStaleness(latestUpdate);
+  const stalenessStyle = STALENESS_STYLES[staleness.level] || STALENESS_STYLES.unknown;
+  const confidenceScore = calculateConfidence(tool, liveUsers);
+  const confidenceLevel = getConfidenceLevel(confidenceScore);
+  const offboardedCount = liveUsers.filter((u) => u.offboarded_flag).length;
+
   return (
     <>
     <div
@@ -111,6 +125,10 @@ export default function ToolUsageCard({ tool }) {
             ) : (
               <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">~ Est.</span>
             )}
+            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1 ${stalenessStyle.badge}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${stalenessStyle.dot}`} />
+              {staleness.label}
+            </span>
             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1 ${meta.cls}`}>
               <StatusIcon className="w-2.5 h-2.5" />
               {meta.label}
@@ -179,6 +197,12 @@ export default function ToolUsageCard({ tool }) {
           </div>
         )}
 
+        {offboardedCount > 0 && (
+          <div className="mt-2 flex items-center gap-1.5 text-xs text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/40 rounded-lg px-2 py-1">
+            <UserX className="w-3 h-3 flex-shrink-0" />
+            <span>{offboardedCount} offboarded user{offboardedCount > 1 ? "s" : ""} — seat likely reclaimable</span>
+          </div>
+        )}
         {wastedCost && (
           <div className="mt-2 flex items-center gap-1.5 text-xs text-destructive">
             <DollarSign className="w-3 h-3" />

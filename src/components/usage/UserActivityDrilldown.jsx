@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { X, User, Calendar, TrendingDown, CheckCircle2, AlertTriangle, Clock, Wifi } from "lucide-react";
+import { X, User, Calendar, TrendingDown, CheckCircle2, AlertTriangle, Clock, Wifi, UserX } from "lucide-react";
 import { formatDistanceToNow, parseISO } from "date-fns";
 
 const STATUS_CFG = {
@@ -135,6 +135,7 @@ export default function UserActivityDrilldown({ toolName, onClose }) {
 function UserRow({ user }) {
   const cfg = STATUS_CFG[user.status] || STATUS_CFG.Dormant;
   const Icon = cfg.Icon;
+  const isOffboarded = user.offboarded_flag;
 
   let lastSeen = null;
   if (user.last_active_date) {
@@ -165,6 +166,14 @@ function UserRow({ user }) {
           <Calendar className="w-3 h-3" />
           {lastSeen}
         </div>
+      )}
+
+      {/* Offboarded badge */}
+      {isOffboarded && (
+        <span className="flex-shrink-0 flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-700/40">
+          <UserX className="w-2.5 h-2.5" />
+          Offboarded
+        </span>
       )}
 
       {/* Status badge */}

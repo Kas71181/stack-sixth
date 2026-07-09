@@ -3,11 +3,17 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const body = await req.json().catch(() => ({}));
+    let user;
+    if (body._targetUserId) {
+      user = await base44.asServiceRole.entities.User.get(body._targetUserId);
+    } else {
+      user = await base44.auth.me();
+    }
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     // Load credentials — need accountId, clientId, clientSecret for Server-to-Server OAuth
-    const stored = await base44.entities.ApiCredential.filter({ service: 'zoom', created_by_id: user.id });
+    const stored = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'zoom', created_by_id: user.id });
     const cred = stored[0];
 
     if (!cred?.api_key) {
@@ -63,6 +69,23 @@ Deno.serve(async (req) => {
     const usersData = await usersRes.json();
     const allMembers = usersData.users || [];
 
+    // Fetch meeting usage report for deeper activity signals
+    const reportTo = new Date().toISOString().split('T')[0];
+    const reportFrom = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    let meetingByUser = new Map();
+    try {
+      const reportRes = await fetch(
+        `https://api.zoom.us/v2/report/users?type=active&from=${reportFrom}&to=${reportTo}&page_size=300`,
+        { headers: { 'Authorization': `Bearer ${access_token}` } }
+      );
+      if (reportRes.ok) {
+        const reportData = await reportRes.json();
+        for (const ru of (reportData.users || [])) {
+          meetingByUser.set(ru.email?.toLowerCase(), { meetings: ru.meetings || 0, minutes: ru.meeting_minutes || 0 });
+        }
+      }
+    } catch {}
+
     // Auto-detect team domain: use user's email domain, or auto-detect from workspace members
     const userDomain = (user.email || '').split('@')[1]?.toLowerCase();
     const freeProviders = ['gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com', 'aol.com', 'proton.me', 'protonmail.com'];
@@ -89,6 +112,7 @@ Deno.serve(async (req) => {
       const activityScore = daysSinceLogin <= 7 ? 90 : daysSinceLogin <= 14 ? 70 : daysSinceLogin <= 30 ? 40 : 10;
       const status = activityScore >= 70 ? 'Active' : activityScore >= 40 ? 'Dormant' : 'Inactive';
 
+      const meetingData = meetingByUser.get(m.email?.toLowerCase());
       return {
         tool_name: 'Zoom',
         user_email: m.email,
@@ -99,6 +123,11 @@ Deno.serve(async (req) => {
         status,
         wasted_cost_flag: activityScore < 40,
         source: 'live',
+        logins_last_30: daysSinceLogin <= 30 ? 1 : 0,
+        features_used: meetingData ? 1 : 0,
+        transactions_last_30: meetingData?.meetings || 0,
+        content_created_last_30: 0,
+        api_calls_last_30: 0,
       };
     });
 

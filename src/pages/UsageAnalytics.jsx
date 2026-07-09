@@ -3,7 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { motion } from "framer-motion";
-import { AlertTriangle, RefreshCw, Activity, Plug, ArrowRight, Zap } from "lucide-react";
+import { AlertTriangle, RefreshCw, Activity, Plug, ArrowRight, Zap, ShieldCheck } from "lucide-react";
+import { calculateConfidence } from "@/lib/confidenceScore";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
@@ -14,6 +15,7 @@ export default function UsageAnalytics({ syncKey = 0 }) {
   const qc = useQueryClient();
   const { user } = useAuth();
   const [syncing, setSyncing] = useState(false);
+  const [hrisSyncing, setHrisSyncing] = useState(false);
   const [filter, setFilter] = useState("All");
 
   const { data: activities = [], isLoading, refetch } = useQuery({
@@ -110,6 +112,8 @@ export default function UsageAnalytics({ syncKey = 0 }) {
   }, 0);
   const avgScore = tools.length ? Math.round(tools.reduce((s, t) => s + (t.activity_score || 0), 0) / tools.length) : 0;
   const healthyCount = tools.filter((t) => t.status === "Active").length;
+  const offboardedCount = enrichedTools.reduce((sum, t) => sum + (t.liveUsers || []).filter((u) => u.offboarded_flag).length, 0);
+  const avgConfidence = tools.length > 0 ? Math.round(tools.reduce((s, t) => s + calculateConfidence(t, t.liveUsers || []), 0) / tools.length) : 0;
 
   // ── Filtering ────────────────────────────────────────────────────────────────
   const FILTERS = ["All", "Healthy", "At Risk", "Wasted"];
@@ -145,6 +149,7 @@ export default function UsageAnalytics({ syncKey = 0 }) {
           status,
           license_cost_per_month: Math.round(costPerSeat * 100) / 100,
           wasted_cost_flag: activityScore < 40,
+          source: "estimated",
         };
       });
     if (!toCreate.length) {
@@ -155,6 +160,22 @@ export default function UsageAnalytics({ syncKey = 0 }) {
       toast.success(`Synced ${toCreate.length} tool(s) from your stack.`);
     }
     setSyncing(false);
+  };
+
+  const handleReconcileHRIS = async () => {
+    setHrisSyncing(true);
+    try {
+      const res = await base44.functions.invoke("reconcileHRIS", {});
+      if (res.data?.success) {
+        toast.success(`HRIS reconciliation: ${res.data.flagged} offboarded user(s) flagged`);
+        await qc.invalidateQueries({ queryKey: ["user-activity"] });
+      } else if (res.data?.not_configured) {
+        toast.error(res.data.error);
+      }
+    } catch (err) {
+      toast.error(err?.message || "HRIS reconciliation failed");
+    }
+    setHrisSyncing(false);
   };
 
   return (
@@ -170,10 +191,16 @@ export default function UsageAnalytics({ syncKey = 0 }) {
             <p className="text-xs text-muted-foreground">Tool-level adoption across your stack</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" className="gap-1.5" onClick={handleSyncFromStack} disabled={syncing}>
-          <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
-          {syncing ? "Syncing…" : "Sync from Stack"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleReconcileHRIS} disabled={hrisSyncing}>
+            <ShieldCheck className={`w-3.5 h-3.5 ${hrisSyncing ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline">{hrisSyncing ? "Checking…" : "Reconcile HR"}</span>
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleSyncFromStack} disabled={syncing}>
+            <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
+            {syncing ? "Syncing…" : "Sync from Stack"}
+          </Button>
+        </div>
       </div>
 
       {/* ── Consolidated Coverage + Stats row ─────────────────────────────── */}
@@ -223,7 +250,7 @@ export default function UsageAnalytics({ syncKey = 0 }) {
           </div>
 
           {/* KPI strip */}
-          <div className="grid grid-cols-3 gap-2 pt-1 border-t border-border/40">
+          <div className="grid grid-cols-4 gap-2 pt-1 border-t border-border/40">
             <div className="text-center">
               <p className="text-xl font-extrabold text-primary tabular-nums">{avgScore}</p>
               <p className="text-[10px] text-muted-foreground">Avg Health Score</p>
@@ -236,8 +263,23 @@ export default function UsageAnalytics({ syncKey = 0 }) {
               <p className="text-xl font-extrabold text-destructive tabular-nums">${Math.round(totalWaste).toLocaleString()}</p>
               <p className="text-[10px] text-muted-foreground">Wasted / Month</p>
             </div>
+            <div className="text-center">
+              <p className="text-xl font-extrabold text-blue-600 tabular-nums">{avgConfidence}%</p>
+              <p className="text-[10px] text-muted-foreground">Data Confidence</p>
+            </div>
           </div>
         </div>
+      )}
+
+      {/* Offboarded users alert */}
+      {offboardedCount > 0 && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          className="flex items-center gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/40 rounded-2xl px-4 py-3">
+          <ShieldCheck className="w-4 h-4 text-red-600 flex-shrink-0" />
+          <p className="text-sm text-red-800 dark:text-red-400">
+            <strong>{offboardedCount} user{offboardedCount > 1 ? "s" : ""}</strong> flagged as offboarded (not in HRIS) — their seats are likely reclaimable.
+          </p>
+        </motion.div>
       )}
 
       {/* Derived insights row */}
