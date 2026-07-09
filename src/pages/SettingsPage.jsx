@@ -10,7 +10,6 @@ import ApiCredentialsSection from "@/components/settings/ApiCredentialsSection";
 import DangerZoneSection from "@/components/settings/DangerZoneSection";
 import InviteTeamSection from "@/components/settings/InviteTeamSection";
 import DataPrivacySection from "@/components/settings/DataPrivacySection";
-import SecurityStatementSection from "@/components/settings/SecurityStatementSection";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 14 },
@@ -40,7 +39,6 @@ export default function SettingsPage() {
       <motion.div {...fadeUp(0.08)} className="glass-card overflow-hidden"><InviteTeamSection /></motion.div>
       <motion.div {...fadeUp(0.10)}><NotificationsSection /></motion.div>
       <motion.div {...fadeUp(0.15)}><ApiCredentialsSection /></motion.div>
-      <motion.div {...fadeUp(0.18)} className="glass-card overflow-hidden"><SecurityStatementSection /></motion.div>
       <motion.div {...fadeUp(0.20)} className="glass-card overflow-hidden"><DataPrivacySection /></motion.div>
       <motion.div {...fadeUp(0.22)}><DangerZoneSection /></motion.div>
     </div>
