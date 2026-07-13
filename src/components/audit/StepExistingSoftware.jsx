@@ -95,8 +95,8 @@ export default function StepExistingSoftware({ data, onChange }) {
                   {s.monthly_cost != null && (
                     <span className="text-sm font-mono font-medium">${s.monthly_cost}/mo</span>
                   )}
-                  {s.usage_score != null && (
-                    <span className="flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                  {s.usage_score != null && s.usage_score !== "" && (
+                    <span className="flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-700/40 dark:text-amber-400 px-2 py-0.5 rounded-full">
                       <Star className="w-3 h-3" />{s.usage_score}%
                     </span>
                   )}

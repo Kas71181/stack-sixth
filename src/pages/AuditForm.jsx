@@ -103,58 +103,68 @@ export default function AuditForm() {
     setLoading(true);
     base44.analytics.track({ eventName: "audit_submitted", properties: { user_type: formData.user_type, team_size: formData.team_size, tool_count: formData.existing_software.length } });
 
-    // Step 1: Fetch ICP from website if provided
+    let audit;
     let icpProfile = null;
-    if (formData.company_website) {
-      setLoadingStep("icp");
-      icpProfile = await base44.integrations.Core.InvokeLLM({
-        prompt: `Analyze this company's online presence and extract their Ideal Customer Profile (ICP) and business context.
+    let dedupedSoftware;
+    let input;
+    try {
+      // Step 1: Fetch ICP from website if provided
+      if (formData.company_website) {
+        setLoadingStep("icp");
+        icpProfile = await base44.integrations.Core.InvokeLLM({
+          prompt: `Analyze this company's online presence and extract their Ideal Customer Profile (ICP) and business context.
 Company name: ${formData.company_name}
 Website/URL: ${formData.company_website}
 
 Return a structured ICP profile with: industry, business_model (B2B/B2C/B2B2C), company_stage (startup/growth/enterprise), primary_customers (who they sell to), key_use_cases (what they do), tech_maturity (low/medium/high), and growth_focus (cost_reduction/scaling/automation/compliance).`,
-        add_context_from_internet: true,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            industry: { type: "string" },
-            business_model: { type: "string" },
-            company_stage: { type: "string" },
-            primary_customers: { type: "string" },
-            key_use_cases: { type: "array", items: { type: "string" } },
-            tech_maturity: { type: "string" },
-            growth_focus: { type: "string" },
-            summary: { type: "string" },
+          add_context_from_internet: true,
+          model: "gemini_3_flash",
+          response_json_schema: {
+            type: "object",
+            properties: {
+              industry: { type: "string" },
+              business_model: { type: "string" },
+              company_stage: { type: "string" },
+              primary_customers: { type: "string" },
+              key_use_cases: { type: "array", items: { type: "string" } },
+              tech_maturity: { type: "string" },
+              growth_focus: { type: "string" },
+              summary: { type: "string" },
+            },
           },
-        },
+        });
+      }
+
+      setLoadingStep("analysis");
+      const seen = new Set();
+      dedupedSoftware = formData.existing_software.filter((s) => {
+        const key = s.name?.toLowerCase().trim();
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
       });
+
+      input = {
+        company_name: formData.company_name,
+        company_website: formData.company_website || null,
+        user_type: formData.user_type,
+        team_size: formData.team_size,
+        monthly_budget: formData.monthly_budget || null,
+        business_processes: formData.business_processes,
+        pain_points: formData.pain_points,
+        existing_software: dedupedSoftware,
+        icp_profile: icpProfile || null,
+      };
+
+      audit = await base44.entities.SoftwareAudit.create({
+        ...input,
+        status: "pending",
+      });
+    } catch (err) {
+      setLoading(false);
+      setLoadingStep("");
+      return;
     }
-
-    setLoadingStep("analysis");
-    const seen = new Set();
-    const dedupedSoftware = formData.existing_software.filter((s) => {
-      const key = s.name?.toLowerCase().trim();
-      if (!key || seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
-    const input = {
-      company_name: formData.company_name,
-      company_website: formData.company_website || null,
-      user_type: formData.user_type,
-      team_size: formData.team_size,
-      monthly_budget: formData.monthly_budget || null,
-      business_processes: formData.business_processes,
-      pain_points: formData.pain_points,
-      existing_software: dedupedSoftware,
-      icp_profile: icpProfile || null,
-    };
-
-    const audit = await base44.entities.SoftwareAudit.create({
-      ...input,
-      status: "pending",
-    });
 
     // Navigate immediately — Results page will poll until completed
     setLoading(false);
