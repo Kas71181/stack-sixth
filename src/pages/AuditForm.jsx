@@ -108,31 +108,39 @@ export default function AuditForm() {
     let dedupedSoftware;
     let input;
     try {
-      // Step 1: Fetch ICP from website if provided
+      // Step 1: Fetch ICP from website if provided (non-blocking — failures proceed without ICP)
       if (formData.company_website) {
         setLoadingStep("icp");
-        icpProfile = await base44.integrations.Core.InvokeLLM({
-          prompt: `Analyze this company's online presence and extract their Ideal Customer Profile (ICP) and business context.
+        try {
+          const icpPromise = base44.integrations.Core.InvokeLLM({
+            prompt: `Analyze this company's online presence and extract their Ideal Customer Profile (ICP) and business context.
 Company name: ${formData.company_name}
 Website/URL: ${formData.company_website}
 
 Return a structured ICP profile with: industry, business_model (B2B/B2C/B2B2C), company_stage (startup/growth/enterprise), primary_customers (who they sell to), key_use_cases (what they do), tech_maturity (low/medium/high), and growth_focus (cost_reduction/scaling/automation/compliance).`,
-          add_context_from_internet: true,
-          model: "gemini_3_flash",
-          response_json_schema: {
-            type: "object",
-            properties: {
-              industry: { type: "string" },
-              business_model: { type: "string" },
-              company_stage: { type: "string" },
-              primary_customers: { type: "string" },
-              key_use_cases: { type: "array", items: { type: "string" } },
-              tech_maturity: { type: "string" },
-              growth_focus: { type: "string" },
-              summary: { type: "string" },
+            add_context_from_internet: true,
+            model: "gemini_3_flash",
+            response_json_schema: {
+              type: "object",
+              properties: {
+                industry: { type: "string" },
+                business_model: { type: "string" },
+                company_stage: { type: "string" },
+                primary_customers: { type: "string" },
+                key_use_cases: { type: "array", items: { type: "string" } },
+                tech_maturity: { type: "string" },
+                growth_focus: { type: "string" },
+                summary: { type: "string" },
+              },
             },
-          },
-        });
+          });
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("ICP timeout")), 15000)
+          );
+          icpProfile = await Promise.race([icpPromise, timeoutPromise]);
+        } catch {
+          icpProfile = null;
+        }
       }
 
       setLoadingStep("analysis");
