@@ -104,13 +104,46 @@ export default function AuditForm() {
     base44.analytics.track({ eventName: "audit_submitted", properties: { user_type: formData.user_type, team_size: formData.team_size, tool_count: formData.existing_software.length } });
 
     let audit;
-    let icpProfile = null;
     let dedupedSoftware;
     let input;
     try {
-      // Step 1: Fetch ICP from website if provided (non-blocking — failures proceed without ICP)
+      const seen = new Set();
+      dedupedSoftware = formData.existing_software.filter((s) => {
+        const key = s.name?.toLowerCase().trim();
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      input = {
+        company_name: formData.company_name,
+        company_website: formData.company_website || null,
+        user_type: formData.user_type,
+        team_size: formData.team_size,
+        monthly_budget: formData.monthly_budget || null,
+        business_processes: formData.business_processes,
+        pain_points: formData.pain_points,
+        existing_software: dedupedSoftware,
+        icp_profile: null,
+      };
+
+      audit = await base44.entities.SoftwareAudit.create({
+        ...input,
+        status: "pending",
+      });
+    } catch (err) {
+      setLoading(false);
+      return;
+    }
+
+    // Navigate immediately — Results page will poll until completed
+    setLoading(false);
+    navigate(`/results/${audit.id}?new=1`);
+
+    // Run ICP enrichment + analysis in background (fully non-blocking)
+    try {
+      let icpProfile = null;
       if (formData.company_website) {
-        setLoadingStep("icp");
         try {
           const icpPromise = base44.integrations.Core.InvokeLLM({
             prompt: `Analyze this company's online presence and extract their Ideal Customer Profile (ICP) and business context.
@@ -143,44 +176,6 @@ Return a structured ICP profile with: industry, business_model (B2B/B2C/B2B2C), 
         }
       }
 
-      setLoadingStep("analysis");
-      const seen = new Set();
-      dedupedSoftware = formData.existing_software.filter((s) => {
-        const key = s.name?.toLowerCase().trim();
-        if (!key || seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
-
-      input = {
-        company_name: formData.company_name,
-        company_website: formData.company_website || null,
-        user_type: formData.user_type,
-        team_size: formData.team_size,
-        monthly_budget: formData.monthly_budget || null,
-        business_processes: formData.business_processes,
-        pain_points: formData.pain_points,
-        existing_software: dedupedSoftware,
-        icp_profile: icpProfile || null,
-      };
-
-      audit = await base44.entities.SoftwareAudit.create({
-        ...input,
-        status: "pending",
-      });
-    } catch (err) {
-      setLoading(false);
-      setLoadingStep("");
-      return;
-    }
-
-    // Navigate immediately — Results page will poll until completed
-    setLoading(false);
-    setLoadingStep("");
-    navigate(`/results/${audit.id}?new=1`);
-
-    // Run analysis in background
-    try {
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: `${SYSTEM_PROMPT}\n\nInput:\n${JSON.stringify(input, null, 2)}`,
         response_json_schema: {
@@ -323,7 +318,7 @@ Return a structured ICP profile with: industry, business_model (B2B/B2C/B2B2C), 
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  {loadingStep === "icp" ? "Building ICP..." : "Analyzing Stack..."}
+                  Starting...
                 </>
               ) : (
                 <>
