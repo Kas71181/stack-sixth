@@ -20,7 +20,13 @@ export default function UsageAnalytics({ syncKey = 0 }) {
 
   const { data: activities = [], isLoading, refetch } = useQuery({
     queryKey: ["user-activity", user?.id],
-    queryFn: () => base44.entities.UserActivity.list(),
+    queryFn: async () => {
+      const [owned, synced] = await Promise.all([
+        base44.entities.UserActivity.filter({ created_by_id: user.id }),
+        base44.entities.UserActivity.filter({ company_id: user.id }),
+      ]);
+      return [...new Map([...owned, ...synced].map((activity) => [activity.id, activity])).values()];
+    },
     enabled: !!user?.id,
     staleTime: 0,
     refetchOnMount: "always",

@@ -114,6 +114,7 @@ Deno.serve(async (req) => {
 
       return {
         tool_name: 'Notion',
+        company_id: user.id,
         user_email: email,
         user_name: u.name || email,
         last_active_date: lastEditDate ? lastEditDate.toISOString().split('T')[0] : null,
@@ -132,8 +133,8 @@ Deno.serve(async (req) => {
       };
     });
 
-    // Upsert into UserActivity
-    const existing = await base44.asServiceRole.entities.UserActivity.filter({ tool_name: 'Notion', created_by_id: user.id });
+    // Upsert only this app user's Notion activity
+    const existing = await base44.asServiceRole.entities.UserActivity.filter({ tool_name: 'Notion', company_id: user.id });
     const existingByEmail = new Map(existing.map((e) => [e.user_email, e.id]));
 
     let created = 0, updated = 0, deleted = 0;
