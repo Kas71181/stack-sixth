@@ -48,8 +48,11 @@ export default function UsageAnalytics({ syncKey = 0 }) {
   // ── Build per-tool display records ──────────────────────────────────────────
   const liveUsersMap = {};
   const estimatedMap = {};
+  const stackToolNames = new Set(integrations.map((tool) => tool.tool_name?.trim().toLowerCase()).filter(Boolean));
 
-  activities.forEach((a) => {
+  activities
+    .filter((activity) => stackToolNames.has(activity.tool_name?.trim().toLowerCase()))
+    .forEach((a) => {
     if (a.source === "live" && a.user_email !== "aggregate@placeholder") {
       if (!liveUsersMap[a.tool_name]) liveUsersMap[a.tool_name] = [];
       liveUsersMap[a.tool_name].push(a);
