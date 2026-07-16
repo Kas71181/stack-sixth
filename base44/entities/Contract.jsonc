@@ -25,10 +25,47 @@
       "type": "number",
       "title": "Annual Cost ($)"
     },
+    "last_renewal_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Last Renewal Date"
+    },
     "renewal_date": {
       "type": "string",
       "format": "date",
-      "title": "Renewal Date"
+      "title": "Next Renewal Date"
+    },
+    "billing_frequency": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "quarterly",
+        "annual",
+        "unknown"
+      ],
+      "default": "unknown",
+      "title": "Billing Frequency"
+    },
+    "renewal_source": {
+      "type": "string",
+      "enum": [
+        "contract",
+        "manual",
+        "gmail",
+        "billing",
+        "inferred"
+      ],
+      "default": "contract",
+      "title": "Renewal Source"
+    },
+    "renewal_confidence": {
+      "type": "number",
+      "title": "Renewal Confidence (0-100)"
+    },
+    "needs_confirmation": {
+      "type": "boolean",
+      "default": false,
+      "title": "Needs Confirmation"
     },
     "notice_period_days": {
       "type": "number",

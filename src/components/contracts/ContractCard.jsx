@@ -37,7 +37,7 @@ export default function ContractCard({ contract, onDeleted }) {
           </div>
           <div>
             <p className="font-bold text-sm">{contract.vendor_name}</p>
-            <p className="text-xs text-muted-foreground">{contract.contract_type || "Contract"}</p>
+            <p className="text-xs text-muted-foreground">{contract.file_url ? (contract.contract_type || "Contract") : `${contract.billing_frequency || "unknown"} renewal`}</p>
           </div>
         </div>
         <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border flex-shrink-0 ${STATUS_STYLE[contract.status] || STATUS_STYLE["Active"]}`}>
@@ -99,6 +99,7 @@ export default function ContractCard({ contract, onDeleted }) {
               <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
               <span className="text-muted-foreground">Renews:</span>
               <span className="font-medium">{format(new Date(contract.renewal_date), "MMM d, yyyy")}</span>
+              {contract.renewal_source && <span className="rounded-full bg-muted px-2 py-0.5 text-[10px]">{contract.renewal_source} · {contract.renewal_confidence || 100}%</span>}
             </div>
           )}
           {contract.notice_period_days && (
@@ -136,7 +137,7 @@ export default function ContractCard({ contract, onDeleted }) {
             disabled={deleting}
           >
             <Trash2 className="w-3.5 h-3.5" />
-            {deleting ? "Deleting..." : "Delete Contract"}
+            {deleting ? "Deleting..." : "Delete renewal"}
           </Button>
         </div>
       )}
