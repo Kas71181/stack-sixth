@@ -50,9 +50,9 @@ export default function Dashboard() {
     enabled: !!user?.id,
   });
 
-  const { data: contracts } = useQuery({
-    queryKey: ["contracts-dash", user?.id],
-    queryFn: () => base44.entities.Contract.filter({ created_by_id: user?.id }),
+  const { data: contracts = [] } = useQuery({
+    queryKey: ["contracts", user?.id],
+    queryFn: () => base44.entities.Contract.filter({ created_by_id: user?.id }, "renewal_date", 50),
     enabled: !!user?.id,
   });
 
@@ -148,13 +148,11 @@ export default function Dashboard() {
   const latestAudit = completedAudits[0];
   const totalSpend = latestAudit?.monthly_budget || 0;
   const totalTools = latestAudit?.existing_software?.length || 0;
-  const urgentRenewals = (monitorReports || []).flatMap((r) =>
-    (r.tools_snapshot || []).filter((t) => {
-      if (!t.renewal_date) return false;
-      const days = Math.ceil((new Date(t.renewal_date) - new Date()) / (1000 * 60 * 60 * 24));
-      return days >= 0 && days <= 30;
-    })
-  );
+  const urgentRenewals = contracts.filter((contract) => {
+    if (!contract.renewal_date || contract.status === "Cancelled") return false;
+    const days = Math.ceil((new Date(contract.renewal_date) - new Date()) / (1000 * 60 * 60 * 24));
+    return days >= 0 && days <= 30;
+  });
   const dormantTools = (userActivity || []).filter((a) => a.status === "Dormant" || a.status === "Inactive");
 
   // Shadow IT: tools with activity but no registered SaasIntegration
@@ -307,7 +305,7 @@ export default function Dashboard() {
           />
         </div>
         <div className="lg:col-span-2">
-          <RenewalTimeline monitorReports={monitorReports} contracts={contracts} />
+          <RenewalTimeline contracts={contracts} />
         </div>
       </motion.div>
 

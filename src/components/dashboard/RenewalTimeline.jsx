@@ -33,29 +33,15 @@ function RenewalItem({ tool, days }) {
   );
 }
 
-export default function RenewalTimeline({ monitorReports, contracts }) {
-  // Collect renewals from monitor reports
-  const fromMonitors = (monitorReports || []).flatMap((r) =>
-    (r.tools_snapshot || [])
-      .filter((t) => t.renewal_date)
-      .map((t) => ({ name: t.name, monthly_cost: t.monthly_cost, renewal_date: t.renewal_date }))
-  );
-
-  // Collect renewals from contracts
-  const fromContracts = (contracts || [])
-    .filter((c) => c.renewal_date)
-    .map((c) => ({ name: c.vendor_name, monthly_cost: c.monthly_cost, renewal_date: c.renewal_date }));
-
-  // Merge, deduplicate by name, sort by soonest
-  const seen = new Set();
-  const all = [...fromMonitors, ...fromContracts]
-    .filter((t) => {
-      const key = (t.name || "").toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    })
-    .map((t) => ({ ...t, days: daysBetween(t.renewal_date) }))
+export default function RenewalTimeline({ contracts }) {
+  const all = (contracts || [])
+    .filter((contract) => contract.renewal_date && contract.status !== "Cancelled")
+    .map((contract) => ({
+      name: contract.vendor_name,
+      monthly_cost: contract.monthly_cost,
+      renewal_date: contract.renewal_date,
+      days: daysBetween(contract.renewal_date),
+    }))
     .filter((t) => t.days >= 0 && t.days <= 90)
     .sort((a, b) => a.days - b.days);
 
