@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 
 Deno.serve(async (req) => {
   try {
@@ -13,10 +13,15 @@ Deno.serve(async (req) => {
       Authorization: `Bearer ${accessToken}`,
       Accept: 'application/vnd.github+json',
       'X-GitHub-Api-Version': '2022-11-28',
+      'User-Agent': 'Stack-Sixth',
     };
 
     // 1. Get authenticated user's orgs
     const orgsRes = await fetch('https://api.github.com/user/orgs', { headers });
+    if (!orgsRes.ok) {
+      const details = await orgsRes.text();
+      return Response.json({ success: false, error: `GitHub access failed (${orgsRes.status}): ${details || 'Reconnect GitHub and approve organization access'}` }, { status: 200 });
+    }
     const orgs = await orgsRes.json();
 
     let allMembers = [];
@@ -146,7 +151,8 @@ Deno.serve(async (req) => {
       if (sorted.length > 0) teamDomain = sorted[0][0];
     }
     if (teamDomain) {
-      allMembers = allMembers.filter((m) => m.user_email?.toLowerCase().endsWith('@' + teamDomain));
+      const domainMatches = allMembers.filter((m) => m.user_email?.toLowerCase().endsWith('@' + teamDomain));
+      if (domainMatches.length > 0) allMembers = domainMatches;
     }
 
     // Upsert into UserActivity
