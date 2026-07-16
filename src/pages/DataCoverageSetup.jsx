@@ -33,6 +33,11 @@ const OAUTH_CONNECTORS = [
     setupUrl: "https://www.notion.so/my-integrations", setupLabel: "Create Notion Integration →",
     scopes: "read_content, read_users",
   },
+  {
+    id: "apollo", oauthFunction: "apolloOAuth", functionName: "getApolloActivity",
+    label: "Apollo.io", description: "Sales team activity & seat usage", coverage: 10,
+    logo: "https://assets-global.website-files.com/60b86da97e58f877a9d4e89f/60e5db46929e39b89bed2e96_apollo-logo.png",
+  },
 ];
 
 const API_KEY_CONNECTORS = [
@@ -64,13 +69,6 @@ const API_KEY_CONNECTORS = [
     logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Salesforce.com_logo.svg/2560px-Salesforce.com_logo.svg.png",
     setupUrl: "https://help.salesforce.com/s/articleView?id=sf.connected_app_create.htm", setupLabel: "Create Connected App →",
     multiSecret: true,
-  },
-  {
-    id: "apollo", functionName: "getApolloActivity", label: "Apollo.io", coverage: 10,
-    description: "Sales team activity & seat usage",
-    logo: "https://assets-global.website-files.com/60b86da97e58f877a9d4e89f/60e5db46929e39b89bed2e96_apollo-logo.png",
-    setupUrl: "https://app.apollo.io/#/settings/integrations/api", setupLabel: "Get Apollo API Key →",
-    placeholder: "Apollo.io API key",
   },
 ];
 
@@ -122,8 +120,12 @@ function OAuthRow({ connector, onConnected }) {
     setStatus("connecting");
     setErrorMsg("");
     try {
-      const url = await base44.connectors.connectAppUser(connector.connectorId);
-      const popup = window.open(url, "_blank");
+      const popup = window.open("", "_blank");
+      const url = connector.oauthFunction
+        ? (await base44.functions.invoke(connector.oauthFunction, {})).data.url
+        : await base44.connectors.connectAppUser(connector.connectorId);
+      if (!popup) throw new Error("Please allow pop-ups to connect this tool.");
+      popup.location.href = url;
       const timer = setInterval(async () => {
         if (!popup || popup.closed) {
           clearInterval(timer);

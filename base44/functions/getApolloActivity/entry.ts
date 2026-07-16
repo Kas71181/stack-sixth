@@ -12,27 +12,49 @@ Deno.serve(async (req) => {
     }
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    let apiKey = Deno.env.get("APOLLO_API_KEY");
-    if (!apiKey) {
-      const stored = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'apollo', created_by_id: user.id });
-      apiKey = stored[0]?.api_key || null;
-    }
-    if (!apiKey) return Response.json({ success: false, not_configured: true, error: 'APOLLO_API_KEY not configured' }, { status: 200 });
+    const stored = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'apollo', created_by_id: user.id });
+    const credential = stored[0] || null;
+    let apiKey = credential?.api_key || null;
+    const isOAuth = credential?.extra_fields?.auth_type === 'oauth';
+    if (!apiKey) return Response.json({ success: false, not_configured: true, error: 'Apollo is not connected' }, { status: 200 });
 
-    // Apollo v1 API — must be POST with JSON body
-    const usersRes = await fetch('https://api.apollo.io/api/v1/users/search', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache',
-        'accept': 'application/json',
-      },
-      body: JSON.stringify({ api_key: apiKey, page: 1, per_page: 200 }),
+    if (isOAuth && credential.extra_fields?.refresh_token && new Date(credential.extra_fields.expires_at || 0).getTime() <= Date.now() + 60000) {
+      const refreshRes = await fetch('https://app.apollo.io/api/v1/oauth/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: credential.extra_fields.refresh_token,
+          client_id: Deno.env.get('APOLLO_OAUTH_CLIENT_ID') || '',
+          client_secret: Deno.env.get('APOLLO_OAUTH_CLIENT_SECRET') || '',
+        }),
+      });
+      const refreshed = await refreshRes.json();
+      if (!refreshRes.ok || !refreshed.access_token) return Response.json({ success: false, error: 'Apollo sign-in expired. Please reconnect Apollo.' }, { status: 200 });
+      apiKey = refreshed.access_token;
+      await base44.asServiceRole.entities.ApiCredential.update(credential.id, {
+        api_key: apiKey,
+        extra_fields: {
+          ...credential.extra_fields,
+          refresh_token: refreshed.refresh_token || credential.extra_fields.refresh_token,
+          expires_at: new Date(Date.now() + (refreshed.expires_in || 2592000) * 1000).toISOString(),
+        },
+      });
+    }
+
+    const usersRes = await fetch(isOAuth
+      ? 'https://api.apollo.io/api/v1/users/search?page=1&per_page=200'
+      : 'https://api.apollo.io/api/v1/users/search', {
+      method: isOAuth ? 'GET' : 'POST',
+      headers: isOAuth
+        ? { 'Authorization': `Bearer ${apiKey}`, 'accept': 'application/json' }
+        : { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache', 'accept': 'application/json' },
+      body: isOAuth ? undefined : JSON.stringify({ api_key: apiKey, page: 1, per_page: 200 }),
     });
 
     if (!usersRes.ok) {
       const err = await usersRes.json().catch(() => ({}));
-      return Response.json({ success: false, error: `Apollo API error (${usersRes.status}): ${err.message || err.error || 'Check your API key and ensure it has team member read access'}` }, { status: 200 });
+      return Response.json({ success: false, error: `Apollo API error (${usersRes.status}): ${err.message || err.error || (isOAuth ? 'Reconnect Apollo and approve team member access' : 'Check the stored key and its team member access')}` }, { status: 200 });
     }
 
     const data = await usersRes.json();
