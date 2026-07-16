@@ -38,7 +38,7 @@ const TABS = [
   { id: "roles", label: "Role Relevance", icon: ShieldCheck },
 ];
 
-export default function ITDashboard() {
+export default function ITDashboard({ simplified = false }) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const location = useLocation();
@@ -52,8 +52,8 @@ export default function ITDashboard() {
   };
 
   useEffect(() => {
-    if (location.state?.tab) setActiveTab(location.state.tab);
-  }, [location.state]);
+    if (!simplified && location.state?.tab) setActiveTab(location.state.tab);
+  }, [location.state, simplified]);
 
   useEffect(() => {
     const el = tabRefs.current[activeTab];
@@ -115,8 +115,8 @@ export default function ITDashboard() {
             <Monitor className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight">IT Manager</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">Manage your SaaS stack, usage, and AI recommendations</p>
+            <h1 className="text-2xl font-extrabold tracking-tight">{simplified ? "Savings" : "IT Manager"}</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">{simplified ? "Review opportunities, make decisions, and track savings." : "Manage your SaaS stack, usage, and AI recommendations"}</p>
           </div>
         </div>
         {activeTab === "decisions" && (
@@ -134,7 +134,7 @@ export default function ITDashboard() {
       </motion.div>
 
       {/* Tab bar — glass sliding pill */}
-      <motion.div {...fade(0.04)} className="relative flex tab-track overflow-x-auto">
+      {!simplified && <motion.div {...fade(0.04)} className="relative flex tab-track overflow-x-auto">
         {/* Sliding pill */}
         <div
           className="absolute top-1 bottom-1 glass-strong rounded-xl shadow-md transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none"
@@ -153,7 +153,7 @@ export default function ITDashboard() {
             <span className="hidden sm:inline">{label}</span>
           </button>
         ))}
-      </motion.div>
+      </motion.div>}
 
       {/* Tab content */}
       {activeTab === "decisions" && (

@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { CartProvider } from '@/components/cart/CartContext';
@@ -27,6 +27,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import MyStack from './pages/MyStack';
+import Savings from './pages/Savings';
 
 
 const AuthenticatedApp = () => {
@@ -61,21 +63,24 @@ const AuthenticatedApp = () => {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/my-stack" element={<MyStack />} />
+        <Route path="/savings" element={<Savings />} />
+        <Route path="/renewals" element={<ContractIntelligence />} />
         <Route path="/audit" element={<AuditForm />} />
         <Route path="/results/:id" element={<Results />} />
         <Route path="/history" element={<History />} />
-        <Route path="/it-dashboard" element={<ITDashboard />} />
-        <Route path="/monitoring" element={<Monitoring />} />
-        <Route path="/contracts" element={<ContractIntelligence />} />
+        <Route path="/it-dashboard" element={<Navigate to="/savings" replace />} />
+        <Route path="/monitoring" element={<Navigate to="/" replace />} />
+        <Route path="/contracts" element={<Navigate to="/renewals" replace />} />
         <Route path="/switch-planner" element={<SwitchPlanner />} />
         <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/data-coverage" element={<DataCoverageSetup />} />
+        <Route path="/data-coverage" element={<Navigate to="/my-stack?tab=connect" replace />} />
         <Route path="/shared-report" element={<SharedReport />} />
-        <Route path="/purchase-requests" element={<PurchaseRequests />} />
-        <Route path="/lifecycle" element={<LifecycleGovernance />} />
-        <Route path="/marketplace" element={<Marketplace />} />
+        <Route path="/purchase-requests" element={<Navigate to="/" replace />} />
+        <Route path="/lifecycle" element={<Navigate to="/renewals" replace />} />
+        <Route path="/marketplace" element={<Navigate to="/" replace />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
-        <Route path="/intelligence" element={<IntelligenceLibrary />} />
+        <Route path="/intelligence" element={<Navigate to="/renewals" replace />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
 

@@ -1,46 +1,33 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { BarChart3, History, Home, Monitor, ShoppingCart, LogOut, User, Activity, ArrowLeftRight, Settings, ChevronDown, ClipboardList, ShieldCheck, Store, Layers, Brain } from "lucide-react";
+import { Home, LogOut, User, ArrowLeftRight, Settings, ChevronDown, Layers, TrendingDown, CalendarClock } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
-import MoreMenu from "@/components/MoreMenu";
 import { useState, useRef, useEffect } from "react";
 import { base44 as analyticsClient } from "@/api/base44Client";
-import { useCart } from "@/components/cart/CartContext";
-import CartDrawer from "@/components/cart/CartDrawer";
 import AssistantChat from "@/components/assistant/AssistantChat";
 import GlobalSearch from "@/components/GlobalSearch";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 
-// Primary nav — the only 3 things users see in the top bar
 const primaryNav = [
-  { path: "/", label: "Dashboard", icon: Home },
-  { path: "/audit", label: "New Audit", icon: BarChart3 },
-  { path: "/it-dashboard", label: "IT Manager", icon: Monitor },
+  { path: "/", label: "Overview", icon: Home },
+  { path: "/my-stack", label: "My Stack", icon: Layers },
+  { path: "/savings", label: "Savings", icon: TrendingDown },
+  { path: "/renewals", label: "Renewals", icon: CalendarClock },
+  { path: "/switch-planner", label: "Switch Planner", icon: ArrowLeftRight },
 ];
-
-// Secondary nav — grouped under "My Stack" dropdown
-const secondaryNav = [
-  { path: "/history", label: "Audit History", icon: History },
-  { path: "/monitoring", label: "Monitoring", icon: Activity },
-  { path: "/lifecycle", label: "Renewals", icon: ShieldCheck },
-  { path: "/switch-planner", label: "Switch Tools", icon: ArrowLeftRight },
-  { path: "/purchase-requests", label: "Purchase Requests", icon: ClipboardList },
-  { path: "/marketplace", label: "Vendor Bids", icon: Store },
-  { path: "/intelligence", label: "Intelligence", icon: Brain },
-];
-
-const navItems = [...primaryNav, ...secondaryNav];
 
 export default function Layout() {
   const location = useLocation();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
 
   // Track page views on every route change
   useEffect(() => {
     const pageNames = {
-      "/": "dashboard",
+      "/": "overview",
+      "/my-stack": "my_stack",
+      "/savings": "savings",
+      "/renewals": "renewals",
       "/audit": "audit_form",
       "/history": "history",
       "/it-dashboard": "it_manager",
@@ -64,7 +51,6 @@ export default function Layout() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
-  const { items, setIsOpen } = useCart();
   const { user, logout, navigateToLogin } = useAuth();
 
   const { data: audits } = useQuery({
@@ -95,8 +81,6 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-background">
-      <CartDrawer />
-
       {/* Floating glass header */}
       <header className="sticky top-0 z-50">
         <div className="absolute inset-0 border-b"
@@ -145,27 +129,10 @@ export default function Layout() {
                     }`}
                   >
                     <Icon className="w-3.5 h-3.5" />
-                    <span className="hidden lg:inline">{label}</span>
+                    <span className="hidden xl:inline">{label}</span>
                   </Link>
                 );
               })}
-
-              {/* Secondary items in "More" dropdown */}
-              <MoreMenu items={secondaryNav} />
-
-              {/* Cart */}
-              <button
-                onClick={() => setIsOpen(true)}
-                className="relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/50 dark:hover:bg-white/5 transition-all duration-200 active:scale-[0.96] ml-1"
-              >
-                <ShoppingCart className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline text-sm">Cart</span>
-                {items.length > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center shadow-sm shadow-primary/40">
-                    {items.length}
-                  </span>
-                )}
-              </button>
 
               {/* Theme toggle */}
               <ThemeToggle />
@@ -262,64 +229,13 @@ export default function Layout() {
               </Link>
             );
           })}
-          {/* More button on mobile — opens bottom sheet */}
-          <button
-            onClick={() => setMobileMoreOpen(true)}
-            className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-0 flex-1 active:scale-95 ${
-              secondaryNav.some(({ path }) => location.pathname === path) ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
-            {secondaryNav.some(({ path }) => location.pathname === path) && (
-              <div className="absolute w-8 h-0.5 bg-primary rounded-full -top-0.5 shadow-[0_0_8px_hsl(var(--primary)/0.8)]" />
-            )}
-            <Layers className="w-5 h-5 flex-shrink-0" />
-            <span className="text-[9px] font-medium truncate w-full text-center">Stack</span>
-          </button>
+
         </div>
       </nav>
 
       <AssistantChat audits={audits} recommendations={recommendations} monitorReports={monitorReports} contracts={contracts} userActivity={userActivity} />
 
-      {/* Mobile "More" bottom sheet */}
-      {mobileMoreOpen && (
-        <div className="sm:hidden fixed inset-0 z-[60]">
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in"
-            onClick={() => setMobileMoreOpen(false)}
-          />
-          <div className="absolute bottom-0 left-0 right-0 glass-strong rounded-t-2xl p-4 pb-8 animate-slide-up">
-            <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mx-auto mb-4" />
-            <div className="grid grid-cols-3 gap-3">
-              {secondaryNav.map(({ path, label, icon: Icon }) => {
-                const isActive = location.pathname === path;
-                return (
-                  <Link
-                    key={path}
-                    to={path}
-                    onClick={() => setMobileMoreOpen(false)}
-                    className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-colors ${
-                      isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-black/5 dark:hover:bg-white/6"
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    <span className="text-xs font-medium text-center">{label}</span>
-                  </Link>
-                );
-              })}
-              <Link
-                to="/settings"
-                onClick={() => setMobileMoreOpen(false)}
-                className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-colors ${
-                  location.pathname === "/settings" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-black/5 dark:hover:bg-white/6"
-                }`}
-              >
-                <Settings className="w-5 h-5" />
-                <span className="text-xs font-medium text-center">Settings</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
