@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import ToolUsageCard from "@/components/usage/ToolUsageCard";
 import UsageInsightsBar from "@/components/usage/UsageInsightsBar";
+import DataQualityWarning from "@/components/usage/DataQualityWarning";
 
 export default function UsageAnalytics({ syncKey = 0 }) {
   const qc = useQueryClient();
@@ -122,13 +123,13 @@ export default function UsageAnalytics({ syncKey = 0 }) {
   const avgConfidence = tools.length > 0 ? Math.round(tools.reduce((s, t) => s + calculateConfidence(t, t.liveUsers || []), 0) / tools.length) : 0;
 
   // ── Filtering ────────────────────────────────────────────────────────────────
-  const FILTERS = ["All", "Healthy", "At Risk", "Wasted"];
-  const statusMap = { Healthy: "Active", "At Risk": "Dormant", Wasted: "Inactive" };
+  const FILTERS = ["All", "Regularly used", "Low use", "Not used"];
+  const statusMap = { "Regularly used": "Active", "Low use": "Dormant", "Not used": "Inactive" };
 
   const filtered = filter === "All"
     ? enrichedTools
     : enrichedTools.filter((t) => {
-        if (filter === "Wasted") return t.status === "Inactive" || t.status === "Never Logged In";
+        if (filter === "Not used") return t.status === "Inactive" || t.status === "Never Logged In";
         return t.status === statusMap[filter];
       });
 
@@ -193,8 +194,8 @@ export default function UsageAnalytics({ syncKey = 0 }) {
             <Activity className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-extrabold tracking-tight">Usage Health</h1>
-            <p className="text-xs text-muted-foreground">Tool-level adoption across your stack</p>
+            <h1 className="text-xl font-extrabold tracking-tight">Software usage</h1>
+            <p className="text-xs text-muted-foreground">See which tools your team uses and where licenses may be going unused</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -204,8 +205,13 @@ export default function UsageAnalytics({ syncKey = 0 }) {
           </Button>
           <Button variant="outline" size="sm" className="gap-1.5" onClick={handleSyncFromStack} disabled={syncing}>
             <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
-            {syncing ? "Syncing…" : "Sync from Stack"}
+            {syncing ? "Refreshing…" : "Refresh data"}
           </Button>
+          <Link to="/data-coverage">
+            <Button size="sm" className="gap-1.5">
+              <Plug className="w-3.5 h-3.5" /> Connect tools
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -217,7 +223,7 @@ export default function UsageAnalytics({ syncKey = 0 }) {
             <div className="flex-1">
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold">Live Data Coverage</span>
+                  <span className="text-xs font-semibold">Tools providing current usage data</span>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                     coveragePct >= 80 ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700/40"
                     : coveragePct >= 50 ? "bg-amber-50 text-amber-700 border border-amber-200"
@@ -249,7 +255,7 @@ export default function UsageAnalytics({ syncKey = 0 }) {
             {coveragePct < 80 && (
               <Link to="/data-coverage" className="flex-shrink-0">
                 <Button size="sm" variant="outline" className="gap-1 text-xs border-primary/30 text-primary hover:bg-primary/5 h-7 px-2.5">
-                  <Zap className="w-3 h-3" /> Improve <ArrowRight className="w-3 h-3" />
+                  <Zap className="w-3 h-3" /> Connect tools <ArrowRight className="w-3 h-3" />
                 </Button>
               </Link>
             )}
@@ -259,23 +265,25 @@ export default function UsageAnalytics({ syncKey = 0 }) {
           <div className="grid grid-cols-4 gap-2 pt-1 border-t border-border/40">
             <div className="text-center">
               <p className="text-xl font-extrabold text-primary tabular-nums">{avgScore}</p>
-              <p className="text-[10px] text-muted-foreground">Avg Health Score</p>
+              <p className="text-[10px] text-muted-foreground">Average usage (out of 100)</p>
             </div>
             <div className="text-center">
               <p className="text-xl font-extrabold text-emerald-600 tabular-nums">{healthyCount}/{tools.length}</p>
-              <p className="text-[10px] text-muted-foreground">Tools Healthy</p>
+              <p className="text-[10px] text-muted-foreground">Tools used regularly</p>
             </div>
             <div className="text-center">
               <p className="text-xl font-extrabold text-destructive tabular-nums">${Math.round(totalWaste).toLocaleString()}</p>
-              <p className="text-[10px] text-muted-foreground">Wasted / Month</p>
+              <p className="text-[10px] text-muted-foreground">Estimated unused spend / month</p>
             </div>
             <div className="text-center">
               <p className="text-xl font-extrabold text-blue-600 tabular-nums">{avgConfidence}%</p>
-              <p className="text-[10px] text-muted-foreground">Data Confidence</p>
+              <p className="text-[10px] text-muted-foreground">Data reliability</p>
             </div>
           </div>
         </div>
       )}
+
+      <DataQualityWarning confidence={avgConfidence} />
 
       {/* Offboarded users alert */}
       {offboardedCount > 0 && (
@@ -299,7 +307,7 @@ export default function UsageAnalytics({ syncKey = 0 }) {
           className="flex items-center gap-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-2xl px-4 py-3">
           <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
           <p className="text-sm text-amber-800 dark:text-amber-400">
-            <strong>{wasted.length} tool{wasted.length > 1 ? "s" : ""}</strong> with low adoption — flagged for your next monitoring report.
+            <strong>{wasted.length} tool{wasted.length > 1 ? "s have" : " has"} low usage.</strong> Review them before renewing or buying more seats.
           </p>
         </motion.div>
       )}
@@ -319,7 +327,7 @@ export default function UsageAnalytics({ syncKey = 0 }) {
             {f}
             {f !== "All" && (
               <span className="ml-1.5 opacity-70">
-                ({f === "Wasted"
+                ({f === "Not used"
                   ? enrichedTools.filter((t) => t.status === "Inactive" || t.status === "Never Logged In").length
                   : enrichedTools.filter((t) => t.status === statusMap[f]).length})
               </span>

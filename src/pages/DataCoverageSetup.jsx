@@ -335,10 +335,10 @@ function ApiKeyRow({ connector, onConnected }) {
 
 // ── Step components ────────────────────────────────────────────────────────────
 const STEPS = [
-  { id: "overview", label: "Coverage Overview" },
-  { id: "oauth", label: "One-Click Connectors" },
-  { id: "apikey", label: "API Key Connectors" },
-  { id: "done", label: "You're Set" },
+  { id: "overview", label: "Start" },
+  { id: "oauth", label: "Quick connections" },
+  { id: "apikey", label: "Other connections" },
+  { id: "done", label: "Finish" },
 ];
 
 function StepIndicator({ current }) {
@@ -414,9 +414,9 @@ export default function DataCoverageSetup() {
           <button onClick={() => navigate(-1)} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 mb-4">
             <ArrowLeft className="w-3.5 h-3.5" /> Back
           </button>
-          <h1 className="text-2xl font-bold">Data Coverage Setup</h1>
+          <h1 className="text-2xl font-bold">Connect your tools</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Connect your tools to replace estimates with live data and unlock accurate savings analysis.
+            Follow these steps to replace estimates with current usage data and make your numbers more reliable.
           </p>
         </div>
 
@@ -463,7 +463,7 @@ export default function DataCoverageSetup() {
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">What live data unlocks</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
-                  { IconComp: BarChart3, label: "Accurate CPAU", desc: "Real cost-per-active-user vs. seat cost guesses" },
+                  { IconComp: BarChart3, label: "Accurate cost per user", desc: "See what each actively used license really costs" },
                   { IconComp: Shield, label: "Renewal Risk", desc: "Flag tools with low utilization before auto-renew" },
                   { IconComp: TrendingUp, label: "Savings ROI", desc: "Specific dollar amounts you can present to leadership" },
                 ].map(({ IconComp, label, desc }) => (
@@ -488,8 +488,8 @@ export default function DataCoverageSetup() {
             <div className="glass-card p-4 flex items-center gap-3 mb-2">
               <Plug className="w-5 h-5 text-primary flex-shrink-0" />
               <div>
-                <p className="font-semibold text-sm">One-Click OAuth Connectors</p>
-                <p className="text-xs text-muted-foreground">These connect in seconds — just click and authorize in the popup.</p>
+                <p className="font-semibold text-sm">Quick connections</p>
+                <p className="text-xs text-muted-foreground">Choose a tool, sign in, and approve access. No keys to copy.</p>
               </div>
             </div>
 
@@ -514,8 +514,8 @@ export default function DataCoverageSetup() {
             <div className="glass-card p-4 flex items-center gap-3 mb-2">
               <Key className="w-5 h-5 text-primary flex-shrink-0" />
               <div>
-                <p className="font-semibold text-sm">API Key Connectors</p>
-                <p className="text-xs text-muted-foreground">These require a token from each vendor — follow the setup link to generate one.</p>
+                <p className="font-semibold text-sm">Other connections</p>
+                <p className="text-xs text-muted-foreground">We’ll show you where to find the access code and where to paste it.</p>
               </div>
             </div>
 

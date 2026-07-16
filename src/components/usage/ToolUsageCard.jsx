@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { AlertTriangle, CheckCircle2, DollarSign, Users, TrendingUp, UserX } from "lucide-react";
-import { calculateConfidence, getStaleness, STALENESS_STYLES, getConfidenceLevel } from "@/lib/confidenceScore";
+import { AlertTriangle, CheckCircle2, DollarSign, Users, UserX } from "lucide-react";
+import { calculateConfidence, getStaleness, STALENESS_STYLES } from "@/lib/confidenceScore";
 import UserActivityDrilldown from "./UserActivityDrilldown";
 
 function HealthGauge({ score }) {
@@ -10,17 +10,20 @@ function HealthGauge({ score }) {
   const dash = (score / 100) * circumference;
 
   return (
-    <div className="relative w-16 h-16 flex items-center justify-center flex-shrink-0">
-      <svg width="64" height="64" className="-rotate-90">
-        <circle cx="32" cy="32" r={radius} fill="none" stroke="hsl(var(--muted))" strokeWidth="5" />
-        <circle
-          cx="32" cy="32" r={radius} fill="none"
-          stroke={color} strokeWidth="5"
-          strokeDasharray={`${dash} ${circumference}`}
-          strokeLinecap="round"
-        />
-      </svg>
-      <span className="absolute text-sm font-bold" style={{ color }}>{score}</span>
+    <div className="w-16 flex-shrink-0 text-center">
+      <div className="relative h-16 w-16 flex items-center justify-center">
+        <svg width="64" height="64" className="-rotate-90">
+          <circle cx="32" cy="32" r={radius} fill="none" stroke="hsl(var(--muted))" strokeWidth="5" />
+          <circle
+            cx="32" cy="32" r={radius} fill="none"
+            stroke={color} strokeWidth="5"
+            strokeDasharray={`${dash} ${circumference}`}
+            strokeLinecap="round"
+          />
+        </svg>
+        <span className="absolute text-sm font-bold" style={{ color }}>{score}</span>
+      </div>
+      <span className="mt-1 block text-[9px] leading-tight text-muted-foreground">Usage out of 100</span>
     </div>
   );
 }
@@ -42,10 +45,10 @@ function MetricBar({ value, max, label, unit }) {
 }
 
 const STATUS_META = {
-  Active:            { label: "Healthy", cls: "text-emerald-700 bg-emerald-50 border-emerald-200", Icon: CheckCircle2 },
-  Dormant:           { label: "At Risk", cls: "text-amber-700 bg-amber-50 border-amber-200",       Icon: AlertTriangle },
-  Inactive:          { label: "Wasted",  cls: "text-destructive bg-destructive/10 border-destructive/20", Icon: AlertTriangle },
-  "Never Logged In": { label: "Wasted",  cls: "text-destructive bg-destructive/10 border-destructive/20", Icon: AlertTriangle },
+  Active:            { label: "Regular use", cls: "text-emerald-700 bg-emerald-50 border-emerald-200", Icon: CheckCircle2 },
+  Dormant:           { label: "Low use", cls: "text-amber-700 bg-amber-50 border-amber-200", Icon: AlertTriangle },
+  Inactive:          { label: "Not used", cls: "text-destructive bg-destructive/10 border-destructive/20", Icon: AlertTriangle },
+  "Never Logged In": { label: "Never used", cls: "text-destructive bg-destructive/10 border-destructive/20", Icon: AlertTriangle },
 };
 
 export default function ToolUsageCard({ tool }) {
@@ -83,11 +86,11 @@ export default function ToolUsageCard({ tool }) {
   const sumSig = (key) => src.reduce((s, u) => s + (u[key] || 0), 0);
   const hasSignals = src.some((u) => u.logins_last_30 != null || u.transactions_last_30 != null || u.content_created_last_30 != null);
   const signals = hasSignals ? [
-    { label: "Logins", value: sumSig("logins_last_30"), icon: "🔐" },
-    { label: "Transactions", value: sumSig("transactions_last_30"), icon: "⚡" },
-    { label: "Content Created", value: sumSig("content_created_last_30"), icon: "✏️" },
-    { label: "Features Used", value: Math.max(...src.map((u) => u.features_used || 0)), icon: "🧩" },
-    { label: "API Calls", value: sumSig("api_calls_last_30"), icon: "🔌" },
+    { label: "sign-ins", value: sumSig("logins_last_30"), icon: "🔐" },
+    { label: "actions", value: sumSig("transactions_last_30"), icon: "⚡" },
+    { label: "items created", value: sumSig("content_created_last_30"), icon: "✏️" },
+    { label: "features used", value: Math.max(...src.map((u) => u.features_used || 0)), icon: "🧩" },
+    { label: "automated requests", value: sumSig("api_calls_last_30"), icon: "🔌" },
   ].filter((s) => s.value > 0) : [];
 
   // Data confidence + staleness
@@ -100,7 +103,6 @@ export default function ToolUsageCard({ tool }) {
   const staleness = getStaleness(latestUpdate);
   const stalenessStyle = STALENESS_STYLES[staleness.level] || STALENESS_STYLES.unknown;
   const confidenceScore = calculateConfidence(tool, liveUsers);
-  const confidenceLevel = getConfidenceLevel(confidenceScore);
   const offboardedCount = liveUsers.filter((u) => u.offboarded_flag).length;
 
   return (
@@ -121,9 +123,9 @@ export default function ToolUsageCard({ tool }) {
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {hasLive ? (
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">● Live</span>
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">● Current data</span>
             ) : (
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">~ Est.</span>
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">~ Estimate</span>
             )}
             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1 ${stalenessStyle.badge}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${stalenessStyle.dot}`} />
@@ -140,13 +142,13 @@ export default function ToolUsageCard({ tool }) {
         {hasLive && (
           <div className="mt-2 space-y-2">
             <div className="flex gap-1.5 flex-wrap">
-              <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-semibold">{activeCount} active</span>
-              {dormantCount > 0 && <span className="text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full font-semibold">{dormantCount} dormant</span>}
-              {inactiveCount > 0 && <span className="text-[10px] bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded-full font-semibold">{inactiveCount} inactive</span>}
-              <span className="text-[10px] text-muted-foreground px-1 py-0.5">{liveUsers.length} users tracked</span>
+              <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-semibold">{activeCount} used recently</span>
+              {dormantCount > 0 && <span className="text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full font-semibold">{dormantCount} low use</span>}
+              {inactiveCount > 0 && <span className="text-[10px] bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded-full font-semibold">{inactiveCount} no recent use</span>}
+              <span className="text-[10px] text-muted-foreground px-1 py-0.5">{liveUsers.length} team members found</span>
             </div>
-            <MetricBar value={avgDays} max={30} label="Avg active days / 30" unit="d" />
-            <MetricBar value={avgScore} max={100} label="Avg activity score" unit="" />
+            <MetricBar value={avgDays} max={30} label="Average days used in the past 30" unit=" days" />
+            <MetricBar value={avgScore} max={100} label="Average usage score (out of 100)" unit="" />
           </div>
         )}
 
@@ -164,7 +166,7 @@ export default function ToolUsageCard({ tool }) {
         {/* Estimated active days (only when no live data) */}
         {!hasLive && tool.days_active_last_30 != null && (
           <div className="mt-2.5">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Active Days (30d)</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Estimated days used in the past 30</p>
             <p className="text-xs font-semibold mt-0.5">{tool.days_active_last_30} / 30</p>
           </div>
         )}
@@ -174,7 +176,7 @@ export default function ToolUsageCard({ tool }) {
           <div className="mt-2 flex flex-wrap gap-3">
             {cpau !== null && (
               <div className="flex flex-col">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Cost / Active User</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Monthly cost per active teammate</p>
                 <p className={`text-xs font-bold mt-0.5 font-mono ${cpau > 100 ? "text-amber-600 dark:text-amber-400" : "text-foreground"}`}>
                   ${cpau.toLocaleString()}/mo
                 </p>
@@ -182,7 +184,7 @@ export default function ToolUsageCard({ tool }) {
             )}
             {utilRate !== null && (
               <div className="flex flex-col">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Seat Utilization</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Licensed seats in use</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
                     <div
@@ -210,9 +212,16 @@ export default function ToolUsageCard({ tool }) {
           </div>
         )}
 
+        {confidenceScore < 70 && (
+          <div className="mt-2 flex items-start gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] text-amber-800 dark:border-amber-700/40 dark:bg-amber-900/20 dark:text-amber-300">
+            <AlertTriangle className="mt-0.5 h-3 w-3 flex-shrink-0" />
+            <span>This tool's figures may be incomplete ({confidenceScore}% data reliability).</span>
+          </div>
+        )}
+
         <div className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground">
           <Users className="w-3 h-3" />
-          <span>Click to see per-user activity</span>
+          <span>Open team member details</span>
         </div>
       </div>
     </div>
