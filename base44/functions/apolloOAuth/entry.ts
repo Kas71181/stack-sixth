@@ -9,7 +9,11 @@ Deno.serve(async (req) => {
 
     const requestUrl = new URL(req.url);
     requestUrl.search = '';
-    const callbackUrl = requestUrl.toString();
+    const body = req.method === 'GET' ? {} : await req.json().catch(() => ({}));
+    const callbackUrl = req.method === 'GET' ? requestUrl.toString() : body.callback_url;
+    if (!callbackUrl || !callbackUrl.startsWith('https://') || !callbackUrl.endsWith('/functions/apolloOAuth')) {
+      return Response.json({ error: 'A valid public Apollo callback URL is required' }, { status: 400 });
+    }
 
     if (req.method === 'GET') {
       const code = new URL(req.url).searchParams.get('code');
@@ -51,7 +55,6 @@ Deno.serve(async (req) => {
 
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    const body = await req.json().catch(() => ({}));
     const payloadPart = btoa(JSON.stringify({ userId: user.id, createdAt: Date.now() })).replace(/\+/g, '-').replace(/\//g, '_');
     const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(clientSecret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
     const signed = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payloadPart)));
