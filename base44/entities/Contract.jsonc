@@ -109,6 +109,21 @@
     "company_id": {
       "type": "string",
       "title": "Company ID"
+    },
+    "reminder_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Reminder Date"
+    },
+    "reminder_email_sent": {
+      "type": "boolean",
+      "default": false,
+      "title": "Reminder Email Sent"
+    },
+    "reminder_dismissed": {
+      "type": "boolean",
+      "default": false,
+      "title": "In-App Reminder Dismissed"
     }
   },
   "required": [

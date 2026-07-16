@@ -4,6 +4,7 @@ import { Calendar, DollarSign, Users, AlertTriangle, CheckCircle2, Clock, Chevro
 import { Button } from "@/components/ui/button";
 import { format, differenceInDays } from "date-fns";
 import NegotiationPlaybookModal from "./NegotiationPlaybookModal";
+import RenewalReminderControl from "./RenewalReminderControl";
 
 const STATUS_STYLE = {
   "Active": "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -12,7 +13,7 @@ const STATUS_STYLE = {
   "Cancelled": "bg-slate-100 text-slate-500 border-slate-200",
 };
 
-export default function ContractCard({ contract, onDeleted }) {
+export default function ContractCard({ contract, onDeleted, onUpdated }) {
   const [expanded, setExpanded] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showPlaybook, setShowPlaybook] = useState(false);
@@ -62,6 +63,8 @@ export default function ContractCard({ contract, onDeleted }) {
           <p className="text-[10px] text-muted-foreground">until renewal</p>
         </div>
       </div>
+
+      <RenewalReminderControl contract={contract} onUpdated={onUpdated} />
 
       {/* Negotiation leverage highlight */}
       {contract.negotiation_leverage && (

@@ -12,6 +12,7 @@ import ContractCard from "@/components/contracts/ContractCard";
 import AuditTrailPanel from "@/components/audit/AuditTrailPanel";
 import ManualRenewalForm from "@/components/contracts/ManualRenewalForm";
 import RenewalDetectionPanel from "@/components/contracts/RenewalDetectionPanel";
+import RenewalActionPanel from "@/components/contracts/RenewalActionPanel";
 
 export default function ContractIntelligence() {
   const { user } = useAuth();
@@ -37,6 +38,8 @@ export default function ContractIntelligence() {
     toast.success("Renewal added");
   };
 
+  const today = new Date().toISOString().split("T")[0];
+  const dueReminders = contracts.filter((c) => c.reminder_date && c.reminder_date <= today && !c.reminder_dismissed && c.status !== "Cancelled");
   const expiringSoon = contracts.filter((c) => c.status === "Expiring Soon");
   const totalAnnual = contracts.filter(c => c.status === "Active" || c.status === "Expiring Soon")
     .reduce((s, c) => s + (c.annual_cost || (c.monthly_cost || 0) * 12), 0);
@@ -69,20 +72,26 @@ export default function ContractIntelligence() {
       {showManual && <ManualRenewalForm onCreated={handleRenewalCreated} onCancel={() => setShowManual(false)} />}
       <RenewalDetectionPanel onConfirmed={() => qc.invalidateQueries({ queryKey: ["contracts", user?.id] })} />
 
+      <RenewalActionPanel reminders={dueReminders} onUpdated={() => qc.invalidateQueries({ queryKey: ["contracts", user?.id] })} />
+
       {/* Stats */}
       {contracts.length > 0 && (
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-card border border-border/60 rounded-2xl p-4 text-center">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="glass-card p-4 text-center">
             <p className="text-2xl font-extrabold text-primary">{contracts.length}</p>
             <p className="text-xs text-muted-foreground mt-0.5">Renewals tracked</p>
           </div>
-          <div className="bg-card border border-border/60 rounded-2xl p-4 text-center">
+          <div className="glass-card p-4 text-center">
             <p className="text-2xl font-extrabold text-amber-600">{expiringSoon.length}</p>
             <p className="text-xs text-muted-foreground mt-0.5">Expiring in 60d</p>
           </div>
-          <div className="bg-card border border-border/60 rounded-2xl p-4 text-center">
+          <div className="glass-card p-4 text-center">
             <p className="text-2xl font-extrabold">${Math.round(totalAnnual / 1000)}k</p>
             <p className="text-xs text-muted-foreground mt-0.5">Annual Spend</p>
+          </div>
+          <div className="glass-card p-4 text-center">
+            <p className="text-2xl font-extrabold text-primary">{dueReminders.length}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Reminders due</p>
           </div>
         </div>
       )}
@@ -121,7 +130,7 @@ export default function ContractIntelligence() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {contracts.map((contract) => (
             <motion.div key={contract.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-              <ContractCard contract={contract} onDeleted={() => qc.invalidateQueries({ queryKey: ["contracts", user?.id] })} />
+              <ContractCard contract={contract} onDeleted={() => qc.invalidateQueries({ queryKey: ["contracts", user?.id] })} onUpdated={() => qc.invalidateQueries({ queryKey: ["contracts", user?.id] })} />
             </motion.div>
           ))}
         </div>
