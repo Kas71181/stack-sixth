@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AlertTriangle, CheckCircle2, DollarSign, Users, UserX } from "lucide-react";
 import { calculateConfidence, getStaleness, STALENESS_STYLES } from "@/lib/confidenceScore";
+import ToolLogo from "@/components/stack/ToolLogo";
 import UserActivityDrilldown from "./UserActivityDrilldown";
 
 function HealthGauge({ score }) {
@@ -117,9 +118,12 @@ export default function ToolUsageCard({ tool }) {
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
-          <div>
-            <p className="font-semibold text-sm truncate">{tool.tool_name}</p>
-            {tool.category && <p className="text-xs text-muted-foreground">{tool.category}</p>}
+          <div className="flex min-w-0 items-center gap-2.5">
+            <ToolLogo name={tool.tool_name} />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">{tool.tool_name}</p>
+              {tool.category && <p className="text-xs text-muted-foreground">{tool.category}</p>}
+            </div>
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {hasLive ? (
