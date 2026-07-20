@@ -19,6 +19,8 @@ export default function useInventoryConnection({ tool, connector, isLive, onSync
     setStatus("authorizing");
     setError("");
     try {
+      const authenticated = await base44.auth.isAuthenticated();
+      if (!authenticated) return base44.auth.redirectToLogin(window.location.href);
       const popup = window.open("", "_blank", "width=620,height=760");
       if (!popup) throw new Error("Please allow pop-ups to connect this tool.");
       const liveOrigin = window.location.origin.replace("preview--", "");
@@ -31,7 +33,11 @@ export default function useInventoryConnection({ tool, connector, isLive, onSync
       await waitForClose(popup);
       setStatus("syncing");
       const result = await base44.functions.invoke(connector.functionName, {});
-      if (!result.data?.success) throw new Error(result.data?.error || "Live sync failed.");
+      if (!result.data?.success) throw new Error(result.data?.error || "Sync failed.");
+      if (connector.connectionMode === "evidence") {
+        setStatus("evidence");
+        return;
+      }
       await base44.entities.SaasIntegration.update(tool.id, {
         connection_status: "Connected", last_synced: new Date().toISOString().slice(0, 10),
       });

@@ -21,8 +21,11 @@ export const INVENTORY_CONNECTORS = {
   quickbooks: { id: "quickbooks", label: "QuickBooks", setupRequired: true, authMode: "Shared OAuth" },
   salesforce: { id: "salesforce", label: "Salesforce", setupRequired: true, authMode: "Per-user OAuth" },
   googleworkspace: {
-    id: "googleworkspace", label: "Google Workspace",
-    unavailableReason: "Admin-level Workspace activity needs an organization integration, not basic Gmail access.",
+    id: "googleworkspace", label: "Google Workspace", connectorId: "6a2c11c93a60aebc9a354fd8",
+    functionName: "detectToolsFromGmail", connectionMode: "evidence", actionLabel: "Scan Gmail evidence",
+    successLabel: "Gmail evidence scanned — financial evidence only",
+    idleLabel: "Connect Gmail to scan for verified vendor and billing evidence",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg",
   },
 };
 

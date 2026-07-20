@@ -49,6 +49,21 @@ const PRIVACY_DETAILS = {
     ],
     scope: "read_users, read_content",
   },
+  googleworkspace: {
+    intro: "Stack Sixth scans up to 50 recent Gmail messages for vendor domains and billing evidence. This provides financial evidence, not live Google Workspace usage telemetry.",
+    reads: [
+      "Sender and recipient domains from recent messages",
+      "Links and vendor domains found in message bodies",
+      "Signals that a software vendor or subscription exists",
+    ],
+    never: [
+      "Attachments or files",
+      "The ability to send, edit, delete, or label email",
+      "Passwords or account credentials",
+      "Live employee activity or Google Admin audit logs",
+    ],
+    scope: "gmail.readonly",
+  },
 };
 
 const DEFAULT_PRIVACY = {
@@ -102,7 +117,7 @@ export default function DataPrivacyModal({ connector, onConfirm, onCancel }) {
         <div className="px-5 pb-4 flex items-center gap-3 bg-muted/30 mx-5 rounded-xl mb-4">
           <img src={connector.logo} alt={connector.label} className="w-8 h-8 object-contain flex-shrink-0" />
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Stack Sixth only reads <strong>seat and activity metadata</strong> to detect unused licenses. We never access your business data, customer records, or financial information.
+            {details.intro || <>Stack Sixth only reads <strong>seat and activity metadata</strong> to detect unused licenses. We never access your business data, customer records, or financial information.</>}
           </p>
         </div>
 
