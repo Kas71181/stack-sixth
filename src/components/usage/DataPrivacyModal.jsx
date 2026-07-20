@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { Shield, CheckCircle2, XCircle, Lock, ExternalLink, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -68,15 +69,15 @@ const DEFAULT_PRIVACY = {
 export default function DataPrivacyModal({ connector, onConfirm, onCancel }) {
   const details = PRIVACY_DETAILS[connector.id] || DEFAULT_PRIVACY;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={onCancel} />
 
       {/* Modal */}
-      <div className="relative glass-strong rounded-2xl w-full max-w-md overflow-hidden animate-scale-in">
+      <div className="relative glass-strong flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-2xl animate-scale-in">
         {/* Header */}
-        <div className="flex items-start justify-between p-5 pb-4">
+        <div className="flex flex-shrink-0 items-start justify-between p-5 pb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
               <Shield className="w-5 h-5 text-primary" />
@@ -96,6 +97,7 @@ export default function DataPrivacyModal({ connector, onConfirm, onCancel }) {
           </button>
         </div>
 
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {/* Logo + intro */}
         <div className="px-5 pb-4 flex items-center gap-3 bg-muted/30 mx-5 rounded-xl mb-4">
           <img src={connector.logo} alt={connector.label} className="w-8 h-8 object-contain flex-shrink-0" />
@@ -146,9 +148,10 @@ export default function DataPrivacyModal({ connector, onConfirm, onCancel }) {
             </div>
           </div>
         </div>
+        </div>
 
         {/* Actions */}
-        <div className="px-5 pb-5 flex gap-3">
+        <div className="flex flex-shrink-0 gap-3 border-t border-border/40 px-5 py-4">
           <Button variant="outline" size="sm" className="flex-1" onClick={onCancel}>
             Cancel
           </Button>
@@ -159,7 +162,7 @@ export default function DataPrivacyModal({ connector, onConfirm, onCancel }) {
         </div>
 
         {/* Footer */}
-        <div className="border-t border-border/40 px-5 py-3 flex items-center justify-between">
+        <div className="flex flex-shrink-0 items-center justify-between border-t border-border/40 px-5 py-3">
           <div className="flex items-center gap-1.5">
             <Shield className="w-3 h-3 text-emerald-500" />
             <p className="text-[10px] text-muted-foreground">SOC 2 · ISO 27001 · Encrypted</p>
@@ -174,6 +177,7 @@ export default function DataPrivacyModal({ connector, onConfirm, onCancel }) {
           </a>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
