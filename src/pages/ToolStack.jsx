@@ -8,13 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import AddToolModal from "@/components/stack/AddToolModal";
+import { getLiveToolNames, normalizeToolName } from "@/lib/connectionStatus";
 
-const STATUS_COLORS = {
-  Connected: "bg-emerald-500/12 text-emerald-500 border-emerald-500/25",
-  "Manual Upload": "bg-primary/10 text-primary border-primary/20",
-  Pending: "bg-amber-500/12 text-amber-500 border-amber-500/25",
-  Failed: "bg-red-500/12 text-red-500 border-red-500/25",
-};
+const LIVE_STATUS = "bg-emerald-500/12 text-emerald-600 border-emerald-500/25";
+const OFFLINE_STATUS = "bg-muted text-muted-foreground border-border";
 
 const CATEGORIES = ["All", "Communication", "Project Management", "CRM & Sales", "Productivity & Docs", "Analytics & BI", "Marketing", "Customer Support", "Identity & Security", "Dev Tools", "Finance & HR"];
 
@@ -30,6 +27,18 @@ export default function ToolStack() {
   const { data: integrations = [], isLoading } = useQuery({
     queryKey: ["integrations", user?.id],
     queryFn: () => base44.entities.SaasIntegration.filter({ created_by_id: user?.id }),
+    enabled: !!user?.id,
+  });
+
+  const { data: activities = [] } = useQuery({
+    queryKey: ["user-activity", user?.id],
+    queryFn: async () => {
+      const [owned, company] = await Promise.all([
+        base44.entities.UserActivity.filter({ created_by_id: user.id }),
+        base44.entities.UserActivity.filter({ company_id: user.id }),
+      ]);
+      return [...new Map([...owned, ...company].map((activity) => [activity.id, activity])).values()];
+    },
     enabled: !!user?.id,
   });
 
@@ -90,6 +99,8 @@ export default function ToolStack() {
     mutationFn: (id) => base44.entities.SaasIntegration.delete(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["integrations"] }),
   });
+
+  const liveNames = getLiveToolNames(activities);
 
   let filtered = integrations.filter((i) => {
     const matchSearch = i.tool_name.toLowerCase().includes(search.toLowerCase());
@@ -174,6 +185,7 @@ export default function ToolStack() {
       ) : (
         <div className="space-y-2">
           {filtered.map((tool, idx) => {
+            const isLive = liveNames.has(normalizeToolName(tool.tool_name));
             const util = tool.licensed_seats > 0 ? Math.round((tool.active_users / tool.licensed_seats) * 100) : 0;
             const inactive = (tool.licensed_seats || 0) - (tool.active_users || 0);
             const utilColor = util >= 70 ? "bg-emerald-500" : util >= 40 ? "bg-amber-400" : "bg-red-500";
@@ -184,7 +196,7 @@ export default function ToolStack() {
                   <p className="font-semibold text-sm">{tool.tool_name}</p>
                   <Badge variant="outline" className="text-[10px] mt-0.5">{tool.category}</Badge>
                 </div>
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${STATUS_COLORS[tool.connection_status] || ""}`}>{tool.connection_status}</span>
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${isLive ? LIVE_STATUS : OFFLINE_STATUS}`}>{isLive ? "Live" : "Not connected"}</span>
                 <div className="text-sm font-mono font-medium w-20 text-right">${(tool.monthly_cost || 0).toLocaleString()}/mo</div>
                 <div className="flex items-center gap-2 min-w-[140px]">
                   <Users className="w-3.5 h-3.5 text-muted-foreground" />
@@ -194,7 +206,7 @@ export default function ToolStack() {
                   </div>
                   <span className="text-xs font-semibold w-8">{util}%</span>
                 </div>
-                {tool.last_synced && <span className="text-[10px] text-muted-foreground hidden md:block">{tool.last_synced}</span>}
+                {isLive && tool.last_synced && <span className="text-[10px] text-muted-foreground hidden md:block">Live sync {tool.last_synced}</span>}
                 {inactive > 0 && <span className="text-[10px] text-amber-500 bg-amber-500/10 border border-amber-500/25 px-2 py-0.5 rounded-full">{inactive} idle</span>}
                 {/* Actions */}
                 <div className="flex items-center gap-1 ml-auto">

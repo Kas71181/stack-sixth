@@ -46,7 +46,13 @@ export default function Dashboard() {
 
   const { data: userActivity } = useQuery({
     queryKey: ["user-activity-dash", user?.id],
-    queryFn: () => base44.entities.UserActivity.filter({ created_by_id: user?.id }, "-updated_date", 20),
+    queryFn: async () => {
+      const [owned, company] = await Promise.all([
+        base44.entities.UserActivity.filter({ created_by_id: user.id }),
+        base44.entities.UserActivity.filter({ company_id: user.id }),
+      ]);
+      return [...new Map([...owned, ...company].map((activity) => [activity.id, activity])).values()];
+    },
     enabled: !!user?.id,
   });
 
@@ -203,8 +209,9 @@ export default function Dashboard() {
 
         {/* Live coverage nudge — shown when activity data is mostly estimated */}
         {(() => {
-          const liveCount = [...new Set((userActivity || []).filter((a) => a.source === "live").map((a) => a.tool_name))].length;
-          const totalCount = [...new Set((userActivity || []).map((a) => a.tool_name))].length;
+          const inventoryNames = new Set((integrations || []).map((tool) => tool.tool_name?.trim().toLowerCase()).filter(Boolean));
+          const liveCount = [...new Set((userActivity || []).filter((a) => a.source === "live" && inventoryNames.has(a.tool_name?.trim().toLowerCase())).map((a) => a.tool_name?.trim().toLowerCase()))].length;
+          const totalCount = inventoryNames.size;
           const pct = totalCount > 0 ? Math.round((liveCount / totalCount) * 100) : 0;
           if (pct >= 80 || totalCount === 0) return null;
           return (
@@ -292,6 +299,7 @@ export default function Dashboard() {
           urgentRenewals={urgentRenewals}
           openRecs={openRecs}
           userActivity={userActivity || []}
+          inventoryTools={integrations}
         />
       </motion.div>
 

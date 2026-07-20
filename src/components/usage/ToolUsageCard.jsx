@@ -123,9 +123,9 @@ export default function ToolUsageCard({ tool }) {
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {hasLive ? (
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">● Current data</span>
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">● Live</span>
             ) : (
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">~ Estimate</span>
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">Not connected</span>
             )}
             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1 ${stalenessStyle.badge}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${stalenessStyle.dot}`} />

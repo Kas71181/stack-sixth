@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 const CATEGORIES = ["Communication", "Project Management", "CRM & Sales", "Productivity & Docs", "Analytics & BI", "Marketing", "Customer Support", "Identity & Security", "Dev Tools", "Finance & HR"];
 const POPULAR_TOOLS = ["Slack", "Zoom", "Notion", "Jira", "HubSpot", "Salesforce", "Google Workspace", "Figma", "Datadog", "Zendesk", "Okta", "Gusto", "Asana", "Monday.com", "Linear", "GitHub", "Intercom", "Mixpanel", "Mailchimp", "QuickBooks"];
 
-const EMPTY = { tool_name: "", category: "Communication", monthly_cost: "", licensed_seats: "", active_users: "", connection_status: "Manual Upload", notes: "" };
+const EMPTY = { tool_name: "", category: "Communication", monthly_cost: "", licensed_seats: "", active_users: "", connection_status: "Pending", notes: "" };
 
 export default function AddToolModal({ tool, onClose }) {
   const qc = useQueryClient();
@@ -25,7 +25,7 @@ export default function AddToolModal({ tool, onClose }) {
         monthly_cost: tool.monthly_cost ?? "",
         licensed_seats: tool.licensed_seats ?? "",
         active_users: tool.active_users ?? "",
-        connection_status: tool.connection_status || "Manual Upload",
+        connection_status: tool.connection_status || "Pending",
         notes: tool.notes || "",
       });
     } else {
@@ -76,19 +76,11 @@ export default function AddToolModal({ tool, onClose }) {
             <Input list="tools-list" value={form.tool_name} onChange={(e) => setForm({ ...form, tool_name: e.target.value })} placeholder="e.g. Slack" required />
             <datalist id="tools-list">{POPULAR_TOOLS.map((t) => <option key={t} value={t} />)}</datalist>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="text-xs mb-1 block">Category</Label>
-              <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm">
-                {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-              </select>
-            </div>
-            <div>
-              <Label className="text-xs mb-1 block">Status</Label>
-              <select value={form.connection_status} onChange={(e) => setForm({ ...form, connection_status: e.target.value })} className="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm">
-                {["Connected", "Manual Upload", "Pending"].map((s) => <option key={s}>{s}</option>)}
-              </select>
-            </div>
+          <div>
+            <Label className="text-xs mb-1 block">Category</Label>
+            <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm">
+              {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+            </select>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>

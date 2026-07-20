@@ -82,11 +82,20 @@ export default function UsageAnalytics({ syncKey = 0 }) {
     if (!toolMap[toolName]) toolMap[toolName] = { ...estimatedMap[toolName], liveUsers: [] };
   });
   integrations.forEach((i) => {
-    if (toolMap[i.tool_name]) {
-      toolMap[i.tool_name].category = i.category;
-      toolMap[i.tool_name].licensed_seats = i.licensed_seats;
-      toolMap[i.tool_name].active_users = i.active_users;
+    if (!toolMap[i.tool_name]) {
+      toolMap[i.tool_name] = {
+        tool_name: i.tool_name,
+        source: "not_connected",
+        activity_score: 0,
+        status: "Inactive",
+        wasted_cost_flag: false,
+        license_cost_per_month: i.licensed_seats > 0 ? (i.monthly_cost || 0) / i.licensed_seats : i.monthly_cost || 0,
+        liveUsers: [],
+      };
     }
+    toolMap[i.tool_name].category = i.category;
+    toolMap[i.tool_name].licensed_seats = i.licensed_seats;
+    toolMap[i.tool_name].active_users = i.active_users;
   });
 
   const tools = Object.values(toolMap);
@@ -107,8 +116,7 @@ export default function UsageAnalytics({ syncKey = 0 }) {
   });
 
   // ── Coverage stats ───────────────────────────────────────────────────────────
-  const liveToolNames = new Set(Object.keys(liveUsersMap));
-  const totalToolCount = enrichedTools.length;
+  const totalToolCount = integrations.length;
   const liveToolCount = enrichedTools.filter((t) => t.source === "live").length;
   const estToolCount = totalToolCount - liveToolCount;
   const coveragePct = totalToolCount > 0 ? Math.round((liveToolCount / totalToolCount) * 100) : 0;
@@ -243,7 +251,7 @@ export default function UsageAnalytics({ syncKey = 0 }) {
                   {estToolCount > 0 && (
                     <span className="flex items-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
-                      {estToolCount} estimated
+                      {estToolCount} not connected
                     </span>
                   )}
                 </div>

@@ -18,7 +18,7 @@ export default function InventoryConnectionCard({ tool, connector, isLive, onSyn
           <p className="truncate text-sm font-semibold">{tool.tool_name}</p>
           <p className="text-xs text-muted-foreground">{tool.category}</p>
           <p className={`mt-1 text-xs font-medium ${flow.status === "live" ? "text-emerald-600" : "text-muted-foreground"}`}>
-            {flow.status === "live" ? "Verified live data" : connector ? "Live OAuth available" : "Insufficient evidence — live connector unavailable"}
+            {flow.status === "live" ? "Live" : connector ? "Not connected — OAuth available" : "Not connected — live connector unavailable"}
           </p>
         </div>
       </div>

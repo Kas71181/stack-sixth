@@ -22,6 +22,7 @@ export default function StackScore({
   urgentRenewals = [],
   openRecs = [],
   userActivity = [],
+  inventoryTools = [],
 }) {
   const { score, grade, tone, factors } = useMemo(() => {
     // ── Factor 1: Utilization (0-35 pts) ──
@@ -47,8 +48,9 @@ export default function StackScore({
     const actionPts = openCount === 0 ? 12 : Math.max(0, 12 - openCount * 2);
 
     // ── Factor 5: Coverage (0-8 pts) ──
-    const liveCount = [...new Set((userActivity || []).filter((a) => a.source === "live").map((a) => a.tool_name))].length;
-    const coverageRatio = activityTools.length > 0 ? liveCount / activityTools.length : 0;
+    const inventoryNames = new Set((inventoryTools || []).map((tool) => tool.tool_name?.trim().toLowerCase()).filter(Boolean));
+    const liveCount = [...new Set((userActivity || []).filter((a) => a.source === "live" && inventoryNames.has(a.tool_name?.trim().toLowerCase())).map((a) => a.tool_name?.trim().toLowerCase()))].length;
+    const coverageRatio = inventoryNames.size > 0 ? liveCount / inventoryNames.size : 0;
     const coveragePts = Math.round(coverageRatio * 8);
 
     const rawScore = utilizationPts + efficiencyPts + governancePts + actionPts + coveragePts;
@@ -69,7 +71,7 @@ export default function StackScore({
     ];
 
     return { score: finalScore, grade, tone, factors };
-  }, [totalSpend, totalSavings, totalTools, dormantTools, urgentRenewals, openRecs, userActivity]);
+  }, [totalSpend, totalSavings, totalTools, dormantTools, urgentRenewals, openRecs, userActivity, inventoryTools]);
 
   const toneClasses = {
     emerald: { stroke: "stroke-emerald-500", text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10", glow: "shadow-emerald-500/20" },
