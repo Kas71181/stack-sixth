@@ -15,7 +15,7 @@ export const INVENTORY_CONNECTORS = {
     id: "apollo", label: "Apollo.io", oauthFunction: "apolloOAuth", functionName: "getApolloActivity",
     logo: "https://assets-global.website-files.com/60b86da97e58f877a9d4e89f/60e5db46929e39b89bed2e96_apollo-logo.png",
   },
-  hubspot: { id: "hubspot", label: "HubSpot", setupRequired: true, authMode: "Per-user OAuth" },
+  hubspot: { id: "hubspot", label: "HubSpot", setupRequired: true, authMode: "API token", functionName: "getHubSpotActivity" },
   googlemeet: { id: "googlemeet", label: "Google Meet", setupRequired: true, authMode: "Per-user OAuth" },
   jira: { id: "jira", label: "Jira", setupRequired: true, authMode: "Per-user OAuth" },
   quickbooks: { id: "quickbooks", label: "QuickBooks", setupRequired: true, authMode: "Shared OAuth" },

@@ -1,4 +1,5 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
+import { decryptCredential } from '../../shared/credentialCrypto.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -12,13 +13,9 @@ Deno.serve(async (req) => {
     }
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    let apiKey = Deno.env.get("HUBSPOT_API_KEY");
-    if (!apiKey) {
-      const stored = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'hubspot', created_by_id: user.id });
-      if (stored[0]) {
-        apiKey = stored[0].api_key || null;
-      }
-    }
+    const stored = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'hubspot', created_by_id: user.id });
+    const credential = stored[0] ? await decryptCredential(stored[0]) : null;
+    const apiKey = credential?.api_key || null;
     if (!apiKey) return Response.json({ success: false, not_configured: true, error: 'HubSpot credentials not configured' }, { status: 200 });
 
     // Fetch users from HubSpot

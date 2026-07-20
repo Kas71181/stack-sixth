@@ -14,7 +14,8 @@ const savedStatus = (tool, isLive) => isLive
   ? "live"
   : tool.connection_status === "Evidence"
     ? "evidence"
-    : tool.connection_status === "Manual Upload" ? "snapshot" : "idle";
+    : tool.connection_status === "Manual Auth" ? "manual"
+      : tool.connection_status === "Manual Upload" ? "snapshot" : "idle";
 
 export default function useInventoryConnection({ tool, connector, isLive, onSynced }) {
   const [status, setStatus] = useState(savedStatus(tool, isLive));

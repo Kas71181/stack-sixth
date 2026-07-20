@@ -31,6 +31,7 @@
       "enum": [
         "Connected",
         "Evidence",
+        "Manual Auth",
         "Manual Upload",
         "Pending",
         "Failed"

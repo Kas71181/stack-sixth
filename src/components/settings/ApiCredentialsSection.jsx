@@ -98,7 +98,7 @@ export default function ApiCredentialsSection() {
               <div>
                 <p className="text-sm font-semibold">{SERVICE_LABELS[cred.service] || cred.service}</p>
                 <p className="text-[11px] text-muted-foreground">
-                  {cred.api_key ? `Token: ••••••••${cred.api_key.slice(-4)}` : "Token saved"}
+                  {cred.token_last_four ? `Token: ••••••••${cred.token_last_four}` : cred.api_key ? `Token: ••••••••${cred.api_key.slice(-4)}` : "Token saved"}
                   {cred.extra_fields && Object.keys(cred.extra_fields).length > 0
                     ? ` · ${Object.keys(cred.extra_fields).join(", ")}`
                     : ""}
