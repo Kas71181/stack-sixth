@@ -29,6 +29,14 @@ export const INVENTORY_CONNECTORS = {
   },
 };
 
+export const GMAIL_EVIDENCE_CONNECTOR = {
+  id: "googleworkspace", label: "Gmail", connectorId: "6a2c11c93a60aebc9a354fd8",
+  functionName: "detectToolsFromGmail", connectionMode: "evidence", actionLabel: "Scan Gmail evidence",
+  successLabel: "Financial evidence found in Gmail",
+  idleLabel: "Scan Gmail for vendor and billing evidence",
+  logo: "https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg",
+};
+
 const CONNECTOR_ALIASES = {
   apolloio: "apollo",
   hubspotmarketing: "hubspot",

@@ -28,7 +28,7 @@ export default function InventoryConnections() {
   };
   return (
     <div className="space-y-5">
-      <div><h2 className="flex items-center gap-2 text-xl font-extrabold"><Plug className="h-5 w-5 text-primary" />Connect inventory</h2><p className="mt-1 text-sm text-muted-foreground">Authorize supported vendors to replace estimates with verified live usage.</p></div>
+      <div><h2 className="flex items-center gap-2 text-xl font-extrabold"><Plug className="h-5 w-5 text-primary" />Connect inventory</h2><p className="mt-1 text-sm text-muted-foreground">Connect directly where available, scan Gmail evidence, or privately upload a vendor report.</p></div>
       <ConnectionGuide />
       {isLoading ? <div className="py-16 text-center text-sm text-muted-foreground">Loading inventory…</div> : !data?.tools.length ? (
         <div className="glass-card py-12 text-center"><Layers className="mx-auto mb-3 h-8 w-8 text-muted-foreground" /><p className="font-semibold">Your inventory is empty</p><p className="mt-1 text-sm text-muted-foreground">Add tools in the Inventory tab first.</p></div>
