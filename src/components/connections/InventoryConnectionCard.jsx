@@ -1,8 +1,9 @@
-import { AlertCircle, CheckCircle2, KeyRound, Loader2, Plug, ShieldAlert } from "lucide-react";
+import { AlertCircle, CheckCircle2, KeyRound, Loader2, Plug } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import DataPrivacyModal from "@/components/usage/DataPrivacyModal";
 import ApiTokenModal from "@/components/connections/ApiTokenModal";
+import ToolLogo from "@/components/stack/ToolLogo";
 import useInventoryConnection from "@/hooks/useInventoryConnection";
 
 export default function InventoryConnectionCard({ tool, connector, isLive, onSynced }) {
@@ -27,9 +28,7 @@ export default function InventoryConnectionCard({ tool, connector, isLive, onSyn
   return (
     <div className="glass-card flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
       <div className="flex min-w-0 flex-1 items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted">
-          {connector?.logo ? <img src={connector.logo} alt="" className="h-7 w-7 object-contain" /> : <ShieldAlert className="h-5 w-5 text-muted-foreground" />}
-        </div>
+        <ToolLogo name={tool.tool_name} />
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">{tool.tool_name}</p>
           <p className="text-xs text-muted-foreground">{tool.category}</p>

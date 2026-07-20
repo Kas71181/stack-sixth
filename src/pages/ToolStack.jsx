@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import AddToolModal from "@/components/stack/AddToolModal";
+import ToolLogo from "@/components/stack/ToolLogo";
 import { getLiveToolNames, normalizeToolName } from "@/lib/connectionStatus";
 
 const LIVE_STATUS = "bg-emerald-500/12 text-emerald-600 border-emerald-500/25";
@@ -192,6 +193,7 @@ export default function ToolStack() {
             return (
               <motion.div key={tool.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.02 }}
                 className="bg-card border border-border/60 rounded-xl px-5 py-4 flex flex-wrap items-center gap-4">
+                <ToolLogo name={tool.tool_name} />
                 <div className="flex-1 min-w-[160px]">
                   <p className="font-semibold text-sm">{tool.tool_name}</p>
                   <Badge variant="outline" className="text-[10px] mt-0.5">{tool.category}</Badge>
