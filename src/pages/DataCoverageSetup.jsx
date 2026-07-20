@@ -121,9 +121,10 @@ function OAuthRow({ connector, onConnected }) {
     setErrorMsg("");
     try {
       const popup = window.open("", "_blank");
+      const liveOrigin = window.location.origin.replace("preview--", "");
       const url = connector.oauthFunction
         ? (await base44.functions.invoke(connector.oauthFunction, {
-            callback_url: `${window.location.origin}/functions/${connector.oauthFunction}`,
+            callback_url: `${liveOrigin}/functions/${connector.oauthFunction}`,
           })).data.url
         : await base44.connectors.connectAppUser(connector.connectorId);
       if (!popup) throw new Error("Please allow pop-ups to connect this tool.");
