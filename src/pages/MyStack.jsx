@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Layers, Users, Plug } from "lucide-react";
 import ToolStack from "@/pages/ToolStack";
 import UsageAnalytics from "@/pages/UsageAnalytics";
-import DataCoverageSetup from "@/pages/DataCoverageSetup";
+import InventoryConnections from "@/components/connections/InventoryConnections";
 
 const tabs = [
   { id: "inventory", label: "Inventory", icon: Layers },
@@ -41,7 +41,7 @@ export default function MyStack() {
       </div>
       {activeTab === "inventory" && <ToolStack />}
       {activeTab === "usage" && <UsageAnalytics />}
-      {activeTab === "connect" && <DataCoverageSetup />}
+      {activeTab === "connect" && <InventoryConnections />}
     </div>
   );
 }
