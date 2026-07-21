@@ -93,6 +93,17 @@ export default function UsageAnalytics({ syncKey = 0 }) {
         liveUsers: [],
       };
     }
+    if (i.evidence_type === "access") {
+      Object.assign(toolMap[i.tool_name], {
+        source: "access",
+        activity_score: null,
+        status: "Access verified",
+        wasted_cost_flag: false,
+        liveUsers: [],
+        evidence_note: i.evidence_note,
+        updated_date: i.evidence_checked_at || i.updated_date,
+      });
+    }
     toolMap[i.tool_name].category = i.category;
     toolMap[i.tool_name].licensed_seats = i.licensed_seats;
     toolMap[i.tool_name].active_users = i.active_users;
@@ -118,7 +129,8 @@ export default function UsageAnalytics({ syncKey = 0 }) {
   // ── Coverage stats ───────────────────────────────────────────────────────────
   const totalToolCount = integrations.length;
   const liveToolCount = enrichedTools.filter((t) => t.source === "live").length;
-  const estToolCount = totalToolCount - liveToolCount;
+  const accessToolCount = enrichedTools.filter((t) => t.source === "access").length;
+  const notConnectedCount = totalToolCount - liveToolCount - accessToolCount;
   const coveragePct = totalToolCount > 0 ? Math.round((liveToolCount / totalToolCount) * 100) : 0;
   const coverageColor = coveragePct >= 80 ? "bg-emerald-500" : coveragePct >= 50 ? "bg-amber-400" : "bg-primary";
 
@@ -248,10 +260,16 @@ export default function UsageAnalytics({ syncKey = 0 }) {
                     <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
                     {liveToolCount} live
                   </span>
-                  {estToolCount > 0 && (
+                  {accessToolCount > 0 && (
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />
+                      {accessToolCount} verified access
+                    </span>
+                  )}
+                  {notConnectedCount > 0 && (
                     <span className="flex items-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
-                      {estToolCount} not connected
+                      {notConnectedCount} not connected
                     </span>
                   )}
                 </div>
