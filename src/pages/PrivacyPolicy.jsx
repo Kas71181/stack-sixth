@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Shield, Lock, EyeOff, Server, KeyRound, FileText, ExternalLink, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import EndUserLicenseAgreement from "@/components/legal/EndUserLicenseAgreement";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 14 },
@@ -56,8 +57,8 @@ export default function PrivacyPolicy() {
             <Shield className="w-5.5 h-5.5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight">Privacy Policy</h1>
-            <p className="text-sm text-muted-foreground">How Stack Sixth collects, uses, and protects your data.</p>
+            <h1 className="text-2xl font-extrabold tracking-tight">Privacy Agreement</h1>
+            <p className="text-sm text-muted-foreground">How Stack Sixth protects your data and the terms governing your use.</p>
           </div>
         </div>
         <p className="text-xs text-muted-foreground">Last updated: July 2026</p>
@@ -141,6 +142,8 @@ export default function PrivacyPolicy() {
           ))}
         </div>
       </motion.div>
+
+      <EndUserLicenseAgreement />
 
       <motion.div {...fade(0.3)} className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-border/40">
         <p className="text-xs text-muted-foreground">
