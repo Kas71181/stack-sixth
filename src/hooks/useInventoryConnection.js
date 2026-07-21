@@ -59,6 +59,15 @@ export default function useInventoryConnection({ tool, connector, isLive, onSync
         onSynced?.();
         return;
       }
+      if (connector.connectionMode === "access") {
+        await base44.entities.SaasIntegration.update(tool.id, {
+          connection_status: "Evidence", evidence_type: "access", evidence_checked_at: new Date().toISOString(),
+          evidence_note: "OAuth account access verified; Apollo team usage requires a master API key",
+        });
+        setStatus("evidence");
+        onSynced?.();
+        return;
+      }
       await base44.entities.SaasIntegration.update(tool.id, {
         connection_status: "Connected", evidence_type: "live", last_synced: new Date().toISOString().slice(0, 10),
         evidence_checked_at: new Date().toISOString(), evidence_note: "Verified through a live OAuth connection",

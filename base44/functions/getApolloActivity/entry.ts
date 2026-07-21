@@ -43,6 +43,18 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (isOAuth) {
+      const profileRes = await fetch('https://api.apollo.io/api/v1/users/api_profile', {
+        headers: { 'Authorization': `Bearer ${apiKey}`, 'accept': 'application/json' },
+      });
+      if (!profileRes.ok) {
+        const err = await profileRes.json().catch(() => ({}));
+        return Response.json({ success: false, error: `Apollo API error (${profileRes.status}): ${err.message || err.error || 'Reconnect Apollo and approve profile access'}` }, { status: 200 });
+      }
+      const profile = await profileRes.json();
+      return Response.json({ success: true, verified_access: true, total: 0, profile_email: profile.email || null });
+    }
+
     const usersRes = await fetch(isOAuth
       ? 'https://api.apollo.io/api/v1/users/search?page=1&per_page=200'
       : 'https://api.apollo.io/api/v1/users/search', {
