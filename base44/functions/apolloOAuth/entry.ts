@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
       const tokens = await tokenRes.json();
       if (!tokenRes.ok || !tokens.access_token) return new Response(`Apollo authorization failed: ${tokens.error_description || tokens.error || 'token exchange failed'}`, { status: 400 });
 
-      const existing = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'apollo', created_by_id: payload.userId });
+      const existing = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'apollo', owner_user_id: payload.userId });
       const credential = {
         service: 'apollo',
         api_key: tokens.access_token,
@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
         },
       };
       if (existing[0]) await base44.asServiceRole.entities.ApiCredential.update(existing[0].id, credential);
-      else await base44.asServiceRole.entities.ApiCredential.create({ ...credential, created_by_id: payload.userId });
+      else await base44.asServiceRole.entities.ApiCredential.create({ ...credential, owner_user_id: payload.userId });
 
       return new Response('<!doctype html><html><body style="font-family:system-ui;text-align:center;padding:48px"><h2>Apollo connected</h2><p>You can close this window.</p><script>window.close()</script></body></html>', { headers: { 'Content-Type': 'text/html' } });
     }

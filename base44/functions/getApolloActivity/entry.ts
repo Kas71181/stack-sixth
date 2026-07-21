@@ -12,8 +12,9 @@ Deno.serve(async (req) => {
     }
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const stored = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'apollo', created_by_id: user.id });
-    const credential = stored[0] || null;
+    const stored = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'apollo', owner_user_id: user.id });
+    const legacy = stored.length ? [] : await base44.asServiceRole.entities.ApiCredential.filter({ service: 'apollo', created_by_id: user.id });
+    const credential = stored[0] || legacy[0] || null;
     let apiKey = credential?.api_key || null;
     const isOAuth = credential?.extra_fields?.auth_type === 'oauth';
     if (!apiKey) return Response.json({ success: false, not_configured: true, error: 'Apollo is not connected' }, { status: 200 });
