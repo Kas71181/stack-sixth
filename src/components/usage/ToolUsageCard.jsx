@@ -3,6 +3,7 @@ import { AlertTriangle, CheckCircle2, DollarSign, Users, UserX } from "lucide-re
 import { calculateConfidence, getStaleness, STALENESS_STYLES } from "@/lib/confidenceScore";
 import ToolLogo from "@/components/stack/ToolLogo";
 import UserActivityDrilldown from "./UserActivityDrilldown";
+import AccessVerifiedUsageCard from "./AccessVerifiedUsageCard";
 
 function HealthGauge({ score }) {
   const color = score >= 70 ? "#16a34a" : score >= 40 ? "#d97706" : "#dc2626";
@@ -105,6 +106,8 @@ export default function ToolUsageCard({ tool }) {
   const stalenessStyle = STALENESS_STYLES[staleness.level] || STALENESS_STYLES.unknown;
   const confidenceScore = calculateConfidence(tool, liveUsers);
   const offboardedCount = liveUsers.filter((u) => u.offboarded_flag).length;
+
+  if (tool.source === "access") return <AccessVerifiedUsageCard tool={tool} />;
 
   return (
     <>

@@ -140,10 +140,11 @@ export default function UsageAnalytics({ syncKey = 0 }) {
     const seats = t.licensed_seats > 0 ? t.licensed_seats : 1;
     return s + (t.license_cost_per_month || 0) * seats;
   }, 0);
-  const avgScore = tools.length ? Math.round(tools.reduce((s, t) => s + (t.activity_score || 0), 0) / tools.length) : 0;
-  const healthyCount = tools.filter((t) => t.status === "Active").length;
+  const usageTools = tools.filter((t) => t.source !== "access");
+  const avgScore = usageTools.length ? Math.round(usageTools.reduce((s, t) => s + (t.activity_score || 0), 0) / usageTools.length) : 0;
+  const healthyCount = usageTools.filter((t) => t.status === "Active").length;
   const offboardedCount = enrichedTools.reduce((sum, t) => sum + (t.liveUsers || []).filter((u) => u.offboarded_flag).length, 0);
-  const avgConfidence = tools.length > 0 ? Math.round(tools.reduce((s, t) => s + calculateConfidence(t, t.liveUsers || []), 0) / tools.length) : 0;
+  const avgConfidence = usageTools.length > 0 ? Math.round(usageTools.reduce((s, t) => s + calculateConfidence(t, t.liveUsers || []), 0) / usageTools.length) : 0;
 
   // ── Filtering ────────────────────────────────────────────────────────────────
   const FILTERS = ["All", "Regularly used", "Low use", "Not used"];
@@ -162,7 +163,7 @@ export default function UsageAnalytics({ syncKey = 0 }) {
     setSyncing(true);
     const existingToolNames = new Set(activities.map((u) => u.tool_name));
     const toCreate = integrations
-      .filter((i) => !existingToolNames.has(i.tool_name))
+      .filter((i) => i.evidence_type !== "access" && !existingToolNames.has(i.tool_name))
       .map((i) => {
         const utilRate = i.licensed_seats > 0 ? (i.active_users || 0) / i.licensed_seats : 0;
         const activityScore = Math.round(utilRate * 100);
@@ -297,7 +298,7 @@ export default function UsageAnalytics({ syncKey = 0 }) {
               <p className="text-[10px] text-muted-foreground">Average usage (out of 100)</p>
             </div>
             <div className="text-center">
-              <p className="text-xl font-extrabold text-emerald-600 tabular-nums">{healthyCount}/{tools.length}</p>
+              <p className="text-xl font-extrabold text-emerald-600 tabular-nums">{healthyCount}/{usageTools.length}</p>
               <p className="text-[10px] text-muted-foreground">Tools used regularly</p>
             </div>
             <div className="text-center">
