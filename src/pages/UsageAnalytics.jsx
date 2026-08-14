@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { motion } from "framer-motion";
 import { AlertTriangle, RefreshCw, Activity, Plug, ArrowRight, Zap, ShieldCheck } from "lucide-react";
 import { calculateConfidence } from "@/lib/confidenceScore";
+import { dedupeTools, normalizeToolName } from "@/lib/connectionStatus";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
@@ -21,13 +22,7 @@ export default function UsageAnalytics({ syncKey = 0 }) {
 
   const { data: activities = [], isLoading, refetch } = useQuery({
     queryKey: ["user-activity", user?.id],
-    queryFn: async () => {
-      const [owned, synced] = await Promise.all([
-        base44.entities.UserActivity.filter({ created_by_id: user.id }),
-        base44.entities.UserActivity.filter({ company_id: user.id }),
-      ]);
-      return [...new Map([...owned, ...synced].map((activity) => [activity.id, activity])).values()];
-    },
+    queryFn: () => base44.entities.UserActivity.filter({ created_by_id: user.id }),
     enabled: !!user?.id,
     staleTime: 0,
     refetchOnMount: "always",
@@ -35,7 +30,7 @@ export default function UsageAnalytics({ syncKey = 0 }) {
 
   const { data: integrations = [] } = useQuery({
     queryKey: ["integrations", user?.id],
-    queryFn: () => base44.entities.SaasIntegration.filter({ created_by_id: user?.id }),
+    queryFn: async () => dedupeTools(await base44.entities.SaasIntegration.filter({ created_by_id: user?.id })),
     enabled: !!user?.id,
   });
 
@@ -45,71 +40,41 @@ export default function UsageAnalytics({ syncKey = 0 }) {
     enabled: !!user?.id,
   });
 
-  // ── Build per-tool display records ──────────────────────────────────────────
-  const liveUsersMap = {};
-  const estimatedMap = {};
-  const stackToolNames = new Set(integrations.map((tool) => tool.tool_name?.trim().toLowerCase()).filter(Boolean));
-
-  activities
-    .filter((activity) => stackToolNames.has(activity.tool_name?.trim().toLowerCase()))
-    .forEach((a) => {
-    if (a.source === "live" && a.user_email !== "aggregate@placeholder") {
-      if (!liveUsersMap[a.tool_name]) liveUsersMap[a.tool_name] = [];
-      liveUsersMap[a.tool_name].push(a);
-    } else {
-      if (!estimatedMap[a.tool_name]) estimatedMap[a.tool_name] = a;
+  // ── Build evidence-backed per-tool records ──────────────────────────────────
+  const tools = integrations.map((integration) => {
+    const liveUsers = activities.filter((activity) =>
+      activity.source === "live" &&
+      activity.user_email !== "aggregate@placeholder" &&
+      normalizeToolName(activity.tool_name) === normalizeToolName(integration.tool_name)
+    );
+    const evidenceOnly = ["access", "observed", "financial", "snapshot"].includes(integration.evidence_type);
+    if (!liveUsers.length) {
+      return {
+        ...integration,
+        source: evidenceOnly ? integration.evidence_type : "insufficient",
+        activity_score: null,
+        status: "Insufficient evidence",
+        wasted_cost_flag: false,
+        license_cost_per_month: integration.licensed_seats > 0 ? (integration.monthly_cost || 0) / integration.licensed_seats : integration.monthly_cost || 0,
+        liveUsers: [],
+        updated_date: integration.evidence_checked_at || integration.updated_date,
+      };
     }
-  });
-
-  const toolMap = {};
-  Object.keys(liveUsersMap).forEach((toolName) => {
-    const users = liveUsersMap[toolName];
-    const avg = (key) => Math.round(users.reduce((s, u) => s + (u[key] || 0), 0) / users.length);
-    const activeCount = users.filter((u) => u.status === "Active").length;
+    const avg = (key) => Math.round(liveUsers.reduce((sum, item) => sum + (item[key] || 0), 0) / liveUsers.length);
+    const activeCount = liveUsers.filter((item) => item.status === "Active").length;
     const score = avg("activity_score");
-    toolMap[toolName] = {
-      tool_name: toolName,
+    return {
+      ...integration,
       source: "live",
       activity_score: score,
       days_active_last_30: avg("days_active_last_30"),
-      status: activeCount / users.length >= 0.7 ? "Active" : activeCount / users.length >= 0.3 ? "Dormant" : "Inactive",
+      status: activeCount / liveUsers.length >= 0.7 ? "Active" : activeCount / liveUsers.length >= 0.3 ? "Dormant" : "Inactive",
       wasted_cost_flag: score < 40,
-      license_cost_per_month: users[0]?.license_cost_per_month || 0,
-      liveUsers: users,
+      license_cost_per_month: integration.licensed_seats > 0 ? (integration.monthly_cost || 0) / integration.licensed_seats : integration.monthly_cost || 0,
+      liveUsers,
+      updated_date: liveUsers.reduce((latest, item) => !latest || new Date(item.updated_date) > new Date(latest) ? item.updated_date : latest, null),
     };
   });
-  Object.keys(estimatedMap).forEach((toolName) => {
-    if (!toolMap[toolName]) toolMap[toolName] = { ...estimatedMap[toolName], liveUsers: [] };
-  });
-  integrations.forEach((i) => {
-    if (!toolMap[i.tool_name]) {
-      toolMap[i.tool_name] = {
-        tool_name: i.tool_name,
-        source: "not_connected",
-        activity_score: 0,
-        status: "Inactive",
-        wasted_cost_flag: false,
-        license_cost_per_month: i.licensed_seats > 0 ? (i.monthly_cost || 0) / i.licensed_seats : i.monthly_cost || 0,
-        liveUsers: [],
-      };
-    }
-    if (i.evidence_type === "access") {
-      Object.assign(toolMap[i.tool_name], {
-        source: "access",
-        activity_score: null,
-        status: "Access verified",
-        wasted_cost_flag: false,
-        liveUsers: [],
-        evidence_note: i.evidence_note,
-        updated_date: i.evidence_checked_at || i.updated_date,
-      });
-    }
-    toolMap[i.tool_name].category = i.category;
-    toolMap[i.tool_name].licensed_seats = i.licensed_seats;
-    toolMap[i.tool_name].active_users = i.active_users;
-  });
-
-  const tools = Object.values(toolMap);
 
   // ── Enrich with CPAU + utilRate ──────────────────────────────────────────────
   const enrichedTools = tools.map((t) => {
@@ -130,7 +95,8 @@ export default function UsageAnalytics({ syncKey = 0 }) {
   const totalToolCount = integrations.length;
   const liveToolCount = enrichedTools.filter((t) => t.source === "live").length;
   const accessToolCount = enrichedTools.filter((t) => t.source === "access").length;
-  const notConnectedCount = totalToolCount - liveToolCount - accessToolCount;
+  const evidenceOnlyCount = enrichedTools.filter((t) => ["observed", "financial", "snapshot"].includes(t.source)).length;
+  const notConnectedCount = totalToolCount - liveToolCount - accessToolCount - evidenceOnlyCount;
   const coveragePct = totalToolCount > 0 ? Math.round((liveToolCount / totalToolCount) * 100) : 0;
   const coverageColor = coveragePct >= 80 ? "bg-emerald-500" : coveragePct >= 50 ? "bg-amber-400" : "bg-primary";
 
@@ -140,8 +106,8 @@ export default function UsageAnalytics({ syncKey = 0 }) {
     const seats = t.licensed_seats > 0 ? t.licensed_seats : 1;
     return s + (t.license_cost_per_month || 0) * seats;
   }, 0);
-  const usageTools = tools.filter((t) => t.source !== "access");
-  const avgScore = usageTools.length ? Math.round(usageTools.reduce((s, t) => s + (t.activity_score || 0), 0) / usageTools.length) : 0;
+  const usageTools = enrichedTools.filter((t) => t.source === "live");
+  const avgScore = usageTools.length ? Math.round(usageTools.reduce((s, t) => s + t.activity_score, 0) / usageTools.length) : 0;
   const healthyCount = usageTools.filter((t) => t.status === "Active").length;
   const offboardedCount = enrichedTools.reduce((sum, t) => sum + (t.liveUsers || []).filter((u) => u.offboarded_flag).length, 0);
   const avgConfidence = usageTools.length > 0 ? Math.round(usageTools.reduce((s, t) => s + calculateConfidence(t, t.liveUsers || []), 0) / usageTools.length) : 0;
@@ -157,39 +123,16 @@ export default function UsageAnalytics({ syncKey = 0 }) {
         return t.status === statusMap[filter];
       });
 
-  // ── Sync from stack ──────────────────────────────────────────────────────────
+  // ── Refresh verified evidence only ──────────────────────────────────────────
   const handleSyncFromStack = async () => {
     if (!integrations.length) return toast.error("No tools found in your stack.");
     setSyncing(true);
-    const existingToolNames = new Set(activities.map((u) => u.tool_name));
-    const toCreate = integrations
-      .filter((i) => i.evidence_type !== "access" && !existingToolNames.has(i.tool_name))
-      .map((i) => {
-        const utilRate = i.licensed_seats > 0 ? (i.active_users || 0) / i.licensed_seats : 0;
-        const activityScore = Math.round(utilRate * 100);
-        const status = activityScore >= 70 ? "Active" : activityScore >= 30 ? "Dormant" : "Inactive";
-        const costPerSeat = i.licensed_seats > 0 ? (i.monthly_cost || 0) / i.licensed_seats : 0;
-        return {
-          integration_id: i.id,
-          company_id: i.company_id || "",
-          tool_name: i.tool_name,
-          user_email: "aggregate@placeholder",
-          user_name: `${i.tool_name} (aggregate)`,
-          days_active_last_30: Math.round(utilRate * 22),
-          activity_score: activityScore,
-          status,
-          license_cost_per_month: Math.round(costPerSeat * 100) / 100,
-          wasted_cost_flag: activityScore < 40,
-          source: "estimated",
-        };
-      });
-    if (!toCreate.length) {
-      toast.info("All tools already have activity entries.");
-    } else {
-      await base44.entities.UserActivity.bulkCreate(toCreate);
-      await qc.invalidateQueries({ queryKey: ["user-activity"] });
-      toast.success(`Synced ${toCreate.length} tool(s) from your stack.`);
-    }
+    await Promise.all([
+      refetch(),
+      qc.invalidateQueries({ queryKey: ["integrations"] }),
+      qc.invalidateQueries({ queryKey: ["contracts-usage"] }),
+    ]);
+    toast.success("Verified evidence refreshed.");
     setSyncing(false);
   };
 
@@ -265,6 +208,12 @@ export default function UsageAnalytics({ syncKey = 0 }) {
                     <span className="flex items-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />
                       {accessToolCount} verified access
+                    </span>
+                  )}
+                  {evidenceOnlyCount > 0 && (
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-violet-500 inline-block" />
+                      {evidenceOnlyCount} evidence only
                     </span>
                   )}
                   {notConnectedCount > 0 && (
@@ -375,7 +324,7 @@ export default function UsageAnalytics({ syncKey = 0 }) {
         <div className="text-center py-20 bg-card border border-border/60 rounded-2xl">
           <Activity className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
           <p className="font-semibold text-sm">No usage data yet</p>
-          <p className="text-xs text-muted-foreground mt-1">Click <strong>Sync from Stack</strong> to auto-populate from your tool stack.</p>
+          <p className="text-xs text-muted-foreground mt-1">Connect a tool to collect verified usage evidence.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

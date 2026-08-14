@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { normalizeToolName } from "@/lib/connectionStatus";
 
 const CATEGORIES = ["Communication", "Project Management", "CRM & Sales", "Productivity & Docs", "Analytics & BI", "Marketing", "Customer Support", "Identity & Security", "Dev Tools", "Finance & HR"];
 const POPULAR_TOOLS = ["Slack", "Zoom", "Notion", "Jira", "HubSpot", "Salesforce", "Google Workspace", "Figma", "Datadog", "Zendesk", "Okta", "Gusto", "Asana", "Monday.com", "Linear", "GitHub", "Intercom", "Mixpanel", "Mailchimp", "QuickBooks"];
@@ -34,7 +35,13 @@ export default function AddToolModal({ tool, onClose }) {
   }, [tool]);
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.SaasIntegration.create(data),
+    mutationFn: async (data) => {
+      const existing = await base44.entities.SaasIntegration.list("-updated_date", 500);
+      if (existing.some((item) => normalizeToolName(item.tool_name) === normalizeToolName(data.tool_name))) {
+        throw new Error(`${data.tool_name.trim()} is already in your inventory.`);
+      }
+      return base44.entities.SaasIntegration.create({ ...data, tool_name: data.tool_name.trim() });
+    },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["integrations"] }); onClose(); },
   });
 
@@ -100,6 +107,7 @@ export default function AddToolModal({ tool, onClose }) {
             <Label className="text-xs mb-1 block">Notes (optional)</Label>
             <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="e.g. Vendor: Acme, renewal in Dec" />
           </div>
+          {createMutation.error && <p className="text-sm text-destructive">{createMutation.error.message}</p>}
           <div className="flex gap-2 pt-2">
             <Button type="button" variant="outline" onClick={onClose} className="flex-1">Cancel</Button>
             <Button type="submit" disabled={isPending} className="flex-1">

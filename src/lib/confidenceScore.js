@@ -6,9 +6,8 @@ export function calculateConfidence(tool, liveUsers = []) {
   let score = 0;
 
   // ── Source factor (0-50) ──
-  if (tool.source === 'live') score += 50;
-  else if (tool.source === 'manual') score += 35;
-  else score += 20;
+  if (tool.source !== 'live') return 0;
+  score += 50;
 
   // ── Data freshness factor (0-30) ──
   const updatedDate = tool.updated_date || liveUsers[0]?.updated_date;

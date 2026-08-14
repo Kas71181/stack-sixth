@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import AddToolModal from "@/components/stack/AddToolModal";
 import ToolLogo from "@/components/stack/ToolLogo";
-import { getLiveToolNames, normalizeToolName } from "@/lib/connectionStatus";
+import { dedupeTools, getLiveToolNames, normalizeToolName } from "@/lib/connectionStatus";
 
 const LIVE_STATUS = "bg-emerald-500/12 text-emerald-600 border-emerald-500/25";
 const OFFLINE_STATUS = "bg-muted text-muted-foreground border-border";
@@ -27,7 +27,7 @@ export default function ToolStack() {
 
   const { data: integrations = [], isLoading } = useQuery({
     queryKey: ["integrations", user?.id],
-    queryFn: () => base44.entities.SaasIntegration.filter({ created_by_id: user?.id }),
+    queryFn: async () => dedupeTools(await base44.entities.SaasIntegration.filter({ created_by_id: user?.id })),
     enabled: !!user?.id,
   });
 
@@ -83,15 +83,19 @@ export default function ToolStack() {
         }
         return "Productivity & Docs";
       };
-      for (const t of tools) {
-        await base44.entities.SaasIntegration.create({
-          tool_name: t.name,
-          category: guessCategory(t.category),
-          monthly_cost: t.monthly_cost || null,
+      const existing = await base44.entities.SaasIntegration.list("-updated_date", 500);
+      const existingNames = new Set(existing.map((item) => normalizeToolName(item.tool_name)));
+      const additions = tools
+        .filter((item) => !existingNames.has(normalizeToolName(item.name)))
+        .filter((item, index, list) => list.findIndex((candidate) => normalizeToolName(candidate.name) === normalizeToolName(item.name)) === index)
+        .map((item) => ({
+          tool_name: item.name.trim(),
+          category: guessCategory(item.category),
+          monthly_cost: item.monthly_cost || null,
           connection_status: "Manual Upload",
           last_synced: new Date().toISOString().split("T")[0],
-        });
-      }
+        }));
+      if (additions.length) await base44.entities.SaasIntegration.bulkCreate(additions);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["integrations"] }),
   });
