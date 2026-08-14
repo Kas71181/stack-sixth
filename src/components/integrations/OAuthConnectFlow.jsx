@@ -37,9 +37,9 @@ function NativeOAuthFlow({ tool, onSuccess }) {
         try {
           const res = await base44.functions.invoke(connector.functionName, {});
           if (res.data?.success) {
-            setStats({ total: res.data.total, created: res.data.created, updated: res.data.updated });
+            setStats({ total: res.data.total });
             setStatus("done");
-            toast.success(`${tool.name} connected — ${res.data.total} users synced`);
+            toast.success(`${tool.name} connected — ${res.data.total} members observed`);
             onSuccess?.();
           } else {
             setError(res.data?.error || "Sync failed");
@@ -60,12 +60,12 @@ function NativeOAuthFlow({ tool, onSuccess }) {
           <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
           <div>
             <p className="text-sm font-semibold text-emerald-800">{tool.name} connected!</p>
-            <p className="text-xs text-emerald-700">Live data is now flowing into Usage Analytics.</p>
+            <p className="text-xs text-emerald-700">Available membership evidence is synced; unsupported usage remains unverified.</p>
           </div>
         </div>
         {stats && (
-          <div className="grid grid-cols-3 gap-2 text-center">
-            {[["Total Users", stats.total, "bg-muted/40"], ["New", stats.created, "bg-emerald-50"], ["Updated", stats.updated, "bg-blue-50"]].map(([label, val, bg]) => (
+          <div className="grid grid-cols-1 gap-2 text-center">
+            {[["Observed Members", stats.total, "bg-muted/40"]].map(([label, val, bg]) => (
               <div key={label} className={`${bg} rounded-lg p-2`}>
                 <p className="text-lg font-extrabold">{val}</p>
                 <p className="text-[10px] text-muted-foreground">{label}</p>
@@ -99,7 +99,7 @@ function NativeOAuthFlow({ tool, onSuccess }) {
         onClick={handleConnect}
       >
         {status === "connecting" && <><Loader2 className="w-4 h-4 animate-spin" /> Waiting for authorization…</>}
-        {status === "syncing"    && <><Loader2 className="w-4 h-4 animate-spin" /> Pulling live data…</>}
+        {status === "syncing"    && <><Loader2 className="w-4 h-4 animate-spin" /> Syncing available evidence…</>}
         {status === "idle"       && <><Zap className="w-4 h-4" /> Connect {tool.name} with OAuth</>}
         {status === "error"      && <><Zap className="w-4 h-4" /> Try Again</>}
       </Button>

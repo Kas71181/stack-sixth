@@ -3,7 +3,7 @@ import { CheckCircle2, MousePointerClick, ShieldCheck } from "lucide-react";
 const steps = [
   { icon: MousePointerClick, title: "Choose an inventory tool", text: "Every tool in Inventory appears below." },
   { icon: ShieldCheck, title: "Review access", text: "See exactly what will and will not be read." },
-  { icon: CheckCircle2, title: "Authorize and sync", text: "Sign in with the vendor, then pull verified live usage." },
+  { icon: CheckCircle2, title: "Authorize and sync", text: "Sign in with the vendor, then sync the evidence that connector supports." },
 ];
 
 export default function ConnectionGuide() {
