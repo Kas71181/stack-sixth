@@ -36,12 +36,12 @@ export default function ContractIntelligence() {
       const days = c.renewal_date ? differenceInDays(new Date(`${c.renewal_date}T12:00:00`), now) : null;
       const match = !term || [c.vendor_name, c.contract_name, c.contract_type].some((value) => value?.toLowerCase().includes(term));
       if (!match) return false;
-      if (filter === "Upcoming") return days !== null && days >= 0;
-      if (filter === "Overdue") return days !== null && days < 0;
-      if (filter === "This month") return c.renewal_date && isSameMonth(new Date(`${c.renewal_date}T12:00:00`), now);
-      if (filter === "This quarter") return days !== null && days >= 0 && days <= 90;
-      if (filter === "Auto-renewing") return c.auto_renews;
-      if (filter === "Needs attention") return c.needs_confirmation || (days !== null && (days < 0 || days <= (c.notice_period_days || 7)));
+      if (filter === "Upcoming") return c.status !== "Cancelled" && days !== null && days >= 0;
+      if (filter === "Overdue") return c.status !== "Cancelled" && days !== null && days < 0;
+      if (filter === "This month") return c.status !== "Cancelled" && c.renewal_date && isSameMonth(new Date(`${c.renewal_date}T12:00:00`), now);
+      if (filter === "This quarter") return c.status !== "Cancelled" && days !== null && days >= 0 && days <= 90;
+      if (filter === "Auto-renewing") return c.status !== "Cancelled" && c.auto_renews;
+      if (filter === "Needs attention") return c.status !== "Cancelled" && (!c.decision_state || c.decision_state === "undecided") && (c.needs_confirmation || (days !== null && (days < 0 || days <= (c.notice_period_days || 7))));
       return true;
     });
     return rows.sort((a, b) => sort === "vendor" ? a.vendor_name.localeCompare(b.vendor_name) : sort === "value" ? (b.annual_cost || (b.monthly_cost || 0) * 12) - (a.annual_cost || (a.monthly_cost || 0) * 12) : (a.renewal_date || "9999").localeCompare(b.renewal_date || "9999"));

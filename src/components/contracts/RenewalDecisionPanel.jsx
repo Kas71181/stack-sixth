@@ -1,17 +1,19 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { ArrowRight, CheckCircle2, RefreshCw, Repeat2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/lib/AuthContext";
+import RenewalResolutionForm from "@/components/contracts/RenewalResolutionForm";
 
-const decisions = ["Continue", "Renegotiate", "Cancel", "Replace"];
+const ACTIONS = [
+  { key: "continue", label: "Continue", icon: CheckCircle2 },
+  { key: "renegotiate", label: "Renegotiate", icon: RefreshCw },
+  { key: "cancel", label: "Cancel", icon: XCircle },
+  { key: "replace", label: "Replace", icon: Repeat2 },
+];
 export default function RenewalDecisionPanel({ contract, onUpdated }) {
-  const { user } = useAuth();
-  const [saving, setSaving] = useState("");
-  const choose = async (decision) => {
-    setSaving(decision);
-    await base44.entities.Contract.update(contract.id, { decision_state: decision.toLowerCase(), last_reviewed: new Date().toISOString() });
-    if (user?.role === "admin") await base44.entities.AuditTrailEvent.create({ entity_type: "Contract", entity_id: contract.id, entity_label: contract.vendor_name, action: "status_changed", actor_name: user.full_name || user.email, actor_email: user.email, old_value: contract.decision_state || "undecided", new_value: decision.toLowerCase(), note: `Renewal decision recorded: ${decision}.` });
-    setSaving(""); onUpdated();
-  };
-  return <section className="rounded-xl border border-border bg-muted/30 p-4"><h3 className="text-sm font-bold">Decision needed</h3><p className="mt-1 text-xs text-muted-foreground">Review what should happen before this renewal.</p><div className="mt-3 grid grid-cols-2 gap-2">{decisions.map((decision) => <Button key={decision} size="sm" variant={contract.decision_state === decision.toLowerCase() ? "default" : "outline"} disabled={Boolean(saving)} onClick={() => choose(decision)}>{saving === decision ? "Saving…" : decision}</Button>)}</div></section>;
+  const [action, setAction] = useState(null);
+  const decided = contract.decision_state && contract.decision_state !== "undecided";
+  if (action) return <RenewalResolutionForm action={action} contract={contract} onBack={() => setAction(null)} onResolved={onUpdated} />;
+  return <section className="rounded-xl border border-border bg-muted/20 p-4"><div className="flex items-start justify-between gap-3"><div><h3 className="text-sm font-bold">{decided ? "Decision recorded" : "Decision needed"}</h3><p className="mt-1 text-xs text-muted-foreground">{decided ? `Current path: ${contract.decision_state}. You can revise it below.` : "Choose a path, then complete the required details to resolve this renewal."}</p></div>{decided && <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold capitalize text-primary">{contract.decision_state}</span>}</div>
+    <div className="mt-4 grid grid-cols-2 gap-2">{ACTIONS.map(({ key, label, icon: Icon }) => <Button key={key} type="button" size="sm" variant={contract.decision_state === key ? "default" : "outline"} className="justify-between" onClick={() => setAction(key)}><span className="flex items-center gap-1.5"><Icon className="h-3.5 w-3.5" />{label}</span><ArrowRight className="h-3.5 w-3.5" /></Button>)}</div>
+  </section>;
 }

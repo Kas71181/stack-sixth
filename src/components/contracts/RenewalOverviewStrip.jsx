@@ -4,9 +4,9 @@ export default function RenewalOverviewStrip({ contracts }) {
   const now = new Date();
   const metrics = [
     ["Tracked renewals", contracts.length],
-    ["Due this month", contracts.filter((c) => c.renewal_date && isSameMonth(new Date(`${c.renewal_date}T12:00:00`), now)).length],
+    ["Due this month", contracts.filter((c) => c.status !== "Cancelled" && c.renewal_date && isSameMonth(new Date(`${c.renewal_date}T12:00:00`), now)).length],
     ["Needs attention", contracts.filter((c) => {
-      if (!c.renewal_date || c.status === "Cancelled") return false;
+      if (!c.renewal_date || c.status === "Cancelled" || (c.decision_state && c.decision_state !== "undecided")) return false;
       const days = differenceInDays(new Date(`${c.renewal_date}T12:00:00`), now);
       return c.needs_confirmation || days < 0 || days <= (c.notice_period_days || 7);
     }).length],
