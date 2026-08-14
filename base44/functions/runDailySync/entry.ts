@@ -1,16 +1,15 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { requireAdmin } from '../../shared/requireAdmin.ts';
 
 // Scheduled function — re-syncs all API-key-based tools for every user daily.
 // OAuth tools (Slack, GitHub, Notion) require user presence and are skipped.
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Admin-only for manual invocation; scheduler runs as service role
-    const user = await base44.auth.me();
-    if (user && user.role !== 'admin') {
-      return Response.json({ error: 'Forbidden — admin only' }, { status: 403 });
-    }
+    // Only authenticated administrators may trigger system-wide synchronization.
+    const access = await requireAdmin(base44);
+    if (access.error) return access.error;
 
     const SYNC_FUNCTIONS = [
       'getZoomActivity',
@@ -66,4 +65,4 @@ Deno.serve(async (req) => {
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
-});
+}

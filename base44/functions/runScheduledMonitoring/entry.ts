@@ -1,19 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { requireAdmin } from '../../shared/requireAdmin.ts';
 
 // Called by scheduled automation — no user context, uses service role
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Guard: only allow authenticated admins to invoke this directly
-    const isAuth = await base44.auth.isAuthenticated();
-    if (isAuth) {
-      const user = await base44.auth.me();
-      if (!user || user.role !== 'admin') {
-        return Response.json({ error: 'Forbidden' }, { status: 403 });
-      }
-    }
-    // If not authenticated at all, it's a scheduled platform call — allow through
+    // Only authenticated administrators may trigger system-wide monitoring.
+    const access = await requireAdmin(base44);
+    if (access.error) return access.error;
 
     // Get all active monitors
     const monitors = await base44.asServiceRole.entities.ToolMonitor.filter({ is_active: true });
@@ -206,4 +201,4 @@ Respond as JSON:
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
-});
+}
