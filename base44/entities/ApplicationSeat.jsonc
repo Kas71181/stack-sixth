@@ -1,0 +1,126 @@
+{
+  "name": "ApplicationSeat",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string"
+    },
+    "organization_app_id": {
+      "type": "string"
+    },
+    "organization_user_id": {
+      "type": "string"
+    },
+    "provider_seat_id": {
+      "type": "string"
+    },
+    "seat_status": {
+      "type": "string",
+      "enum": [
+        "assigned",
+        "unassigned",
+        "suspended",
+        "unknown"
+      ],
+      "default": "unknown"
+    },
+    "license_type": {
+      "type": "string"
+    },
+    "assignment_verified_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_verified_activity_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "activity_event_count": {
+      "type": "number",
+      "default": 0
+    },
+    "activity_window_days": {
+      "type": "number",
+      "default": 0
+    },
+    "activity_source": {
+      "type": "string"
+    },
+    "usage_evidence_level": {
+      "type": "string",
+      "enum": [
+        "VERIFIED_LIVE",
+        "OBSERVED",
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "default": "INSUFFICIENT_EVIDENCE"
+    },
+    "data_freshness": {
+      "type": "string",
+      "enum": [
+        "fresh",
+        "stale",
+        "failed",
+        "unknown"
+      ],
+      "default": "unknown"
+    },
+    "usage_classification": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "LOW_ACTIVITY",
+        "DORMANCY_CANDIDATE",
+        "STRONG_DORMANCY_CANDIDATE",
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "default": "INSUFFICIENT_EVIDENCE"
+    }
+  },
+  "required": [
+    "organization_id",
+    "organization_app_id",
+    "provider_seat_id"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

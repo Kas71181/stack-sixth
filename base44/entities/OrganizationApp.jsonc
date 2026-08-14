@@ -1,0 +1,139 @@
+{
+  "name": "OrganizationApp",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string",
+      "title": "Organization ID"
+    },
+    "canonical_app_id": {
+      "type": "string",
+      "title": "Canonical Application ID"
+    },
+    "display_name": {
+      "type": "string",
+      "title": "Display Name"
+    },
+    "category": {
+      "type": "string",
+      "title": "Category"
+    },
+    "lifecycle_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "trial",
+        "cancelled",
+        "unknown"
+      ],
+      "default": "unknown"
+    },
+    "ownership_status": {
+      "type": "string",
+      "enum": [
+        "VERIFIED_LIVE",
+        "OBSERVED",
+        "DISCOVERED",
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "default": "INSUFFICIENT_EVIDENCE"
+    },
+    "access_status": {
+      "type": "string",
+      "enum": [
+        "VERIFIED_ACCESS",
+        "OBSERVED",
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "default": "INSUFFICIENT_EVIDENCE"
+    },
+    "usage_status": {
+      "type": "string",
+      "enum": [
+        "VERIFIED_LIVE",
+        "OBSERVED",
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "default": "INSUFFICIENT_EVIDENCE"
+    },
+    "financial_status": {
+      "type": "string",
+      "enum": [
+        "FINANCIAL_EVIDENCE",
+        "OBSERVED",
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "default": "INSUFFICIENT_EVIDENCE"
+    },
+    "contract_status": {
+      "type": "string",
+      "enum": [
+        "CONTRACT_EVIDENCE",
+        "OBSERVED",
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "default": "INSUFFICIENT_EVIDENCE"
+    },
+    "connected": {
+      "type": "boolean",
+      "default": false
+    },
+    "organization_verified": {
+      "type": "boolean",
+      "default": false
+    },
+    "dormancy_threshold_days": {
+      "type": "number"
+    },
+    "last_validated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "organization_id",
+    "canonical_app_id",
+    "display_name"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "name": "EvidenceRecord",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string"
+    },
+    "organization_app_id": {
+      "type": "string"
+    },
+    "application_seat_id": {
+      "type": "string"
+    },
+    "evidence_category": {
+      "type": "string",
+      "enum": [
+        "OWNERSHIP",
+        "ACCESS",
+        "USAGE",
+        "FINANCIAL",
+        "CONTRACT"
+      ]
+    },
+    "evidence_status": {
+      "type": "string",
+      "enum": [
+        "VERIFIED_LIVE",
+        "VERIFIED_ACCESS",
+        "OBSERVED",
+        "FINANCIAL_EVIDENCE",
+        "CONTRACT_EVIDENCE",
+        "DISCOVERED",
+        "INSUFFICIENT_EVIDENCE"
+      ]
+    },
+    "source_type": {
+      "type": "string"
+    },
+    "source_connection_id": {
+      "type": "string"
+    },
+    "source_record_id": {
+      "type": "string"
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "valid_from": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "valid_through": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "freshness_status": {
+      "type": "string",
+      "enum": [
+        "fresh",
+        "stale",
+        "failed",
+        "unknown"
+      ],
+      "default": "unknown"
+    },
+    "verification_method": {
+      "type": "string"
+    },
+    "derived_metadata": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "organization_id",
+    "organization_app_id",
+    "evidence_category",
+    "evidence_status",
+    "source_type"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

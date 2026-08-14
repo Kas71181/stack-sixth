@@ -1,0 +1,64 @@
+{
+  "name": "CanonicalApp",
+  "type": "object",
+  "properties": {
+    "canonical_app_id": {
+      "type": "string",
+      "title": "Canonical Application ID"
+    },
+    "name": {
+      "type": "string",
+      "title": "Application Name"
+    },
+    "vendor_name": {
+      "type": "string",
+      "title": "Vendor Name"
+    },
+    "primary_domain": {
+      "type": "string",
+      "title": "Primary Domain"
+    },
+    "aliases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Deterministic Aliases"
+    },
+    "category": {
+      "type": "string",
+      "title": "Category"
+    },
+    "default_dormancy_days": {
+      "type": "number",
+      "title": "Default Dormancy Threshold"
+    },
+    "seasonal": {
+      "type": "boolean",
+      "default": false,
+      "title": "Seasonal Application"
+    }
+  },
+  "required": [
+    "canonical_app_id",
+    "name"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

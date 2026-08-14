@@ -10,6 +10,23 @@
       "type": "string",
       "title": "Company ID"
     },
+    "organization_app_id": {
+      "type": "string",
+      "title": "Organization Application ID"
+    },
+    "recommendation_type": {
+      "type": "string",
+      "enum": [
+        "seat_reclamation",
+        "renewal_optimization",
+        "usage_verification",
+        "contract_review",
+        "tool_consolidation"
+      ]
+    },
+    "recommended_action": {
+      "type": "string"
+    },
     "category": {
       "type": "string",
       "enum": [
@@ -19,8 +36,7 @@
         "Consolidate Tools",
         "Negotiate Contract",
         "Add Missing Tool"
-      ],
-      "title": "Category"
+      ]
     },
     "tool_name": {
       "type": "string",
@@ -32,7 +48,63 @@
     },
     "estimated_monthly_savings": {
       "type": "number",
-      "title": "Est. Monthly Savings ($)"
+      "title": "Legacy Estimated Monthly Savings"
+    },
+    "financial_impact": {
+      "type": "number",
+      "title": "Verified Financial Impact"
+    },
+    "financial_impact_status": {
+      "type": "string",
+      "enum": [
+        "SAVINGS_READY_TO_CAPTURE",
+        "RENEWAL_SAVINGS_OPPORTUNITY",
+        "OPTIMIZATION_CANDIDATE",
+        "INSUFFICIENT_EVIDENCE"
+      ]
+    },
+    "evidence_sources": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_level": {
+      "type": "string",
+      "enum": [
+        "VERIFIED_LIVE",
+        "VERIFIED_ACCESS",
+        "OBSERVED",
+        "FINANCIAL_EVIDENCE",
+        "CONTRACT_EVIDENCE",
+        "DISCOVERED",
+        "INSUFFICIENT_EVIDENCE"
+      ]
+    },
+    "confidence_level": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low",
+        "insufficient"
+      ]
+    },
+    "calculation_method": {
+      "type": "string"
+    },
+    "last_validated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "validation_status": {
+      "type": "string",
+      "enum": [
+        "valid",
+        "suppressed",
+        "stale"
+      ],
+      "default": "valid"
     },
     "priority": {
       "type": "string",
@@ -40,8 +112,7 @@
         "High",
         "Medium",
         "Low"
-      ],
-      "title": "Priority"
+      ]
     },
     "status": {
       "type": "string",
@@ -52,21 +123,17 @@
         "Completed",
         "Dismissed"
       ],
-      "default": "Open",
-      "title": "Status"
+      "default": "Open"
     },
     "assignee": {
-      "type": "string",
-      "title": "Assignee"
+      "type": "string"
     },
     "due_date": {
       "type": "string",
-      "format": "date",
-      "title": "Due Date"
+      "format": "date"
     },
     "notes": {
-      "type": "string",
-      "title": "Notes"
+      "type": "string"
     }
   },
   "required": [

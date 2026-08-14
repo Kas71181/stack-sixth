@@ -1,0 +1,80 @@
+{
+  "name": "OrganizationUser",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string"
+    },
+    "primary_email": {
+      "type": "string",
+      "format": "email"
+    },
+    "normalized_email": {
+      "type": "string"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "employee_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "offboarded",
+        "unknown"
+      ],
+      "default": "unknown"
+    },
+    "identity_provider_id": {
+      "type": "string"
+    },
+    "last_identity_sync_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "organization_id",
+    "normalized_email"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
