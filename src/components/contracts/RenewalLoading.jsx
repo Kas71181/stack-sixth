@@ -1,0 +1,3 @@
+export default function RenewalLoading() {
+  return <div className="space-y-4" aria-label="Loading renewals"><div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border bg-border lg:grid-cols-4">{[1,2,3,4].map((item) => <div key={item} className="bg-card p-5"><div className="skeleton h-7 w-10" /><div className="skeleton mt-2 h-3 w-24" /></div>)}</div><div className="rounded-2xl border bg-card p-5">{[1,2,3].map((item) => <div key={item} className="flex items-center gap-3 border-b py-4 last:border-0"><div className="skeleton h-10 w-10 rounded-xl" /><div className="flex-1"><div className="skeleton h-4 w-32" /><div className="skeleton mt-2 h-3 w-48" /></div></div>)}</div></div>;
+}

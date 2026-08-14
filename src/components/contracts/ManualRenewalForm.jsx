@@ -24,7 +24,8 @@ export default function ManualRenewalForm({ onCreated, onCancel }) {
   const submit = async (event) => {
     event.preventDefault(); setSaving(true);
     const days = Math.ceil((new Date(form.renewal_date) - new Date()) / 86400000);
-    await base44.entities.Contract.create({ ...form, monthly_cost: Number(form.monthly_cost) || 0, notice_period_days: Number(form.notice_period_days) || 0, contract_type: "Other", renewal_source: "manual", renewal_confidence: 100, needs_confirmation: false, status: days < 0 ? "Expired" : days <= 60 ? "Expiring Soon" : "Active" });
+    const contract = await base44.entities.Contract.create({ ...form, monthly_cost: Number(form.monthly_cost) || 0, notice_period_days: Number(form.notice_period_days) || 0, contract_type: "Other", renewal_source: "manual", renewal_confidence: 100, needs_confirmation: false, decision_state: "undecided", status: days < 0 ? "Expired" : days <= 60 ? "Expiring Soon" : "Active" });
+    if (user?.role === "admin") await base44.entities.AuditTrailEvent.create({ entity_type: "Contract", entity_id: contract.id, entity_label: contract.vendor_name, action: "created", actor_name: user.full_name || user.email, actor_email: user.email, new_value: contract.renewal_date, note: "Renewal added manually." });
     onCreated();
   };
   const changeLast = (value) => setForm((current) => ({ ...current, last_renewal_date: value, renewal_date: nextDate(value, current.billing_frequency) }));

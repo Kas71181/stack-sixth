@@ -6,6 +6,10 @@
       "type": "string",
       "title": "Vendor Name"
     },
+    "contract_name": {
+      "type": "string",
+      "title": "Contract Name"
+    },
     "contract_type": {
       "type": "string",
       "enum": [
@@ -109,6 +113,23 @@
     "company_id": {
       "type": "string",
       "title": "Company ID"
+    },
+    "decision_state": {
+      "type": "string",
+      "enum": [
+        "undecided",
+        "continue",
+        "renegotiate",
+        "cancel",
+        "replace"
+      ],
+      "default": "undecided",
+      "title": "Renewal Decision"
+    },
+    "last_reviewed": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Last Reviewed"
     },
     "governance_owner_name": {
       "type": "string",

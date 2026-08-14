@@ -1,132 +1,57 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { differenceInDays, isSameMonth } from "date-fns";
+import { AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { motion } from "framer-motion";
-import { FileText, Upload, AlertTriangle, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { format, differenceInDays } from "date-fns";
 import ContractUploader from "@/components/contracts/ContractUploader";
-import ContractCard from "@/components/contracts/ContractCard";
-import AuditTrailPanel from "@/components/audit/AuditTrailPanel";
 import ManualRenewalForm from "@/components/contracts/ManualRenewalForm";
+import RenewalActionHeader from "@/components/contracts/RenewalActionHeader";
+import RenewalOverviewStrip from "@/components/contracts/RenewalOverviewStrip";
 import RenewalDetectionPanel from "@/components/contracts/RenewalDetectionPanel";
 import RenewalActionPanel from "@/components/contracts/RenewalActionPanel";
+import RenewalEmptyState from "@/components/contracts/RenewalEmptyState";
+import RenewalInsights from "@/components/contracts/RenewalInsights";
+import RenewalTimeline from "@/components/contracts/RenewalTimeline";
+import RenewalToolbar from "@/components/contracts/RenewalToolbar";
+import RenewalList from "@/components/contracts/RenewalList";
+import RenewalLoading from "@/components/contracts/RenewalLoading";
 
-export default function ContractIntelligence({ embedded = false, showAudit = true }) {
+const CONNECTOR_ID = "6a2c11c93a60aebc9a354fd8";
+export default function ContractIntelligence() {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const [showUploader, setShowUploader] = useState(false);
-  const [showManual, setShowManual] = useState(false);
+  const [showUploader, setShowUploader] = useState(false), [showManual, setShowManual] = useState(false), [gmailKey, setGmailKey] = useState(0);
+  const [search, setSearch] = useState(""), [filter, setFilter] = useState("All"), [sort, setSort] = useState("date"), [view, setView] = useState("list");
+  const query = useQuery({ queryKey: ["contracts", user?.id], queryFn: () => base44.entities.Contract.filter({ created_by_id: user.id }, "renewal_date", 100), enabled: !!user?.id });
+  const contracts = query.data || [];
+  const refresh = () => qc.invalidateQueries({ queryKey: ["contracts", user?.id] });
+  const connectGmail = async () => { const popup = window.open("", "_blank"); const url = await base44.connectors.connectAppUser(CONNECTOR_ID); if (!popup) return toast.error("Please allow pop-ups to connect Gmail."); popup.location.href = url; const timer = setInterval(() => { if (popup.closed) { clearInterval(timer); setGmailKey((key) => key + 1); } }, 500); };
+  const dueReminders = contracts.filter((c) => c.reminder_date && c.reminder_date <= new Date().toISOString().split("T")[0] && !c.reminder_dismissed && c.status !== "Cancelled");
+  const visible = useMemo(() => {
+    const now = new Date(), term = search.trim().toLowerCase();
+    const rows = contracts.filter((c) => {
+      const days = c.renewal_date ? differenceInDays(new Date(`${c.renewal_date}T12:00:00`), now) : null;
+      const match = !term || [c.vendor_name, c.contract_name, c.contract_type].some((value) => value?.toLowerCase().includes(term));
+      if (!match) return false;
+      if (filter === "Upcoming") return days !== null && days >= 0;
+      if (filter === "Overdue") return days !== null && days < 0;
+      if (filter === "This month") return c.renewal_date && isSameMonth(new Date(`${c.renewal_date}T12:00:00`), now);
+      if (filter === "This quarter") return days !== null && days >= 0 && days <= 90;
+      if (filter === "Auto-renewing") return c.auto_renews;
+      if (filter === "Needs attention") return c.needs_confirmation || (days !== null && (days < 0 || days <= (c.notice_period_days || 7)));
+      return true;
+    });
+    return rows.sort((a, b) => sort === "vendor" ? a.vendor_name.localeCompare(b.vendor_name) : sort === "value" ? (b.annual_cost || (b.monthly_cost || 0) * 12) - (a.annual_cost || (a.monthly_cost || 0) * 12) : (a.renewal_date || "9999").localeCompare(b.renewal_date || "9999"));
+  }, [contracts, filter, search, sort]);
+  const created = () => { refresh(); setShowManual(false); toast.success("Renewal added"); };
+  const uploaded = () => { refresh(); setShowUploader(false); toast.success("Confirmed renewal added"); };
 
-  const { data: contracts = [], isLoading } = useQuery({
-    queryKey: ["contracts", user?.id],
-    queryFn: () => base44.entities.Contract.filter({ created_by_id: user?.id }, "renewal_date", 50),
-    enabled: !!user?.id,
-  });
-
-  const handleUploaded = () => {
-    qc.invalidateQueries({ queryKey: ["contracts", user?.id] });
-    setShowUploader(false);
-    toast.success("Contract extracted and saved!");
-  };
-
-  const handleRenewalCreated = () => {
-    qc.invalidateQueries({ queryKey: ["contracts", user?.id] });
-    setShowManual(false);
-    toast.success("Renewal added");
-  };
-
-  const today = new Date().toISOString().split("T")[0];
-  const dueReminders = contracts.filter((c) => c.reminder_date && c.reminder_date <= today && !c.reminder_dismissed && c.status !== "Cancelled");
-  const expiringSoon = contracts.filter((c) => c.status === "Expiring Soon");
-  const totalAnnual = contracts.filter(c => c.status === "Active" || c.status === "Expiring Soon")
-    .reduce((s, c) => s + (c.annual_cost || (c.monthly_cost || 0) * 12), 0);
-
-  return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        {!embedded && <div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/20 bg-primary/10"><FileText className="h-5 w-5 text-primary" /></div><div><h1 className="text-xl font-extrabold tracking-tight">Renewals</h1><p className="text-xs text-muted-foreground">Track renewal dates manually, detect them from invoices, or upload a contract</p></div></div>}
-        <div className="flex gap-2 self-start sm:self-auto sm:ml-auto">
-          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => { setShowManual(!showManual); setShowUploader(false); }}><Plus className="w-3.5 h-3.5" />Add manually</Button>
-          <Button size="sm" className="gap-1.5" onClick={() => { setShowUploader(!showUploader); setShowManual(false); }}><Upload className="w-3.5 h-3.5" />Upload contract</Button>
-        </div>
-      </div>
-
-      {/* Uploader */}
-      {showUploader && (
-        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
-          <ContractUploader onComplete={handleUploaded} onCancel={() => setShowUploader(false)} />
-        </motion.div>
-      )}
-      {showManual && <ManualRenewalForm onCreated={handleRenewalCreated} onCancel={() => setShowManual(false)} />}
-      <RenewalDetectionPanel onConfirmed={() => qc.invalidateQueries({ queryKey: ["contracts", user?.id] })} />
-
-      <RenewalActionPanel reminders={dueReminders} onUpdated={() => qc.invalidateQueries({ queryKey: ["contracts", user?.id] })} />
-
-      {/* Stats */}
-      {contracts.length > 0 && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="glass-card p-4 text-center">
-            <p className="text-2xl font-extrabold text-primary">{contracts.length}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Renewals tracked</p>
-          </div>
-          <div className="glass-card p-4 text-center">
-            <p className="text-2xl font-extrabold text-amber-600">{expiringSoon.length}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Expiring in 60d</p>
-          </div>
-          <div className="glass-card p-4 text-center">
-            <p className="text-2xl font-extrabold">${Math.round(totalAnnual / 1000)}k</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Annual Spend</p>
-          </div>
-          <div className="glass-card p-4 text-center">
-            <p className="text-2xl font-extrabold text-primary">{dueReminders.length}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Reminders due</p>
-          </div>
-        </div>
-      )}
-
-      {/* Expiring soon alert */}
-      {expiringSoon.length > 0 && (
-        <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
-          <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-          <p className="text-sm text-amber-800">
-            <strong>{expiringSoon.length} contract{expiringSoon.length > 1 ? "s" : ""}</strong> renewing within 60 days —{" "}
-            {expiringSoon.map(c => c.vendor_name).join(", ")}
-          </p>
-        </div>
-      )}
-
-      {/* Audit Trail — recent playbook activity */}
-      {showAudit && contracts.length > 0 && (
-        <div className="glass-card p-5">
-          <AuditTrailPanel entityType="NegotiationPlaybook" entityId={contracts[0]?.id} title="Recent Negotiation Activity" />
-        </div>
-      )}
-
-      {/* Contract list */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="w-7 h-7 border-4 border-muted border-t-primary rounded-full animate-spin" />
-        </div>
-      ) : contracts.length === 0 ? (
-        <div className="text-center py-20 bg-card border border-dashed border-border rounded-2xl">
-          <FileText className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />
-          <p className="font-semibold text-sm">No renewals tracked yet</p>
-          <p className="text-xs text-muted-foreground mt-1 mb-4">Add a date manually, scan Gmail, or upload a contract.</p>
-          <Button size="sm" onClick={() => setShowManual(true)} className="gap-1.5"><Plus className="w-3.5 h-3.5" />Add your first renewal</Button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {contracts.map((contract) => (
-            <motion.div key={contract.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-              <ContractCard contract={contract} onDeleted={() => qc.invalidateQueries({ queryKey: ["contracts", user?.id] })} onUpdated={() => qc.invalidateQueries({ queryKey: ["contracts", user?.id] })} />
-            </motion.div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  return <div className="space-y-5"><RenewalActionHeader onAdd={() => setShowManual((open) => !open)} onUpload={() => setShowUploader(true)} />
+    {showUploader && <ContractUploader onComplete={uploaded} onCancel={() => setShowUploader(false)} />}
+    {showManual && <ManualRenewalForm onCreated={created} onCancel={() => setShowManual(false)} />}
+    {query.isLoading ? <RenewalLoading /> : query.isError ? <div role="alert" className="rounded-2xl border border-destructive/20 bg-destructive/5 p-6 text-center"><AlertCircle className="mx-auto h-6 w-6 text-destructive" /><p className="mt-2 text-sm font-bold">Renewals couldn’t be loaded</p><p className="mt-1 text-xs text-muted-foreground">Try again without losing your work.</p><Button className="mt-4" size="sm" variant="outline" onClick={() => query.refetch()}>Try again</Button></div> : <><RenewalOverviewStrip contracts={contracts} /><RenewalDetectionPanel key={gmailKey} onConfirmed={refresh} /><RenewalActionPanel reminders={dueReminders} onUpdated={refresh} />{contracts.length === 0 ? <RenewalEmptyState onAdd={() => setShowManual(true)} onUpload={() => setShowUploader(true)} onGmail={connectGmail} /> : <><RenewalInsights contracts={contracts} /><div><h2 className="mb-3 text-base font-bold">Upcoming renewals</h2><RenewalToolbar search={search} setSearch={setSearch} filter={filter} setFilter={setFilter} sort={sort} setSort={setSort} view={view} setView={setView} /></div>{view === "timeline" ? <RenewalTimeline contracts={visible} /> : <RenewalList contracts={visible} onUpdated={refresh} />}</>}</>}
+  </div>;
 }
