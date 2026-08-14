@@ -11,9 +11,13 @@ export default async function(req) {
     if (!request_id || !status) return Response.json({ error: 'request_id and status are required' }, { status: 400 });
     if (!['approved', 'rejected', 'deferred'].includes(status)) return Response.json({ error: 'Invalid status' }, { status: 400 });
 
-    const matches = await base44.asServiceRole.entities.PurchaseRequest.filter({ id: request_id, created_by_id: user.id });
-    const request = matches[0];
-    if (!request) return Response.json({ error: 'Request not found' }, { status: 404 });
+    let request = null;
+    try {
+      request = await base44.asServiceRole.entities.PurchaseRequest.get(request_id);
+    } catch {
+      return Response.json({ error: 'Request not found' }, { status: 404 });
+    }
+    if (!request || request.created_by_id !== user.id) return Response.json({ error: 'Request not found' }, { status: 404 });
 
     const updated = await base44.asServiceRole.entities.PurchaseRequest.update(request.id, {
       status,

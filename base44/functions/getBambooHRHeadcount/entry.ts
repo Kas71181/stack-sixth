@@ -1,19 +1,16 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { authorizeTargetUser } from '../../shared/authorizeTargetUser.ts';
 
 // Pulls full employee list from BambooHR for true headcount-based seat analysis.
 // BambooHR uses HTTP Basic Auth: API key as username, 'x' as password.
 // Subdomain is the company's BambooHR subdomain (e.g. "acme" for acme.bamboohr.com).
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json().catch(() => ({}));
-    let user;
-    if (body._targetUserId) {
-      user = await base44.asServiceRole.entities.User.get(body._targetUserId);
-    } else {
-      user = await base44.auth.me();
-    }
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    const access = await authorizeTargetUser(base44, body);
+    if (access.error) return access.error;
+    const user = access.user;
 
     // Load stored credentials
     const stored = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'bamboohr', created_by_id: user.id });
@@ -131,4 +128,4 @@ Deno.serve(async (req) => {
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
-});
+}

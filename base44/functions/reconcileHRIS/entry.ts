@@ -1,19 +1,16 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { authorizeTargetUser } from '../../shared/authorizeTargetUser.ts';
 
 // Cross-references UserActivity emails against BambooHR active employee list.
 // Flags seats assigned to users no longer in the company as "offboarded".
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json().catch(() => ({}));
 
-    let user;
-    if (body._targetUserId) {
-      user = await base44.asServiceRole.entities.User.get(body._targetUserId);
-    } else {
-      user = await base44.auth.me();
-    }
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    const access = await authorizeTargetUser(base44, body);
+    if (access.error) return access.error;
+    const user = access.user;
 
     // 1. Get BambooHR records — these contain the active employee email list
     const bamboohrRecords = await base44.asServiceRole.entities.UserActivity.filter({
@@ -85,4 +82,4 @@ Deno.serve(async (req) => {
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
-});
+}
