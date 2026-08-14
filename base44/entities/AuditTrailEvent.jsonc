@@ -4,7 +4,7 @@
   "properties": {
     "entity_type": {
       "type": "string",
-      "title": "Entity Type (e.g. Recommendation, Contract, ToolMonitor)"
+      "title": "Entity Type"
     },
     "entity_id": {
       "type": "string",
@@ -12,7 +12,7 @@
     },
     "entity_label": {
       "type": "string",
-      "title": "Human-readable label (tool name, vendor, etc.)"
+      "title": "Human-readable label"
     },
     "action": {
       "type": "string",
@@ -30,7 +30,7 @@
     },
     "actor_name": {
       "type": "string",
-      "title": "Actor (user name)"
+      "title": "Actor"
     },
     "actor_email": {
       "type": "string",
@@ -56,12 +56,7 @@
   ],
   "rls": {
     "create": {
-      "user_condition": {
-        "role": "admin"
-      }
-    },
-    "read": {
-      "$or": [
+      "$and": [
         {
           "created_by_id": "{{user.id}}"
         },
@@ -72,15 +67,32 @@
         }
       ]
     },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
     "update": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$and": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$and": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     }
   }
 }
