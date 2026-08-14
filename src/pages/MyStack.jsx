@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Layers, Users, Plug } from "lucide-react";
+import { Layers, Users, Plug, ShieldCheck } from "lucide-react";
 import ToolStack from "@/pages/ToolStack";
-import UsageAnalytics from "@/pages/UsageAnalytics";
 import InventoryConnections from "@/components/connections/InventoryConnections";
+import MyStackEvidencePanel from "@/components/evidence/MyStackEvidencePanel";
+import EvidenceUsagePanel from "@/components/evidence/EvidenceUsagePanel";
+import EvidenceConnectionsPanel from "@/components/evidence/EvidenceConnectionsPanel";
 
 const tabs = [
+  { id: "evidence", label: "Evidence", icon: ShieldCheck },
   { id: "inventory", label: "Inventory", icon: Layers },
   { id: "usage", label: "Usage", icon: Users },
   { id: "connect", label: "Connections", icon: Plug },
@@ -14,11 +17,11 @@ const tabs = [
 export default function MyStack() {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get("tab");
-  const [activeTab, setActiveTab] = useState(tabs.some(({ id }) => id === requestedTab) ? requestedTab : "inventory");
+  const [activeTab, setActiveTab] = useState(tabs.some(({ id }) => id === requestedTab) ? requestedTab : "evidence");
 
   const selectTab = (tab) => {
     setActiveTab(tab);
-    setSearchParams(tab === "inventory" ? {} : { tab });
+    setSearchParams(tab === "evidence" ? {} : { tab });
   };
 
   return (
@@ -39,9 +42,10 @@ export default function MyStack() {
           </button>
         ))}
       </div>
+      {activeTab === "evidence" && <MyStackEvidencePanel />}
       {activeTab === "inventory" && <ToolStack />}
-      {activeTab === "usage" && <UsageAnalytics />}
-      {activeTab === "connect" && <InventoryConnections />}
+      {activeTab === "usage" && <EvidenceUsagePanel />}
+      {activeTab === "connect" && <div className="space-y-6"><EvidenceConnectionsPanel /><InventoryConnections /></div>}
     </div>
   );
 }

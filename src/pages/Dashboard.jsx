@@ -16,6 +16,7 @@ import SpendHistoryChart from "@/components/dashboard/SpendHistoryChart";
 import DailyPulse from "@/components/dashboard/DailyPulse";
 import StackScore from "@/components/dashboard/StackScore";
 import PrivacyPolicyFooter from "@/components/dashboard/PrivacyPolicyFooter";
+import EvidenceSummaryStrip from "@/components/evidence/EvidenceSummaryStrip";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -149,7 +150,7 @@ export default function Dashboard() {
   // ── Returning user: Command Center ──────────────────────────────────────────
   const firstName = user?.full_name?.split(" ")[0] || "there";
   const openRecs = (recommendations || []).filter((r) => r.status === "Open");
-  const totalSavings = openRecs.reduce((s, r) => s + (r.estimated_monthly_savings || 0), 0);
+  const totalSavings = openRecs.reduce((sum, recommendation) => recommendation.financial_impact_status === "SAVINGS_READY_TO_CAPTURE" ? sum + (recommendation.financial_impact || 0) : sum, 0);
   // Use the most recent audit as the source of truth to avoid double-counting
   const latestAudit = completedAudits[0];
   const totalSpend = latestAudit?.monthly_budget || 0;
@@ -186,6 +187,8 @@ export default function Dashboard() {
         shadowTools={shadowTools}
       />
 
+      <EvidenceSummaryStrip />
+
       {/* Hero command center */}
       <motion.div {...fade()} className="relative">
         {/* Radial hero glow */}
@@ -206,33 +209,6 @@ export default function Dashboard() {
             </Button>
           </Link>
         </div>
-
-        {/* Live coverage nudge — shown when activity data is mostly estimated */}
-        {(() => {
-          const inventoryNames = new Set((integrations || []).map((tool) => tool.tool_name?.trim().toLowerCase()).filter(Boolean));
-          const liveCount = [...new Set((userActivity || []).filter((a) => a.source === "live" && inventoryNames.has(a.tool_name?.trim().toLowerCase())).map((a) => a.tool_name?.trim().toLowerCase()))].length;
-          const totalCount = inventoryNames.size;
-          const pct = totalCount > 0 ? Math.round((liveCount / totalCount) * 100) : 0;
-          if (pct >= 80 || totalCount === 0) return null;
-          return (
-            <div className="mb-5 glass-card border-primary/20 bg-primary/5 hidden sm:flex items-center gap-3 px-4 py-3 rounded-xl">
-              <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center flex-shrink-0">
-                <Zap className="w-4 h-4 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold">
-                  {pct}% live data coverage — connect more tools for accurate savings numbers
-                </p>
-                <p className="text-[11px] text-muted-foreground">Your recommendations are {pct < 40 ? "mostly" : "partly"} based on estimates.</p>
-              </div>
-              <Link to="/data-coverage" className="flex-shrink-0">
-                <Button size="sm" variant="outline" className="gap-1.5 text-primary border-primary/30 hover:bg-primary/5 text-xs">
-                  Improve Coverage <ArrowRight className="w-3 h-3" />
-                </Button>
-              </Link>
-            </div>
-          );
-        })()}
 
         {/* Big 4 KPI cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

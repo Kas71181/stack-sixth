@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { CANONICAL_APPS, resolveCanonicalApp } from '../../shared/canonicalApps.ts';
+import { CONNECTOR_CAPABILITIES } from '../../shared/connectorCapabilities.ts';
 
 export default async function(req) {
   try {
@@ -9,7 +10,7 @@ export default async function(req) {
     const organizationId = user.id;
     const now = new Date().toISOString();
 
-    const [integrations, activities, contracts, existingApps, existingUsers, existingSeats, existingCatalog, existingEvidence, existingFinancial] = await Promise.all([
+    const [integrations, activities, contracts, existingApps, existingUsers, existingSeats, existingCatalog, existingEvidence, existingFinancial, existingConnections] = await Promise.all([
       base44.entities.SaasIntegration.filter({ created_by_id: user.id }),
       base44.entities.UserActivity.filter({ created_by_id: user.id }),
       base44.entities.Contract.filter({ created_by_id: user.id }),
@@ -18,7 +19,8 @@ export default async function(req) {
       base44.entities.ApplicationSeat.filter({ created_by_id: user.id }),
       base44.entities.CanonicalApp.list(),
       base44.entities.EvidenceRecord.filter({ created_by_id: user.id }),
-      base44.entities.FinancialRecord.filter({ created_by_id: user.id })
+      base44.entities.FinancialRecord.filter({ created_by_id: user.id }),
+      base44.entities.IntegrationConnection.filter({ created_by_id: user.id })
     ]);
 
     const catalogIds = new Set(existingCatalog.map((item) => item.canonical_app_id));
@@ -67,6 +69,26 @@ export default async function(req) {
     const createdApps = appCreates.length ? await base44.entities.OrganizationApp.bulkCreate(appCreates) : [];
     [...existingApps, ...createdApps].forEach((app) => appByCanonical.set(app.canonical_app_id, app));
 
+    const connectionTypes = new Set(existingConnections.map((item) => item.connector_type));
+    const connectionCreates = integrations.flatMap((item) => {
+      const connectorType = resolveCanonicalApp(item.tool_name).canonical_app_id;
+      if (connectionTypes.has(connectorType)) return [];
+      connectionTypes.add(connectorType);
+      const manifest = CONNECTOR_CAPABILITIES[connectorType] || {};
+      return [{
+        organization_id: organizationId,
+        connector_type: connectorType,
+        connected: item.connection_status === 'Connected',
+        organization_verified: ['slack', 'github'].includes(connectorType),
+        capabilities_enabled: Object.entries(manifest).filter(([, enabled]) => enabled).map(([capability]) => capability),
+        last_successful_sync_at: item.last_synced ? `${item.last_synced}T00:00:00.000Z` : undefined,
+        provider_data_through: item.evidence_checked_at || undefined,
+        health_status: item.connection_status === 'Connected' ? 'healthy' : item.connection_status === 'Failed' ? 'failed' : 'unknown',
+        created_by_id: user.id
+      }];
+    });
+    if (connectionCreates.length) await base44.entities.IntegrationConnection.bulkCreate(connectionCreates);
+
     const validActivities = activities.filter((item) => item.user_email && !item.user_email.includes('placeholder'));
     const userByEmail = new Map(existingUsers.map((item) => [item.normalized_email, item]));
     const userCreates = [];
@@ -96,21 +118,31 @@ export default async function(req) {
 
     const financialCreates = [];
     const evidenceCreates = [];
+    const evidenceKeys = new Set(existingEvidence.map((item) => `${item.evidence_category}:${item.source_type}:${item.source_record_id || item.organization_app_id}`));
+    const financialKeys = new Set(existingFinancial.map((item) => `${item.organization_app_id}:${item.evidence_id || ''}`));
+    const addEvidence = (record) => {
+      const key = `${record.evidence_category}:${record.source_type}:${record.source_record_id || record.organization_app_id}`;
+      if (!evidenceKeys.has(key)) { evidenceKeys.add(key); evidenceCreates.push(record); }
+    };
     for (const [canonicalId, group] of sources) {
       const app = appByCanonical.get(canonicalId);
       if (!app) continue;
-      group.integrations.forEach((item) => evidenceCreates.push({ organization_id: organizationId, organization_app_id: app.id, evidence_category: 'OWNERSHIP', evidence_status: item.evidence_type === 'financial' ? 'OBSERVED' : 'DISCOVERED', source_type: 'legacy_integration', source_record_id: item.id, observed_at: item.evidence_checked_at || item.updated_date || now, freshness_status: 'unknown', verification_method: 'legacy migration', created_by_id: user.id }));
+      group.integrations.forEach((item) => addEvidence({ organization_id: organizationId, organization_app_id: app.id, evidence_category: 'OWNERSHIP', evidence_status: item.evidence_type === 'financial' ? 'OBSERVED' : 'DISCOVERED', source_type: 'legacy_integration', source_record_id: item.id, observed_at: item.evidence_checked_at || item.updated_date || now, freshness_status: 'unknown', verification_method: 'legacy migration', created_by_id: user.id }));
       group.contracts.forEach((item) => {
-        evidenceCreates.push({ organization_id: organizationId, organization_app_id: app.id, evidence_category: 'CONTRACT', evidence_status: item.file_url || item.renewal_source === 'contract' ? 'CONTRACT_EVIDENCE' : 'OBSERVED', source_type: 'contract', source_record_id: item.id, observed_at: item.updated_date || now, freshness_status: 'fresh', verification_method: item.renewal_source || 'manual', created_by_id: user.id });
+        addEvidence({ organization_id: organizationId, organization_app_id: app.id, evidence_category: 'CONTRACT', evidence_status: item.file_url || item.renewal_source === 'contract' ? 'CONTRACT_EVIDENCE' : 'OBSERVED', source_type: 'contract', source_record_id: item.id, observed_at: item.updated_date || now, freshness_status: 'fresh', verification_method: item.renewal_source || 'manual', created_by_id: user.id });
         const amount = item.monthly_cost || (item.annual_cost ? item.annual_cost / 12 : 0);
-        if (amount > 0) financialCreates.push({ organization_id: organizationId, organization_app_id: app.id, record_type: 'contract', amount, currency: 'USD', billing_period: 'monthly', quantity: item.seats_licensed || undefined, minimum_commitment: item.seats_licensed || undefined, seat_reduction_changes_spend: false, verified_at: item.updated_date || now, valid_through: item.renewal_date ? `${item.renewal_date}T23:59:59.000Z` : now, created_by_id: user.id });
+        const key = `${app.id}:${item.id}`;
+        if (amount > 0 && !financialKeys.has(key)) {
+          financialKeys.add(key);
+          financialCreates.push({ organization_id: organizationId, organization_app_id: app.id, record_type: 'contract', amount, currency: 'USD', billing_period: 'monthly', quantity: item.seats_licensed || undefined, minimum_commitment: item.seats_licensed || undefined, seat_reduction_changes_spend: false, evidence_id: item.id, verified_at: item.updated_date || now, valid_through: item.renewal_date ? `${item.renewal_date}T23:59:59.000Z` : now, created_by_id: user.id });
+        }
       });
-      if (group.activities.length) evidenceCreates.push({ organization_id: organizationId, organization_app_id: app.id, evidence_category: 'USAGE', evidence_status: 'OBSERVED', source_type: 'legacy_activity', observed_at: now, freshness_status: 'unknown', verification_method: 'legacy connector output; not promoted to verified usage', derived_metadata: { records: group.activities.length }, created_by_id: user.id });
+      if (group.activities.length) addEvidence({ organization_id: organizationId, organization_app_id: app.id, evidence_category: 'USAGE', evidence_status: 'OBSERVED', source_type: 'legacy_activity', observed_at: now, freshness_status: 'unknown', verification_method: 'legacy connector output; not promoted to verified usage', derived_metadata: { records: group.activities.length }, created_by_id: user.id });
     }
     if (financialCreates.length) await base44.entities.FinancialRecord.bulkCreate(financialCreates);
     if (evidenceCreates.length) await base44.entities.EvidenceRecord.bulkCreate(evidenceCreates);
 
-    return Response.json({ success: true, applications: sources.size, organizationAppsCreated: appCreates.length, usersCreated: userCreates.length, seatsCreated: seatCreates.length, evidenceCreated: evidenceCreates.length, financialRecordsCreated: financialCreates.length });
+    return Response.json({ success: true, applications: sources.size, organizationAppsCreated: appCreates.length, usersCreated: userCreates.length, seatsCreated: seatCreates.length, connectionsCreated: connectionCreates.length, evidenceCreated: evidenceCreates.length, financialRecordsCreated: financialCreates.length });
   } catch (error) {
     console.error('Evidence foundation initialization failed', error);
     return Response.json({ error: error.message }, { status: 500 });
