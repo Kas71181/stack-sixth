@@ -15,7 +15,7 @@ export default function InventoryConnectionCard({ tool, connector, isLive, onSyn
   const verified = ["live", "evidence"].includes(flow.status);
   const configured = verified || flow.status === "manual";
   const connectionLabel = flow.status === "live" ? "Verified live"
-    : flow.status === "evidence" ? tool.evidence_type === "access" ? "Verified access" : "Financial evidence found"
+    : flow.status === "evidence" ? tool.evidence_type === "access" ? "Verified access" : tool.evidence_type === "observed" ? "Observed membership evidence" : "Financial evidence found"
       : flow.status === "manual" ? "API token saved — verification pending"
         : direct ? connector?.idleLabel || "OAuth connection available"
           : "Manual API token available";

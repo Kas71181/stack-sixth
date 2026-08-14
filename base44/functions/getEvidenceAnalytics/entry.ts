@@ -8,10 +8,10 @@ export default async function(req) {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const now = new Date();
     const [apps, seats, financialRecords, evidenceRecords, recommendations] = await Promise.all([
-      base44.entities.OrganizationApp.filter({ created_by_id: user.id }),
-      base44.entities.ApplicationSeat.filter({ created_by_id: user.id }),
-      base44.entities.FinancialRecord.filter({ created_by_id: user.id }),
-      base44.entities.EvidenceRecord.filter({ created_by_id: user.id }),
+      base44.entities.OrganizationApp.filter({ organization_id: user.id }),
+      base44.entities.ApplicationSeat.filter({ organization_id: user.id }),
+      base44.entities.FinancialRecord.filter({ organization_id: user.id }),
+      base44.entities.EvidenceRecord.filter({ organization_id: user.id }),
       base44.entities.Recommendation.filter({ created_by_id: user.id })
     ]);
 

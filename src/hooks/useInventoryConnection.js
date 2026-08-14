@@ -68,11 +68,16 @@ export default function useInventoryConnection({ tool, connector, isLive, onSync
         onSynced?.();
         return;
       }
+      const observedOnly = result.data?.evidence_status === "OBSERVED";
+      const insufficient = result.data?.evidence_status === "INSUFFICIENT_EVIDENCE";
       await base44.entities.SaasIntegration.update(tool.id, {
-        connection_status: "Connected", evidence_type: "live", last_synced: new Date().toISOString().slice(0, 10),
-        evidence_checked_at: new Date().toISOString(), evidence_note: "Verified through a live OAuth connection",
+        connection_status: insufficient ? "Pending" : observedOnly ? "Evidence" : "Connected",
+        evidence_type: insufficient ? "insufficient" : observedOnly ? "observed" : "live",
+        last_synced: new Date().toISOString().slice(0, 10),
+        evidence_checked_at: new Date().toISOString(),
+        evidence_note: result.data?.evidence_note || "Verified through a live OAuth connection",
       });
-      setStatus("live");
+      setStatus(insufficient ? "idle" : observedOnly ? "evidence" : "live");
       onSynced?.();
     } catch (err) {
       setError(err?.message || "Connection failed.");

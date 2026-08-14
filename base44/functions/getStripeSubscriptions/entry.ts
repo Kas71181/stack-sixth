@@ -1,59 +1,18 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { secrets } from 'base44:runtime';
 
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    let stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) {
-      const stored = await base44.entities.ApiCredential.filter({ service: 'stripe', created_by_id: user.id });
-      stripeKey = stored[0]?.api_key || null;
-    }
-    if (!stripeKey) {
-      return Response.json({ error: 'Stripe API key not configured. Set STRIPE_SECRET_KEY env var or save it in Settings → API Credentials.' }, { status: 400 });
-    }
-
-    // Fetch active subscriptions from Stripe
-    const subsResponse = await fetch('https://api.stripe.com/v1/subscriptions?status=active&limit=100&expand[]=data.items.data.price.product', {
-      headers: {
-        'Authorization': `Bearer ${stripeKey}`,
-      },
-    });
-
-    if (!subsResponse.ok) {
-      const err = await subsResponse.json();
-      return Response.json({ error: err.error?.message || 'Stripe API error' }, { status: 400 });
-    }
-
-    const subsData = await subsResponse.json();
-
-    // Map subscriptions to our tool format
-    const tools = subsData.data.map((sub) => {
-      const item = sub.items?.data?.[0];
-      const price = item?.price;
-      const product = price?.product;
-
-      const monthlyCost = price
-        ? (price.unit_amount / 100) * (price.recurring?.interval === 'year' ? 1 / 12 : 1)
-        : null;
-
-      return {
-        name: typeof product === 'object' ? product.name : 'Unknown',
-        category: 'Other',
-        monthly_cost: monthlyCost ? Math.round(monthlyCost * 100) / 100 : null,
-        stripe_subscription_id: sub.id,
-        status: sub.status,
-        current_period_end: sub.current_period_end,
-        quantity: item?.quantity || 1,
-      };
-    });
-
-    return Response.json({ tools, total: tools.length });
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    const response = await fetch('https://api.stripe.com/v1/subscriptions?status=active&limit=100', { headers: { Authorization: `Bearer ${secrets.get('STRIPE_SECRET_KEY')}`, 'Stripe-Version': '2025-10-29.clover' } });
+    const data = await response.json();
+    if (!response.ok) return Response.json({ error: data.error?.message || 'Stripe request failed' }, { status: 400 });
+    const subscriptions = (data.data || []).map((subscription) => ({ id: subscription.id, status: subscription.status, customer: subscription.customer, current_period_end: subscription.current_period_end, products: (subscription.items?.data || []).map((item) => ({ product_id: typeof item.price?.product === 'string' ? item.price.product : item.price?.product?.id || null, quantity: item.quantity || 1 })) }));
+    return Response.json({ success: true, total: subscriptions.length, subscriptions, evidence_status: 'INSUFFICIENT_EVIDENCE', evidence_eligible: false, evidence_note: 'Stripe Billing records customer revenue subscriptions, not the organization SaaS expenses required for procurement savings.' });
   } catch (error) {
+    console.error('Stripe subscription read failed', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
-});
+}

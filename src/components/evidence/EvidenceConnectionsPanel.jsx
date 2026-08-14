@@ -7,7 +7,7 @@ const limits = { slack: "No login or message activity inferred", github: "No cod
 
 export default function EvidenceConnectionsPanel() {
   const { user } = useAuth();
-  const { data = [], isLoading } = useQuery({ queryKey: ["evidence-connections", user?.id], queryFn: () => base44.entities.IntegrationConnection.filter({ created_by_id: user.id }), enabled: !!user?.id });
+  const { data = [], isLoading } = useQuery({ queryKey: ["evidence-connections", user?.id], queryFn: () => base44.entities.IntegrationConnection.filter({ organization_id: user.id }), enabled: !!user?.id });
   if (isLoading) return <div className="skeleton h-28 rounded-2xl" />;
   return (
     <div className="space-y-4">
