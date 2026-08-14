@@ -1,32 +1,40 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'admin') return Response.json({ error: 'Forbidden — admin access required to approve or reject requests' }, { status: 403 });
+    if (user.role !== 'admin') return Response.json({ error: 'Forbidden — admin access required' }, { status: 403 });
 
-    const body = await req.json();
-    const { request_id, status, reviewer_note } = body;
+    const { request_id, status, reviewer_note } = await req.json();
+    if (!request_id || !status) return Response.json({ error: 'request_id and status are required' }, { status: 400 });
+    if (!['approved', 'rejected', 'deferred'].includes(status)) return Response.json({ error: 'Invalid status' }, { status: 400 });
 
-    if (!request_id || !status) {
-      return Response.json({ error: 'request_id and status are required' }, { status: 400 });
-    }
+    const matches = await base44.asServiceRole.entities.PurchaseRequest.filter({ id: request_id, created_by_id: user.id });
+    const request = matches[0];
+    if (!request) return Response.json({ error: 'Request not found' }, { status: 404 });
 
-    const validStatuses = ['approved', 'rejected', 'deferred'];
-    if (!validStatuses.includes(status)) {
-      return Response.json({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` }, { status: 400 });
-    }
-
-    const updated = await base44.asServiceRole.entities.PurchaseRequest.update(request_id, {
+    const updated = await base44.asServiceRole.entities.PurchaseRequest.update(request.id, {
       status,
       reviewer: user.full_name || user.email,
       reviewer_note: reviewer_note || '',
+    });
+    await base44.asServiceRole.entities.AuditTrailEvent.create({
+      entity_type: 'PurchaseRequest',
+      entity_id: request.id,
+      entity_label: request.tool_name,
+      action: status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : 'status_changed',
+      actor_name: user.full_name || user.email,
+      actor_email: user.email,
+      old_value: request.status,
+      new_value: status,
+      note: reviewer_note || '',
+      created_by_id: user.id,
     });
 
     return Response.json({ success: true, request: updated });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
-});
+}

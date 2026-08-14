@@ -2,6 +2,7 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/lib/AuthContext";
 
 const nextDate = (date, frequency) => {
   if (!date || frequency === "unknown") return "";
@@ -16,7 +17,8 @@ const nextDate = (date, frequency) => {
 };
 
 export default function ManualRenewalForm({ onCreated, onCancel }) {
-  const [form, setForm] = useState({ vendor_name: "", last_renewal_date: "", renewal_date: "", billing_frequency: "annual", monthly_cost: "", notice_period_days: "30" });
+  const { user } = useAuth();
+  const [form, setForm] = useState({ vendor_name: "", last_renewal_date: "", renewal_date: "", billing_frequency: "annual", monthly_cost: "", notice_period_days: "30", governance_owner_name: user?.full_name || "", governance_owner_email: user?.email || "" });
   const [saving, setSaving] = useState(false);
   const set = (key, value) => setForm((current) => ({ ...current, [key]: value }));
   const submit = async (event) => {
@@ -35,6 +37,8 @@ export default function ManualRenewalForm({ onCreated, onCancel }) {
     <label className="space-y-1 text-xs text-muted-foreground">Next renewal<Input required type="date" value={form.renewal_date} onChange={(e) => set("renewal_date", e.target.value)} /></label>
     <Input type="number" min="0" placeholder="Monthly cost" value={form.monthly_cost} onChange={(e) => set("monthly_cost", e.target.value)} />
     <Input type="number" min="0" placeholder="Cancellation notice (days)" value={form.notice_period_days} onChange={(e) => set("notice_period_days", e.target.value)} />
+    <Input placeholder="Decision owner" value={form.governance_owner_name} onChange={(e) => set("governance_owner_name", e.target.value)} />
+    <Input type="email" placeholder="Owner email" value={form.governance_owner_email} onChange={(e) => set("governance_owner_email", e.target.value)} />
     <div className="flex justify-end gap-2 sm:col-span-2"><Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button><Button disabled={saving}>{saving ? "Saving…" : "Track renewal"}</Button></div>
   </form>;
 }

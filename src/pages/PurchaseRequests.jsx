@@ -16,7 +16,7 @@ const fade = (delay = 0) => ({
 
 const RESOLVED_STATUSES = ["approved", "rejected", "deferred", "provisioned"];
 
-export default function PurchaseRequests() {
+export default function PurchaseRequests({ embedded = false }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const isAdmin = user?.role === "admin";
@@ -102,9 +102,9 @@ export default function PurchaseRequests() {
       ];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className={`${embedded ? "" : "max-w-5xl mx-auto"} space-y-6`}>
       {/* Header */}
-      <motion.div {...fade()}>
+      {!embedded && <motion.div {...fade()}>
         <h1 className="text-page flex items-center gap-2">
           <ClipboardList className="w-6 h-6 text-primary" />
           Purchase Requests
@@ -114,7 +114,7 @@ export default function PurchaseRequests() {
             ? "Review and approve software purchase requests from your team — evaluated by AI against your stack, budget, and policies."
             : "Submit software requests for IT manager review. Each request is evaluated by AI before approval."}
         </p>
-      </motion.div>
+      </motion.div>}
 
       {/* Stats */}
       {requests && requests.length > 0 && (

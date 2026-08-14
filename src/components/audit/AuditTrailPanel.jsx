@@ -57,9 +57,13 @@ export default function AuditTrailPanel({ entityType, entityId, title }) {
   const { user } = useAuth();
 
   const { data: events = [], isLoading } = useQuery({
-    queryKey: ["audit-trail", entityType, entityId],
-    queryFn: () => base44.entities.AuditTrailEvent.filter({ entity_id: entityId, entity_type: entityType }, "-created_date", 50),
-    enabled: !!entityId,
+    queryKey: ["audit-trail", entityType || "all", entityId || user?.id],
+    queryFn: () => base44.entities.AuditTrailEvent.filter({
+      created_by_id: user.id,
+      ...(entityId ? { entity_id: entityId } : {}),
+      ...(entityType ? { entity_type: entityType } : {}),
+    }, "-created_date", 50),
+    enabled: !!user?.id,
   });
 
   if (isLoading) return (

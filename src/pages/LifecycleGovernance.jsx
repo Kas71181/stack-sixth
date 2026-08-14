@@ -12,7 +12,7 @@ const fade = (delay = 0) => ({
   transition: { duration: 0.4, delay },
 });
 
-export default function LifecycleGovernance() {
+export default function LifecycleGovernance({ embedded = false }) {
   const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -73,6 +73,17 @@ export default function LifecycleGovernance() {
           toast.success(`${alert.tool_name} marked for negotiation`);
         }
       }
+      await base44.entities.AuditTrailEvent.create({
+        entity_type: alert.type === "renewal" ? "Contract" : "SaasIntegration",
+        entity_id: alert.contract_id || alert.integration_id || alert.tool_name,
+        entity_label: alert.tool_name,
+        action: action === "cancel" ? "status_changed" : "updated",
+        actor_name: user.full_name || user.email,
+        actor_email: user.email,
+        old_value: "Review required",
+        new_value: action,
+        note: `Governance action: ${action}`,
+      });
       // Reload alerts after action
       await loadAlerts();
     } catch {
@@ -87,15 +98,15 @@ export default function LifecycleGovernance() {
   const summary = data?.summary;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className={`${embedded ? "" : "max-w-5xl mx-auto"} space-y-6`}>
       {/* Header */}
-      <motion.div {...fade()}>
+      {!embedded && <motion.div {...fade()}>
         <h1 className="text-page flex items-center gap-2">
           <ShieldCheck className="w-6 h-6 text-primary" />
           Lifecycle Governance
         </h1>
         <p className="text-sm text-muted-foreground mt-1">Automated guardrails — dormant tools get flagged for downgrade, renewals hit a decision gate before auto-renewing.</p>
-      </motion.div>
+      </motion.div>}
 
       {/* Summary stats */}
       {summary && (

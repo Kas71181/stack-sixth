@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Calendar, DollarSign, Users, AlertTriangle, CheckCircle2, Clock, ChevronDown, ChevronUp, Trash2, TrendingDown, BookOpen } from "lucide-react";
+import { Calendar, DollarSign, Users, AlertTriangle, CheckCircle2, Clock, ChevronDown, ChevronUp, Trash2, TrendingDown, BookOpen, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format, differenceInDays } from "date-fns";
 import NegotiationPlaybookModal from "./NegotiationPlaybookModal";
@@ -26,6 +26,13 @@ export default function ContractCard({ contract, onDeleted, onUpdated }) {
     setDeleting(true);
     await base44.entities.Contract.delete(contract.id);
     onDeleted();
+  };
+
+  const assignToMe = async () => {
+    const user = await base44.auth.me();
+    await base44.entities.Contract.update(contract.id, { governance_owner_name: user.full_name || user.email, governance_owner_email: user.email });
+    await base44.entities.AuditTrailEvent.create({ entity_type: "Contract", entity_id: contract.id, entity_label: contract.vendor_name, action: "assigned", actor_name: user.full_name || user.email, actor_email: user.email, new_value: user.full_name || user.email });
+    onUpdated();
   };
 
   return (
@@ -64,6 +71,10 @@ export default function ContractCard({ contract, onDeleted, onUpdated }) {
         </div>
       </div>
 
+      <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-xs">
+        <span className="flex items-center gap-1.5 text-muted-foreground"><UserRound className="h-3.5 w-3.5" />{contract.governance_owner_name || "No decision owner"}</span>
+        {!contract.governance_owner_email && <button onClick={assignToMe} className="font-semibold text-primary hover:underline">Assign to me</button>}
+      </div>
       <RenewalReminderControl contract={contract} onUpdated={onUpdated} />
 
       {/* Negotiation leverage highlight */}

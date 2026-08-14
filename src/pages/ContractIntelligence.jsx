@@ -14,7 +14,7 @@ import ManualRenewalForm from "@/components/contracts/ManualRenewalForm";
 import RenewalDetectionPanel from "@/components/contracts/RenewalDetectionPanel";
 import RenewalActionPanel from "@/components/contracts/RenewalActionPanel";
 
-export default function ContractIntelligence() {
+export default function ContractIntelligence({ embedded = false, showAudit = true }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [showUploader, setShowUploader] = useState(false);
@@ -47,17 +47,9 @@ export default function ContractIntelligence() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
-            <FileText className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-xl font-extrabold tracking-tight">Renewals</h1>
-            <p className="text-xs text-muted-foreground">Track renewal dates manually, detect them from invoices, or upload a contract</p>
-          </div>
-        </div>
-        <div className="flex gap-2 self-start sm:self-auto">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        {!embedded && <div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/20 bg-primary/10"><FileText className="h-5 w-5 text-primary" /></div><div><h1 className="text-xl font-extrabold tracking-tight">Renewals</h1><p className="text-xs text-muted-foreground">Track renewal dates manually, detect them from invoices, or upload a contract</p></div></div>}
+        <div className="flex gap-2 self-start sm:self-auto sm:ml-auto">
           <Button size="sm" variant="outline" className="gap-1.5" onClick={() => { setShowManual(!showManual); setShowUploader(false); }}><Plus className="w-3.5 h-3.5" />Add manually</Button>
           <Button size="sm" className="gap-1.5" onClick={() => { setShowUploader(!showUploader); setShowManual(false); }}><Upload className="w-3.5 h-3.5" />Upload contract</Button>
         </div>
@@ -108,7 +100,7 @@ export default function ContractIntelligence() {
       )}
 
       {/* Audit Trail — recent playbook activity */}
-      {contracts.length > 0 && (
+      {showAudit && contracts.length > 0 && (
         <div className="glass-card p-5">
           <AuditTrailPanel entityType="NegotiationPlaybook" entityId={contracts[0]?.id} title="Recent Negotiation Activity" />
         </div>

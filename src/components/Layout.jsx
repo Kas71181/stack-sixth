@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { Home, LogOut, User, ArrowLeftRight, Settings, ChevronDown, Layers, TrendingDown, CalendarClock } from "lucide-react";
+import { Home, LogOut, User, ArrowLeftRight, Settings, ChevronDown, Layers, TrendingDown, ShieldCheck } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useState, useRef, useEffect } from "react";
 import { base44 as analyticsClient } from "@/api/base44Client";
@@ -13,7 +13,7 @@ const primaryNav = [
   { path: "/", label: "Overview", icon: Home },
   { path: "/my-stack", label: "My Stack", icon: Layers },
   { path: "/savings", label: "Savings", icon: TrendingDown },
-  { path: "/renewals", label: "Renewals", icon: CalendarClock },
+  { path: "/governance", label: "Governance", icon: ShieldCheck },
   { path: "/switch-planner", label: "Switch Planner", icon: ArrowLeftRight },
 ];
 
@@ -28,6 +28,7 @@ export default function Layout() {
       "/my-stack": "my_stack",
       "/savings": "savings",
       "/renewals": "renewals",
+      "/governance": "governance",
       "/audit": "audit_form",
       "/history": "history",
       "/it-dashboard": "it_manager",

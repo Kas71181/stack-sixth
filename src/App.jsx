@@ -29,6 +29,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import MyStack from './pages/MyStack';
 import Savings from './pages/Savings';
+import Governance from './pages/Governance';
 
 
 const AuthenticatedApp = () => {
@@ -65,19 +66,20 @@ const AuthenticatedApp = () => {
         <Route path="/" element={<Dashboard />} />
         <Route path="/my-stack" element={<MyStack />} />
         <Route path="/savings" element={<Savings />} />
-        <Route path="/renewals" element={<ContractIntelligence />} />
+        <Route path="/governance" element={<Governance />} />
+        <Route path="/renewals" element={<Navigate to="/governance?tab=renewals" replace />} />
         <Route path="/audit" element={<AuditForm />} />
         <Route path="/results/:id" element={<Results />} />
         <Route path="/history" element={<History />} />
         <Route path="/it-dashboard" element={<Navigate to="/savings" replace />} />
         <Route path="/monitoring" element={<Navigate to="/" replace />} />
-        <Route path="/contracts" element={<Navigate to="/renewals" replace />} />
+        <Route path="/contracts" element={<Navigate to="/governance?tab=renewals" replace />} />
         <Route path="/switch-planner" element={<SwitchPlanner />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/data-coverage" element={<Navigate to="/my-stack?tab=connect" replace />} />
         <Route path="/shared-report" element={<SharedReport />} />
-        <Route path="/purchase-requests" element={<Navigate to="/" replace />} />
-        <Route path="/lifecycle" element={<Navigate to="/renewals" replace />} />
+        <Route path="/purchase-requests" element={<Navigate to="/governance?tab=purchases" replace />} />
+        <Route path="/lifecycle" element={<Navigate to="/governance?tab=lifecycle" replace />} />
         <Route path="/marketplace" element={<Navigate to="/" replace />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/intelligence" element={<Navigate to="/renewals" replace />} />

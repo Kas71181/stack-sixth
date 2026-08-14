@@ -110,6 +110,14 @@
       "type": "string",
       "title": "Company ID"
     },
+    "governance_owner_name": {
+      "type": "string",
+      "title": "Decision Owner"
+    },
+    "governance_owner_email": {
+      "type": "string",
+      "title": "Decision Owner Email"
+    },
     "reminder_date": {
       "type": "string",
       "format": "date",
