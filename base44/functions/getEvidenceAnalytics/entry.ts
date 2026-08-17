@@ -33,6 +33,7 @@ export default async function(req) {
       assignedSeats: applicationMetrics.reduce((sum, item) => sum + item.metrics.assignedSeats, 0),
       activeSeats: applicationMetrics.reduce((sum, item) => sum + item.metrics.activeSeats, 0),
       dormantSeats: applicationMetrics.reduce((sum, item) => sum + item.metrics.dormantSeats, 0),
+      unknownSeats: applicationMetrics.reduce((sum, item) => sum + item.metrics.unknownSeats, 0),
       dormantApplications: applicationMetrics.filter((item) => item.metrics.dormantApplication).length,
       verifiedSavings: applicationMetrics.filter((item) => item.metrics.savings.classification === 'SAVINGS_READY_TO_CAPTURE').reduce((sum, item) => sum + (item.metrics.savings.amount || 0), 0),
       renewalOpportunity: applicationMetrics.filter((item) => item.metrics.savings.classification === 'RENEWAL_SAVINGS_OPPORTUNITY').reduce((sum, item) => sum + (item.metrics.savings.amount || 0), 0),
@@ -63,8 +64,8 @@ export default async function(req) {
 
     return Response.json({
       summary,
-      coverage: calculateCoverage(apps),
-      applications: applicationMetrics.map((item) => ({ id: item.app.id, canonicalAppId: item.app.canonical_app_id, name: item.app.display_name, statuses: { ownership: item.app.ownership_status, access: item.app.access_status, usage: item.app.usage_status, financial: item.app.financial_status, contract: item.app.contract_status }, ...item.metrics })),
+      coverage: calculateCoverage(applicationMetrics.map((item) => ({ ...item.app, usage_status: item.metrics.usageCoverage > 0 ? 'VERIFIED_LIVE' : 'INSUFFICIENT_EVIDENCE' }))),
+      applications: applicationMetrics.map((item) => ({ id: item.app.id, canonicalAppId: item.app.canonical_app_id, name: item.app.display_name, statuses: { ownership: item.app.ownership_status, access: item.app.access_status, usage: item.metrics.usageCoverage > 0 ? 'VERIFIED_LIVE' : 'INSUFFICIENT_EVIDENCE', financial: item.app.financial_status, contract: item.app.contract_status }, ...item.metrics })),
       validation: { passed: validationIssues.length === 0, issues: validationIssues },
       recommendationsCreated: recommendationCreates.length,
       calculatedAt: now.toISOString()

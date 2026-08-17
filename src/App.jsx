@@ -30,6 +30,7 @@ import ResetPassword from './pages/ResetPassword';
 import MyStack from './pages/MyStack';
 import Savings from './pages/Savings';
 import Governance from './pages/Governance';
+import UsageEvidenceAdmin from './pages/UsageEvidenceAdmin';
 
 
 const AuthenticatedApp = () => {
@@ -76,6 +77,7 @@ const AuthenticatedApp = () => {
         <Route path="/contracts" element={<Navigate to="/governance?tab=renewals" replace />} />
         <Route path="/switch-planner" element={<SwitchPlanner />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/admin/usage-evidence" element={<UsageEvidenceAdmin />} />
         <Route path="/data-coverage" element={<Navigate to="/my-stack?tab=connect" replace />} />
         <Route path="/shared-report" element={<SharedReport />} />
         <Route path="/purchase-requests" element={<Navigate to="/governance?tab=purchases" replace />} />

@@ -17,12 +17,13 @@ export default function EvidenceUsagePanel() {
         {data.applications.map((item) => (
           <div key={item.id} className="glass-card p-5">
             <div className="flex items-center justify-between gap-3"><p className="font-semibold">{item.name}</p><EvidenceBadge value={item.statuses.usage} /></div>
-            <div className="mt-4 grid grid-cols-3 gap-3 text-center">
+            <div className="mt-4 grid grid-cols-4 gap-3 text-center">
               <div><p className="font-mono text-lg font-bold">{item.assignedSeats}</p><p className="text-[10px] text-muted-foreground">Assigned</p></div>
+              <div><p className="font-mono text-lg font-bold">{item.verifiedAccessOnlySeats}</p><p className="text-[10px] text-muted-foreground">Access only</p></div>
               <div><p className="font-mono text-lg font-bold">{item.activeSeats}</p><p className="text-[10px] text-muted-foreground">Active</p></div>
-              <div><p className="font-mono text-lg font-bold">{item.dormantSeats}</p><p className="text-[10px] text-muted-foreground">Dormant candidates</p></div>
+              <div><p className="font-mono text-lg font-bold">{item.dormantSeats}</p><p className="text-[10px] text-muted-foreground">Dormant</p></div>
             </div>
-            <div className="mt-4 flex items-center gap-2 rounded-xl border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground"><ShieldQuestion className="h-4 w-4" />Utilization: {item.utilization === null ? "Insufficient evidence" : `${item.utilization}%`}</div>
+            <div className="mt-4 flex items-center gap-2 rounded-xl border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground"><ShieldQuestion className="h-4 w-4" />Usage coverage: {item.usageCoverage}% · Utilization: {item.utilization === null ? "Insufficient evidence" : `${item.utilization}%`}</div>
           </div>
         ))}
       </div>

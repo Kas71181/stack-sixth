@@ -1,5 +1,5 @@
 export const CANONICAL_APPS = [
-  { canonical_app_id: 'slack', name: 'Slack', vendor_name: 'Salesforce', primary_domain: 'slack.com', aliases: ['slack'], category: 'Communication', default_dormancy_days: 30, seasonal: false },
+  { canonical_app_id: 'slack', name: 'Slack', vendor_name: 'Salesforce', primary_domain: 'slack.com', aliases: ['slack', 'slack com', 'slack technologies', 'microsoft entra slack enterprise app'], category: 'Communication', default_dormancy_days: 30, seasonal: false },
   { canonical_app_id: 'github', name: 'GitHub', vendor_name: 'GitHub', primary_domain: 'github.com', aliases: ['github', 'github.com'], category: 'Dev Tools', default_dormancy_days: 60, seasonal: false },
   { canonical_app_id: 'notion', name: 'Notion', vendor_name: 'Notion Labs', primary_domain: 'notion.so', aliases: ['notion', 'notion.so'], category: 'Productivity & Docs', default_dormancy_days: 45, seasonal: false },
   { canonical_app_id: 'apollo-io', name: 'Apollo.io', vendor_name: 'Apollo', primary_domain: 'apollo.io', aliases: ['apollo', 'apollo io', 'apollo.io'], category: 'CRM & Sales', default_dormancy_days: 45, seasonal: false },
@@ -17,7 +17,7 @@ export function normalizeApplicationName(value = '') {
 
 export function resolveCanonicalApp(value = '') {
   const normalized = normalizeApplicationName(value);
-  const match = CANONICAL_APPS.find((app) => app.aliases.includes(normalized));
+  const match = CANONICAL_APPS.find((app) => app.aliases.includes(normalized) || normalizeApplicationName(app.primary_domain) === normalized || normalizeApplicationName(app.vendor_name) === normalized);
   if (match) return match;
   const slug = normalized.replace(/\s+/g, '-');
   return { canonical_app_id: slug, name: value.trim(), vendor_name: value.trim(), primary_domain: '', aliases: [normalized], category: 'Other', default_dormancy_days: 60, seasonal: false };

@@ -8,7 +8,22 @@
     "organization_app_id": {
       "type": "string"
     },
+    "canonical_app_id": {
+      "type": "string"
+    },
     "organization_user_id": {
+      "type": "string"
+    },
+    "canonical_user_id": {
+      "type": "string"
+    },
+    "provider": {
+      "type": "string"
+    },
+    "provider_user_id": {
+      "type": "string"
+    },
+    "provider_app_identifier": {
       "type": "string"
     },
     "provider_event_id": {
@@ -21,12 +36,25 @@
       "type": "string",
       "format": "date-time"
     },
+    "ingested_at": {
+      "type": "string",
+      "format": "date-time"
+    },
     "source_connection_id": {
       "type": "string"
     },
     "qualifies_as_activity": {
       "type": "boolean",
       "default": false
+    },
+    "evidence_level": {
+      "type": "string",
+      "enum": [
+        "VERIFIED_LIVE",
+        "OBSERVED",
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "default": "INSUFFICIENT_EVIDENCE"
     },
     "provider_metadata": {
       "type": "object"

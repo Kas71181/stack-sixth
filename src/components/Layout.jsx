@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { Home, LogOut, User, ArrowLeftRight, Settings, ChevronDown, Layers, TrendingDown, ShieldCheck } from "lucide-react";
+import { Home, LogOut, User, ArrowLeftRight, Settings, ChevronDown, Layers, TrendingDown, ShieldCheck, Activity } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useState, useRef, useEffect } from "react";
 import { base44 as analyticsClient } from "@/api/base44Client";
@@ -41,6 +41,7 @@ export default function Layout() {
       "/contracts": "contracts",
       "/settings": "settings",
       "/data-coverage": "data_coverage",
+      "/admin/usage-evidence": "usage_evidence_admin",
     };
     const page = pageNames[location.pathname] || location.pathname.replace("/", "").replace(/\//g, "_") || "unknown";
     analyticsClient.analytics.track({ eventName: "page_view", properties: { page } });
@@ -169,6 +170,7 @@ export default function Layout() {
                           <Settings className="w-3.5 h-3.5 text-muted-foreground" />
                           Settings
                         </Link>
+                        {user.role === "admin" && <Link to="/admin/usage-evidence" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2.5 px-3.5 py-2 text-sm text-foreground/90 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/6 transition-colors mx-1 rounded-lg"><Activity className="w-3.5 h-3.5 text-muted-foreground" />Usage evidence</Link>}
                         <div className="my-1 border-t border-border/40 mx-2" />
                         <button
                           onClick={() => { setUserMenuOpen(false); logout(); }}

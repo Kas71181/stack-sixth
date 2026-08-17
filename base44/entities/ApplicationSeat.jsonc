@@ -8,7 +8,16 @@
     "organization_app_id": {
       "type": "string"
     },
+    "canonical_app_id": {
+      "type": "string"
+    },
     "organization_user_id": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "provider_user_id": {
       "type": "string"
     },
     "provider_seat_id": {
@@ -31,11 +40,38 @@
       "type": "string",
       "format": "date-time"
     },
+    "usage_supported": {
+      "type": "boolean",
+      "default": false
+    },
+    "usage_verified": {
+      "type": "boolean",
+      "default": false
+    },
+    "activity_source": {
+      "type": "string"
+    },
+    "first_activity_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_activity_at": {
+      "type": "string",
+      "format": "date-time"
+    },
     "last_verified_activity_at": {
       "type": "string",
       "format": "date-time"
     },
+    "usage_event_count": {
+      "type": "number",
+      "default": 0
+    },
     "activity_event_count": {
+      "type": "number",
+      "default": 0
+    },
+    "observation_window_days": {
       "type": "number",
       "default": 0
     },
@@ -43,17 +79,52 @@
       "type": "number",
       "default": 0
     },
-    "activity_source": {
-      "type": "string"
+    "last_successful_sync_at": {
+      "type": "string",
+      "format": "date-time"
     },
-    "usage_evidence_level": {
+    "provider_data_current_through": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sync_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "running",
+        "succeeded",
+        "failed",
+        "rate_limited",
+        "revoked"
+      ],
+      "default": "pending"
+    },
+    "evidence_level": {
       "type": "string",
       "enum": [
         "VERIFIED_LIVE",
+        "VERIFIED_ACCESS",
         "OBSERVED",
         "INSUFFICIENT_EVIDENCE"
       ],
       "default": "INSUFFICIENT_EVIDENCE"
+    },
+    "evidence_record_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "data_freshness_status": {
+      "type": "string",
+      "enum": [
+        "fresh",
+        "delayed",
+        "stale",
+        "failed",
+        "unknown"
+      ],
+      "default": "unknown"
     },
     "data_freshness": {
       "type": "string",
@@ -64,6 +135,26 @@
         "unknown"
       ],
       "default": "unknown"
+    },
+    "confidence_level": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low",
+        "insufficient"
+      ],
+      "default": "insufficient"
+    },
+    "usage_evidence_level": {
+      "type": "string",
+      "enum": [
+        "VERIFIED_LIVE",
+        "VERIFIED_ACCESS",
+        "OBSERVED",
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "default": "INSUFFICIENT_EVIDENCE"
     },
     "usage_classification": {
       "type": "string",

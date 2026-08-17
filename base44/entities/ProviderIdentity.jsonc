@@ -1,31 +1,22 @@
 {
-  "name": "OrganizationUser",
+  "name": "ProviderIdentity",
   "type": "object",
   "properties": {
     "organization_id": {
       "type": "string"
     },
+    "provider": {
+      "type": "string"
+    },
+    "provider_user_id": {
+      "type": "string"
+    },
     "canonical_user_id": {
       "type": "string"
     },
-    "primary_email": {
+    "verified_email": {
       "type": "string",
       "format": "email"
-    },
-    "normalized_email": {
-      "type": "string"
-    },
-    "display_name": {
-      "type": "string"
-    },
-    "employee_status": {
-      "type": "string",
-      "enum": [
-        "active",
-        "offboarded",
-        "unknown"
-      ],
-      "default": "unknown"
     },
     "identity_type": {
       "type": "string",
@@ -39,17 +30,24 @@
       ],
       "default": "unknown"
     },
-    "identity_provider_id": {
-      "type": "string"
-    },
-    "last_identity_sync_at": {
+    "resolution_method": {
       "type": "string",
-      "format": "date-time"
+      "enum": [
+        "verified_email",
+        "directory",
+        "administrator",
+        "unresolved"
+      ]
+    },
+    "manually_resolved": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [
     "organization_id",
-    "normalized_email"
+    "provider",
+    "provider_user_id"
   ],
   "rls": {
     "create": {

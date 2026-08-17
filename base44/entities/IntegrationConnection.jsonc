@@ -15,6 +15,26 @@
       "type": "boolean",
       "default": false
     },
+    "connection_status": {
+      "type": "string",
+      "enum": [
+        "connected",
+        "disconnected",
+        "failed",
+        "revoked"
+      ],
+      "default": "disconnected"
+    },
+    "authentication_status": {
+      "type": "string",
+      "enum": [
+        "valid",
+        "expired",
+        "revoked",
+        "unknown"
+      ],
+      "default": "unknown"
+    },
     "organization_verified": {
       "type": "boolean",
       "default": false
@@ -25,6 +45,14 @@
         "type": "string"
       }
     },
+    "usage_supported": {
+      "type": "boolean",
+      "default": false
+    },
+    "last_sync_started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
     "last_successful_sync_at": {
       "type": "string",
       "format": "date-time"
@@ -33,10 +61,46 @@
       "type": "string",
       "format": "date-time"
     },
+    "provider_data_current_through": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "records_processed": {
+      "type": "number",
+      "default": 0
+    },
+    "records_created": {
+      "type": "number",
+      "default": 0
+    },
+    "records_updated": {
+      "type": "number",
+      "default": 0
+    },
+    "usage_events_created": {
+      "type": "number",
+      "default": 0
+    },
+    "rate_limit_status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "limited",
+        "unknown"
+      ],
+      "default": "unknown"
+    },
+    "error_code": {
+      "type": "string"
+    },
+    "error_message": {
+      "type": "string"
+    },
     "health_status": {
       "type": "string",
       "enum": [
         "healthy",
+        "delayed",
         "stale",
         "failed",
         "revoked",
