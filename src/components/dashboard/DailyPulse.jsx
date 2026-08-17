@@ -74,17 +74,21 @@ function getActiveHoliday(date) {
 export default function DailyPulse({
   pendingRequests = [],
   urgentRenewals = [],
-  openRecs = [],
-  dormantTools = [],
-  shadowTools = [],
+  verifiedSavings = 0,
+  dormantToolCount = 0,
+  shadowToolCount = 0,
+  isLoading = false,
 }) {
-  const totalSavings = openRecs.reduce((s, r) => s + (r.estimated_monthly_savings || 0), 0);
 
   const today = new Date();
   const day = today.getDate();
   const dateStr = `${today.toLocaleDateString("en-US", { weekday: "long" })} ${day}${getOrdinal(day)} ${today.toLocaleDateString("en-US", { month: "long" })}, ${today.getFullYear()}`;
   const holiday = getActiveHoliday(today);
   const holidayStr = holiday ? `${holiday.emoji} ${holiday.name}` : null;
+
+  if (isLoading) {
+    return <div className="h-10 rounded-xl skeleton" aria-label="Loading today's verified pulse" />;
+  }
 
   const alerts = [];
 
@@ -106,28 +110,28 @@ export default function DailyPulse({
     });
   }
 
-  if (dormantTools.length > 0) {
+  if (dormantToolCount > 0) {
     alerts.push({
       icon: Moon,
-      label: `${dormantTools.length} dormant tool${dormantTools.length > 1 ? "s" : ""} wasting licenses`,
+      label: `${dormantToolCount} dormant tool${dormantToolCount > 1 ? "s" : ""} with verified usage evidence`,
       to: "/monitoring",
       tone: "violet",
     });
   }
 
-  if (shadowTools.length > 0) {
+  if (shadowToolCount > 0) {
     alerts.push({
       icon: Ghost,
-      label: `${shadowTools.length} shadow IT tool${shadowTools.length > 1 ? "s" : ""} detected`,
+      label: `${shadowToolCount} shadow IT tool${shadowToolCount > 1 ? "s" : ""} detected`,
       to: "/data-coverage",
       tone: "rose",
     });
   }
 
-  if (totalSavings > 0) {
+  if (verifiedSavings > 0) {
     alerts.push({
       icon: TrendingUp,
-      label: `$${totalSavings.toLocaleString()}/mo in savings ready to capture`,
+      label: `$${verifiedSavings.toLocaleString()}/mo in verified savings ready to capture`,
       to: "/it-dashboard",
       tone: "emerald",
     });

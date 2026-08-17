@@ -17,6 +17,7 @@ import DailyPulse from "@/components/dashboard/DailyPulse";
 import StackScore from "@/components/dashboard/StackScore";
 import PrivacyPolicyFooter from "@/components/dashboard/PrivacyPolicyFooter";
 import EvidenceSummaryStrip from "@/components/evidence/EvidenceSummaryStrip";
+import useEvidenceAnalytics from "@/hooks/useEvidenceAnalytics";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -26,6 +27,7 @@ const fade = (delay = 0) => ({
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { data: evidenceAnalytics, isLoading: evidenceLoading } = useEvidenceAnalytics();
 
   const { data: audits, isError: auditsError } = useQuery({
     queryKey: ["audits-summary", user?.id],
@@ -182,9 +184,10 @@ export default function Dashboard() {
       <DailyPulse
         pendingRequests={purchaseRequests}
         urgentRenewals={urgentRenewals}
-        openRecs={openRecs}
-        dormantTools={dormantTools}
-        shadowTools={shadowTools}
+        verifiedSavings={evidenceAnalytics?.summary?.verifiedSavings || 0}
+        dormantToolCount={evidenceAnalytics?.summary?.dormantApplications || 0}
+        shadowToolCount={shadowTools.length}
+        isLoading={evidenceLoading}
       />
 
       <EvidenceSummaryStrip />
