@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ClipboardList, RefreshCw, TrendingUp, Moon, CheckCircle2, Ghost } from "lucide-react";
+import { ClipboardList, RefreshCw, TrendingUp, Moon, CheckCircle2 } from "lucide-react";
 
 function getOrdinal(n) {
   const s = ["th", "st", "nd", "rd"];
@@ -76,7 +76,6 @@ export default function DailyPulse({
   urgentRenewals = [],
   verifiedSavings = 0,
   dormantToolCount = 0,
-  shadowToolCount = 0,
   isLoading = false,
 }) {
 
@@ -119,15 +118,6 @@ export default function DailyPulse({
     });
   }
 
-  if (shadowToolCount > 0) {
-    alerts.push({
-      icon: Ghost,
-      label: `${shadowToolCount} shadow IT tool${shadowToolCount > 1 ? "s" : ""} detected`,
-      to: "/data-coverage",
-      tone: "rose",
-    });
-  }
-
   if (verifiedSavings > 0) {
     alerts.push({
       icon: TrendingUp,
@@ -152,7 +142,7 @@ export default function DailyPulse({
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
-            You're all caught up — nothing needs your attention today.
+            No verified actions need attention right now.
           </p>
           <p className="text-[11px] text-emerald-600/70 dark:text-emerald-400/70 mt-0.5">
             {dateStr}{holidayStr ? ` · ${holidayStr}` : ""}

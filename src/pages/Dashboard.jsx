@@ -158,25 +158,11 @@ export default function Dashboard() {
   const totalSpend = latestAudit?.monthly_budget || 0;
   const totalTools = latestAudit?.existing_software?.length || 0;
   const urgentRenewals = contracts.filter((contract) => {
-    if (!contract.renewal_date || contract.status === "Cancelled") return false;
+    if (!contract.renewal_date || contract.status === "Cancelled" || contract.needs_confirmation === true || contract.renewal_source === "inferred") return false;
     const days = Math.ceil((new Date(contract.renewal_date) - new Date()) / (1000 * 60 * 60 * 24));
     return days >= 0 && days <= 30;
   });
   const dormantTools = (userActivity || []).filter((a) => a.status === "Dormant" || a.status === "Inactive");
-
-  // Shadow IT: tools with activity but no registered SaasIntegration
-  const integrationNames = new Set(
-    (integrations || []).map((i) => i.tool_name?.toLowerCase().trim()).filter(Boolean)
-  );
-  const auditedToolNames = new Set(
-    (latestAudit?.existing_software || []).map((s) => s.name?.toLowerCase().trim()).filter(Boolean)
-  );
-  const knownTools = new Set([...integrationNames, ...auditedToolNames]);
-  const shadowTools = [...new Set(
-    (userActivity || [])
-      .map((a) => a.tool_name)
-      .filter((name) => name && !knownTools.has(name.toLowerCase().trim()))
-  )];
 
   return (
     <div className="space-y-8">
@@ -186,7 +172,6 @@ export default function Dashboard() {
         urgentRenewals={urgentRenewals}
         verifiedSavings={evidenceAnalytics?.summary?.verifiedSavings || 0}
         dormantToolCount={evidenceAnalytics?.summary?.dormantApplications || 0}
-        shadowToolCount={shadowTools.length}
         isLoading={evidenceLoading}
       />
 
