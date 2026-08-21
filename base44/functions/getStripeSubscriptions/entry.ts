@@ -1,11 +1,12 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { secrets } from 'base44:runtime';
+import { requireAdmin } from '../../shared/requireAdmin.ts';
 
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    const admin = await requireAdmin(base44);
+    if (admin.error) return admin.error;
     const response = await fetch('https://api.stripe.com/v1/subscriptions?status=active&limit=100', { headers: { Authorization: `Bearer ${secrets.get('STRIPE_SECRET_KEY')}`, 'Stripe-Version': '2025-10-29.clover' } });
     const data = await response.json();
     if (!response.ok) return Response.json({ error: data.error?.message || 'Stripe request failed' }, { status: 400 });
