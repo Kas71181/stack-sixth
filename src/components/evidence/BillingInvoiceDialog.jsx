@@ -1,0 +1,21 @@
+import { useRef, useState } from "react";
+import { Loader2, LockKeyhole, Upload } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+export default function BillingInvoiceDialog({ open, onClose, onConfirmed }) {
+  const inputRef = useRef(null); const [stage, setStage] = useState("idle"); const [candidate, setCandidate] = useState(null); const [error, setError] = useState("");
+  const set = (key, value) => setCandidate((current) => ({ ...current, [key]: value }));
+  const upload = async (file) => { if (!file) return; if (file.size > 20 * 1024 * 1024) return setError("Choose a file smaller than 20MB."); setError(""); setStage("extracting"); const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file }); const response = await base44.functions.invoke("extractBillingEvidence", { file_uri }); if (!response.data?.success) { setStage("idle"); return setError(response.data?.error || "We couldn't read this invoice."); } setCandidate(response.data.extracted); setStage("review"); };
+  const confirm = async () => { setStage("saving"); const response = await base44.functions.invoke("confirmBillingEvidence", { candidate: { ...candidate, amount: Number(candidate.amount) || null, quantity: Number(candidate.quantity) || null, unit_price: Number(candidate.unit_price) || null } }); if (!response.data?.success) { setStage("review"); return setError(response.data?.error || "Evidence could not be saved."); } onConfirmed(); };
+  const close = () => { setStage("idle"); setCandidate(null); setError(""); onClose(); };
+  return <Dialog open={open} onOpenChange={(value) => !value && close()}><DialogContent className="sm:max-w-lg"><DialogHeader><DialogTitle>Upload billing evidence</DialogTitle><DialogDescription>Review every extracted value before it becomes financial evidence.</DialogDescription></DialogHeader>
+    {stage === "idle" && <div className="rounded-2xl border-2 border-dashed p-8 text-center"><Upload className="mx-auto h-7 w-7 text-primary" /><p className="mt-3 text-sm font-semibold">Invoice or receipt</p><p className="mt-1 text-xs text-muted-foreground">PDF, image, or spreadsheet up to 20MB</p><input ref={inputRef} type="file" accept=".pdf,.png,.jpg,.jpeg,.xlsx,.csv" className="hidden" onChange={(event) => upload(event.target.files?.[0])} /><Button className="mt-4" variant="outline" onClick={() => inputRef.current?.click()}>Choose file</Button></div>}
+    {stage === "extracting" && <div className="flex items-center justify-center gap-2 py-12 text-sm font-semibold"><Loader2 className="h-4 w-4 animate-spin" />Reading invoice…</div>}
+    {stage === "review" && candidate && <div className="grid gap-3 sm:grid-cols-2"><Input aria-label="Vendor" value={candidate.vendor_name || ""} onChange={(e) => set("vendor_name", e.target.value)} /><Input aria-label="Amount" type="number" placeholder="Amount" value={candidate.amount || ""} onChange={(e) => set("amount", e.target.value)} /><Input aria-label="Currency" value={candidate.currency || "USD"} onChange={(e) => set("currency", e.target.value.toUpperCase())} /><Input aria-label="Invoice date" type="date" value={candidate.invoice_date || ""} onChange={(e) => set("invoice_date", e.target.value)} /><Input aria-label="Renewal date" type="date" value={candidate.renewal_date || ""} onChange={(e) => set("renewal_date", e.target.value)} /><Input aria-label="Plan" placeholder="Plan or subscription" value={candidate.plan_name || ""} onChange={(e) => set("plan_name", e.target.value)} /><div className="sm:col-span-2 flex justify-end"><Button onClick={confirm}>Confirm evidence</Button></div></div>}
+    {stage === "saving" && <div className="flex items-center justify-center gap-2 py-12 text-sm font-semibold"><Loader2 className="h-4 w-4 animate-spin" />Saving confirmed evidence…</div>}
+    {error && <p role="alert" className="rounded-lg bg-destructive/10 p-2 text-xs text-destructive">{error}</p>}<p className="flex items-center justify-center gap-1 text-[11px] text-muted-foreground"><LockKeyhole className="h-3.5 w-3.5" />Files stay private and nothing is saved until confirmation.</p>
+  </DialogContent></Dialog>;
+}

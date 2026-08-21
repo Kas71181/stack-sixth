@@ -2,6 +2,7 @@ import { Database, ShieldAlert } from "lucide-react";
 import CoverageGrid from "@/components/evidence/CoverageGrid";
 import EvidenceBadge from "@/components/evidence/EvidenceBadge";
 import EvidenceLoading from "@/components/evidence/EvidenceLoading";
+import BillingEvidencePanel from "@/components/evidence/BillingEvidencePanel";
 import useEvidenceAnalytics from "@/hooks/useEvidenceAnalytics";
 
 const fields = ["ownership", "access", "usage", "financial", "contract"];
@@ -17,6 +18,7 @@ export default function MyStackEvidencePanel() {
         <div><h2 className="text-lg font-bold">Evidence coverage</h2><p className="text-sm text-muted-foreground">Every application is scored by the source types actually present.</p></div>
       </div>
       <CoverageGrid coverage={data.coverage} />
+      <BillingEvidencePanel />
       <div className="glass-card overflow-hidden">
         {data.applications.map((item) => (
           <div key={item.id} className="border-b border-border/50 p-4 last:border-b-0">
