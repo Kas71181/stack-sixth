@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CheckCircle2, AlertTriangle, Clock, Star, ShoppingCart, Check, ArrowRight, DollarSign, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/components/cart/CartContext";
+import DiscountOffer from "@/components/discounts/DiscountOffer";
 
 const PRIORITY_STYLES = {
   high: "bg-primary/10 text-primary border-primary/20",
@@ -31,7 +32,7 @@ function ScoreBar({ value, max = 100 }) {
   );
 }
 
-function ComparisonCell({ rec, auditName, monthlyBudget }) {
+function ComparisonCell({ rec, auditName, monthlyBudget, discount }) {
   const { addItem, items } = useCart();
   const inCart = items.some((i) => i.name === rec.name);
   const risk = RISK_CONFIG[rec.migration_risk] || RISK_CONFIG.unknown;
@@ -60,6 +61,7 @@ function ComparisonCell({ rec, auditName, monthlyBudget }) {
           </button>
         </div>
         <div className="flex flex-wrap gap-1.5">
+          {discount && <DiscountOffer offer={discount} compact />}
           <Badge variant="outline" className={`text-[10px] font-medium px-1.5 ${PRIORITY_STYLES[rec.implementation_priority] || ""}`}>
             {rec.implementation_priority} priority
           </Badge>
@@ -136,7 +138,7 @@ function ComparisonCell({ rec, auditName, monthlyBudget }) {
   );
 }
 
-export default function ComparisonView({ recommendations, auditName, monthlyBudget }) {
+export default function ComparisonView({ recommendations, auditName, monthlyBudget, discountsByTool = {} }) {
   const [selected, setSelected] = useState(() => recommendations.slice(0, 3).map((_, i) => i));
 
   const toggleSelect = (i) => {
@@ -181,6 +183,7 @@ export default function ComparisonView({ recommendations, auditName, monthlyBudg
                 rec={rec}
                 auditName={auditName}
                 monthlyBudget={monthlyBudget}
+                discount={discountsByTool[rec.name]?.[0]}
               />
             </div>
           ))}

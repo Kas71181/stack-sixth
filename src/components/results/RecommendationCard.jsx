@@ -6,6 +6,7 @@ import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import DiscountOffer from "@/components/discounts/DiscountOffer";
 
 function ToolLogo({ name, index }) {
   const [imgError, setImgError] = useState(false);
@@ -63,7 +64,7 @@ const LOCK_IN_COLORS = {
   Low: "text-emerald-700 bg-emerald-50 border-emerald-200",
 };
 
-export default function RecommendationCard({ rec, index, auditName = "", onUpdate }) {
+export default function RecommendationCard({ rec, index, auditName = "", onUpdate, discount }) {
   const [expanded, setExpanded] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState("none"); // "none" | "pending" | "approved"
   const [buyUrl, setBuyUrl] = useState(null);
@@ -169,6 +170,7 @@ export default function RecommendationCard({ rec, index, auditName = "", onUpdat
             <Badge variant="outline" className="text-[10px] font-medium px-2">
               {rec.adopt_now_or_later === "now" ? "Adopt now" : "Adopt later"}
             </Badge>
+            {discount && <DiscountOffer offer={discount} compact />}
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); if (!inCart) addItem(rec, auditName); }}

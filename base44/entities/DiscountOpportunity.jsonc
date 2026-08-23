@@ -1,0 +1,43 @@
+{
+  "name": "DiscountOpportunity",
+  "type": "object",
+  "properties": {
+    "tool_name": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "discount_percent": {
+      "type": "number"
+    },
+    "terms": {
+      "type": "string"
+    },
+    "source_url": {
+      "type": "string"
+    },
+    "expires_at": {
+      "type": "string"
+    },
+    "verified_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "expired"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "tool_name",
+    "title",
+    "terms",
+    "source_url",
+    "verified_at"
+  ]
+}

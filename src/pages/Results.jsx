@@ -12,6 +12,7 @@ import ComparisonView from "../components/results/ComparisonView";
 import ProjectedROICalculator from "../components/results/ProjectedROICalculator";
 import ExportPptxButton from "../components/results/ExportPptxButton";
 import DataConfidenceScore from "../components/results/DataConfidenceScore";
+import useDiscountOpportunities from "@/hooks/useDiscountOpportunities";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -70,6 +71,9 @@ export default function Results() {
     // Poll every 3s while the analysis is still running
     refetchInterval: (query) => query.state.data?.status === "pending" ? 3000 : false,
   });
+  const recommendationNames = (audit?.analysis_result?.recommendations || []).map((rec) => rec.name);
+  const { data: discountData } = useDiscountOpportunities(recommendationNames);
+  const offersByTool = discountData?.by_tool || {};
 
   const handleUpdateRec = async (index, updates) => {
     const recs = [...(audit?.analysis_result?.recommendations || [])];
@@ -394,9 +398,9 @@ export default function Results() {
 
       {/* Recommendations */}
       <motion.div {...fade(0.2)}>
-        <div className="flex items-center justify-between mb-3">
+        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-semibold">Recommendations</h2>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
             {viewMode === "list" && (
               <button
                 onClick={() => setGroupByCategory(!groupByCategory)}
@@ -450,7 +454,7 @@ export default function Results() {
                       </div>
                       <div className="space-y-3">
                         {recs.map((rec, i) => (
-                          <RecommendationCard key={i} rec={rec} index={result.recommendations.indexOf(rec)} auditName={audit.company_name} onUpdate={handleUpdateRec} />
+                          <RecommendationCard key={i} rec={rec} index={result.recommendations.indexOf(rec)} auditName={audit.company_name} onUpdate={handleUpdateRec} discount={offersByTool[rec.name]?.[0]} />
                         ))}
                       </div>
                     </div>
@@ -461,7 +465,7 @@ export default function Results() {
           ) : (
             <div className="space-y-3">
               {result.recommendations?.map((rec, i) => (
-                <RecommendationCard key={i} rec={rec} index={i} auditName={audit.company_name} onUpdate={handleUpdateRec} />
+                <RecommendationCard key={i} rec={rec} index={i} auditName={audit.company_name} onUpdate={handleUpdateRec} discount={offersByTool[rec.name]?.[0]} />
               ))}
             </div>
           )
@@ -470,6 +474,7 @@ export default function Results() {
             recommendations={result.recommendations || []}
             auditName={audit.company_name}
             monthlyBudget={audit.monthly_budget}
+            discountsByTool={offersByTool}
           />
         )}
       </motion.div>
