@@ -4,7 +4,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 // Lists all third-party OAuth apps that have been granted access across the org.
 // Requires a Service Account with domain-wide delegation and the Admin SDK scope.
 // This replaces the need for a browser extension — it finds every shadow IT app at once.
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
@@ -127,4 +127,4 @@ Deno.serve(async (req) => {
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
-});
+}

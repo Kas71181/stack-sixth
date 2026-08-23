@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
@@ -9,15 +9,11 @@ Deno.serve(async (req) => {
     }
 
     const { domain } = await req.json().catch(() => ({}));
-    let accessToken = Deno.env.get("GOOGLE_WORKSPACE_ACCESS_TOKEN");
+    const stored = await base44.entities.ApiCredential.filter({ service: 'google_workspace', created_by_id: user.id });
+    const accessToken = stored[0]?.api_key || null;
 
     if (!accessToken) {
-      const stored = await base44.entities.ApiCredential.filter({ service: 'google_workspace', created_by_id: user.id });
-      accessToken = stored[0]?.api_key || null;
-    }
-
-    if (!accessToken) {
-      return Response.json({ error: 'Google Workspace access token not configured. Set GOOGLE_WORKSPACE_ACCESS_TOKEN env var or save it in Settings → API Credentials.' }, { status: 400 });
+      return Response.json({ error: 'Google Workspace access token not configured. Save it in Settings → API Credentials.' }, { status: 400 });
     }
     if (!domain) {
       return Response.json({ error: 'domain is required' }, { status: 400 });
@@ -77,4 +73,4 @@ Deno.serve(async (req) => {
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
-});
+}

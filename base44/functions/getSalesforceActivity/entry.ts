@@ -9,18 +9,10 @@ export default async function(req) {
     if (access.error) return access.error;
     const user = access.user;
 
-    let clientId = Deno.env.get("SALESFORCE_CLIENT_ID");
-    let clientSecret = Deno.env.get("SALESFORCE_CLIENT_SECRET");
-    let instanceUrl = Deno.env.get("SALESFORCE_INSTANCE_URL");
-
-    if (!clientId || !clientSecret || !instanceUrl) {
-      const stored = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'salesforce', created_by_id: user.id });
-      if (stored[0]) {
-        clientId = stored[0].api_key || clientId;
-        clientSecret = stored[0].extra_fields?.client_secret || clientSecret;
-        instanceUrl = stored[0].extra_fields?.instance_url || instanceUrl;
-      }
-    }
+    const stored = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'salesforce', created_by_id: user.id });
+    const clientId = stored[0]?.api_key;
+    const clientSecret = stored[0]?.extra_fields?.client_secret;
+    const instanceUrl = stored[0]?.extra_fields?.instance_url;
 
     if (!clientId || !clientSecret || !instanceUrl) {
       return Response.json({ success: false, not_configured: true, error: 'Salesforce credentials not configured' }, { status: 200 });
