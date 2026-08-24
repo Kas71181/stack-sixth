@@ -12,6 +12,17 @@ const fade = (delay = 0) => ({
   transition: { duration: 0.4, delay },
 });
 
+const getNextRenewalDate = (renewalDate, frequency) => {
+  if (!renewalDate || !["monthly", "quarterly", "annual"].includes(frequency)) return null;
+  const next = new Date(`${renewalDate}T12:00:00`);
+  while (next <= new Date()) {
+    if (frequency === "monthly") next.setMonth(next.getMonth() + 1);
+    if (frequency === "quarterly") next.setMonth(next.getMonth() + 3);
+    if (frequency === "annual") next.setFullYear(next.getFullYear() + 1);
+  }
+  return next.toISOString().split("T")[0];
+};
+
 export default function LifecycleGovernance({ embedded = false }) {
   const { user } = useAuth();
   const [data, setData] = useState(null);
@@ -62,10 +73,20 @@ export default function LifecycleGovernance({ embedded = false }) {
           });
           toast.success(`${alert.tool_name} contract cancelled`);
         } else if (action === "renew") {
+          const contract = await base44.entities.Contract.get(alert.contract_id);
+          const nextRenewalDate = getNextRenewalDate(contract.renewal_date, contract.billing_frequency);
+          if (!nextRenewalDate) throw new Error("A billing frequency is required to calculate the next renewal.");
+          const days = Math.ceil((new Date(`${nextRenewalDate}T12:00:00`) - new Date()) / 86400000);
           await base44.entities.Contract.update(alert.contract_id, {
+            last_renewal_date: contract.renewal_date,
+            renewal_date: nextRenewalDate,
+            decision_state: "continue",
+            last_reviewed: new Date().toISOString(),
+            needs_confirmation: false,
+            status: days <= 60 ? "Expiring Soon" : "Active",
             negotiation_leverage: `Renewed — good usage. ${new Date().toLocaleDateString()}`,
           });
-          toast.success(`${alert.tool_name} marked for renewal`);
+          toast.success(`${alert.tool_name} renewed through ${nextRenewalDate}`);
         } else if (action === "negotiate") {
           await base44.entities.Contract.update(alert.contract_id, {
             negotiation_leverage: `Negotiating — activity score ${alert.avg_activity_score}/100. Target 10-15% discount. ${new Date().toLocaleDateString()}`,
