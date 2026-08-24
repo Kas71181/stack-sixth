@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, BarChart3, Sparkles, AlertCircle, Plus, TrendingUp, Zap, RefreshCw } from "lucide-react";
+import { ArrowRight, BarChart3, Sparkles, AlertCircle, Plus, TrendingUp, Zap, RefreshCw, Plug, DollarSign, TrendingDown, AlertTriangle, Activity, Lightbulb, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/AuthContext";
@@ -18,10 +19,6 @@ import StackScore from "@/components/dashboard/StackScore";
 import PrivacyPolicyFooter from "@/components/dashboard/PrivacyPolicyFooter";
 import EvidenceSummaryStrip from "@/components/evidence/EvidenceSummaryStrip";
 import useEvidenceAnalytics from "@/hooks/useEvidenceAnalytics";
-import InventorySummary from "@/components/dashboard/InventorySummary";
-import UsageSummary from "@/components/dashboard/UsageSummary";
-import OpportunitySummary from "@/components/dashboard/OpportunitySummary";
-import NextActionsSummary from "@/components/dashboard/NextActionsSummary";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -39,19 +36,19 @@ export default function Dashboard() {
     enabled: !!user?.id,
   });
 
-  const { data: recommendations } = useQuery({
+  const { data: recommendations = [] } = useQuery({
     queryKey: ["recommendations-dash", user?.id],
     queryFn: () => base44.entities.Recommendation.filter({ created_by_id: user?.id }, "-created_date", 100),
     enabled: !!user?.id,
   });
 
-  const { data: monitorReports } = useQuery({
+  const { data: monitorReports = [] } = useQuery({
     queryKey: ["monitor-reports-dash", user?.id],
     queryFn: () => base44.entities.ToolMonitor.filter({ created_by_id: user?.id }, "-created_date", 50),
     enabled: !!user?.id,
   });
 
-  const { data: userActivity } = useQuery({
+  const { data: userActivity = [] } = useQuery({
     queryKey: ["user-activity-dash", user?.id],
     queryFn: async () => {
       const [owned, company] = await Promise.all([
@@ -153,34 +150,136 @@ export default function Dashboard() {
     );
   }
 
-  // ── Returning user: trusted decision overview ───────────────────────────────
+  // ── Returning user: Command Center ──────────────────────────────────────────
   const firstName = user?.full_name?.split(" ")[0] || "there";
-  const summary = evidenceAnalytics?.summary;
-  if (!summary) return <div className="skeleton h-72 rounded-2xl" />;
-  const urgentRenewals = contracts.filter((contract) => {
-    if (!contract.renewal_date || contract.status === "Cancelled" || contract.needs_confirmation === true || contract.renewal_source === "inferred") return false;
-    const days = Math.ceil((new Date(contract.renewal_date) - new Date()) / 86400000);
-    return days >= 0 && days <= 30;
+  const latestAudit = completedAudits[0];
+  const totalMonthlySpend = latestAudit?.total_monthly_spend || 0;
+  const totalApps = latestAudit?.existing_software?.length || 0;
+  const openRecs = recommendations.filter((r) => r.status === "Open");
+  const potentialSavings = openRecs.reduce((s, r) => s + (r.estimated_monthly_savings || 0), 0);
+  const wastedUsers = userActivity.filter((u) => u.wasted_cost_flag);
+  const wastedCost = wastedUsers.reduce((s, u) => s + (u.license_cost_per_month || 0), 0);
+  const activeTools = userActivity.filter((u) => u.usage_status === "Active").length;
+
+  // Renewals within 30 days
+  const urgentRenewals = contracts.filter((c) => {
+    if (!c.renewal_date || c.status === "Cancelled" || c.needs_confirmation === true || c.renewal_source === "inferred") return false;
+    const d = Math.ceil((new Date(c.renewal_date) - new Date()) / 86400000);
+    return d >= 0 && d <= 30;
   });
+
+  // Stack score
+  const coveragePct = evidenceAnalytics?.coverage?.overall || 0;
+  const stackScore = Math.min(100, Math.round(
+    (coveragePct * 0.35) +
+    (openRecs.length === 0 ? 25 : Math.max(0, 25 - openRecs.length * 3)) +
+    (urgentRenewals.length === 0 ? 20 : Math.max(0, 20 - urgentRenewals.length * 4)) +
+    (wastedUsers.length === 0 ? 20 : Math.max(0, 20 - wastedUsers.length * 2))
+  ));
 
   return (
     <div className="space-y-7">
-      <DailyPulse pendingRequests={purchaseRequests} urgentRenewals={urgentRenewals} verifiedSavings={summary.verifiedSavings || 0} dormantToolCount={summary.dormantApplications || 0} isLoading={evidenceLoading} />
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      {/* Daily Pulse */}
+      <DailyPulse
+        pendingRequests={purchaseRequests}
+        urgentRenewals={urgentRenewals}
+        verifiedSavings={potentialSavings}
+        dormantToolCount={wastedUsers.length}
+        isLoading={false}
+      />
+
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-primary/70">See · Understand · Decide · Act · Measure</p>
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight sm:text-[2rem]">Good {getTimeOfDay()}, {firstName}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Trusted evidence first. Unsupported metrics stay hidden.</p>
+          <p className="text-[11px] font-semibold text-primary/70 uppercase tracking-[0.1em] mb-1">Command Center</p>
+          <h1 className="text-2xl sm:text-[2rem] font-extrabold tracking-tight">Good {getTimeOfDay()}, {firstName}</h1>
+          <p className="text-sm text-muted-foreground mt-1">Here's what's happening across your software stack.</p>
         </div>
-        <Link to="/audit"><Button size="sm" className="gap-2"><Plus className="h-4 w-4" />New Audit</Button></Link>
+        <div className="flex gap-2">
+          <Link to="/my-stack?tab=connect"><Button variant="outline" size="sm" className="gap-2"><Plug className="w-3.5 h-3.5" />Connect Data</Button></Link>
+          <Link to="/audit"><Button size="sm" className="gap-2"><Plus className="w-3.5 h-3.5" />New Audit</Button></Link>
+        </div>
       </div>
+
+      {/* Evidence foundation */}
       <EvidenceSummaryStrip />
-      <div className="grid gap-5 lg:grid-cols-2">
-        <InventorySummary summary={summary} contracts={contracts} upcomingRenewals={urgentRenewals} />
-        <UsageSummary summary={summary} />
-        <OpportunitySummary summary={summary} />
-        <NextActionsSummary summary={summary} recommendations={recommendations} renewals={urgentRenewals} pendingRequests={purchaseRequests} />
+
+      {/* KPIs + Score */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <KpiCard label="Monthly Spend" value={totalMonthlySpend ? `$${Math.round(totalMonthlySpend).toLocaleString()}` : "—"} sub={totalMonthlySpend ? `${totalApps} apps` : "No financial evidence"} icon={DollarSign} color="blue" />
+        <KpiCard label="Verified Savings" value={potentialSavings ? `$${Math.round(potentialSavings).toLocaleString()}` : "$0"} sub="per month identified" icon={TrendingDown} color="emerald" />
+        <KpiCard label="Wasted Licenses" value={wastedUsers.length} sub={wastedCost ? `$${Math.round(wastedCost).toLocaleString()}/mo waste` : "No evidence yet"} icon={AlertTriangle} color="amber" />
+        <KpiCard label="Active Tools" value={activeTools || totalApps || "—"} sub="across your stack" icon={Activity} color="violet" />
+        <div className="col-span-2 lg:col-span-1">
+          <StackScore score={stackScore} />
+        </div>
       </div>
+
+      {/* Action Center + Renewal Timeline */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="lg:col-span-2 glass-card p-5">
+          <ActionCenter
+            recommendations={recommendations}
+            contracts={contracts}
+            monitors={monitorReports}
+            purchaseRequests={purchaseRequests}
+            maxItems={5}
+          />
+        </div>
+        <div className="glass-card p-5">
+          <RenewalTimeline contracts={contracts} />
+        </div>
+      </div>
+
+      {/* Recent activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Recent audits */}
+        <div className="glass-card p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-bold flex items-center gap-2"><BarChart3 className="w-4 h-4 text-primary" />Recent Audits</h2>
+            <Link to="/history" className="text-xs text-primary font-medium hover:underline flex items-center gap-1">View all <ArrowRight className="w-3 h-3" /></Link>
+          </div>
+          <div className="space-y-2">
+            {completedAudits.slice(0, 4).map((audit) => (
+              <Link key={audit.id} to={`/results/${audit.id}`} className="flex items-center justify-between p-3 rounded-xl hover:bg-black/4 dark:hover:bg-white/4 transition-colors group">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold truncate">{audit.company_name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{format(new Date(audit.created_date), "MMM d, yyyy")} · {audit.existing_software?.length || 0} tools</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  {audit.audit_score && <span className="text-xs font-mono font-bold text-primary">{audit.audit_score}/100</span>}
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                </div>
+              </Link>
+            ))}
+            {completedAudits.length === 0 && <p className="text-sm text-muted-foreground py-4 text-center">No completed audits yet</p>}
+          </div>
+        </div>
+
+        {/* Recent recommendations */}
+        <div className="glass-card p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-bold flex items-center gap-2"><Lightbulb className="w-4 h-4 text-amber-500" />Top Opportunities</h2>
+            <Link to="/savings?view=recommendations" className="text-xs text-primary font-medium hover:underline flex items-center gap-1">View all <ArrowRight className="w-3 h-3" /></Link>
+          </div>
+          <div className="space-y-2">
+            {openRecs.slice(0, 4).map((rec) => (
+              <div key={rec.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-black/4 dark:hover:bg-white/4 transition-colors">
+                <div className="min-w-0 flex items-center gap-3">
+                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${rec.priority === "High" ? "bg-red-500" : rec.priority === "Medium" ? "bg-amber-500" : "bg-blue-500"}`} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold truncate">{rec.tool_name}</p>
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">{rec.description}</p>
+                  </div>
+                </div>
+                {rec.estimated_monthly_savings > 0 && <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 flex-shrink-0 ml-2">${Math.round(rec.estimated_monthly_savings)}/mo</span>}
+              </div>
+            ))}
+            {openRecs.length === 0 && <p className="text-sm text-muted-foreground py-4 text-center">No open opportunities</p>}
+          </div>
+        </div>
+      </div>
+
       <PrivacyPolicyFooter />
     </div>
   );
@@ -191,4 +290,23 @@ function getTimeOfDay() {
   if (h < 12) return "morning";
   if (h < 17) return "afternoon";
   return "evening";
+}
+
+function KpiCard({ label, value, sub, icon: Icon, color }) {
+  const colors = {
+    blue: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+    emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    violet: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+  };
+  return (
+    <div className="stat-card hover-lift">
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${colors[color]}`}>
+        <Icon className="w-4 h-4" />
+      </div>
+      <p className="text-xl font-mono font-bold mt-2">{value}</p>
+      <p className="text-xs font-semibold">{label}</p>
+      <p className="text-[10px] text-muted-foreground">{sub}</p>
+    </div>
+  );
 }
