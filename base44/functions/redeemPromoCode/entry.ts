@@ -1,7 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.40";
 import Stripe from "npm:stripe@18.5.0";
 import { secrets } from "base44:runtime";
-import { validatePromo } from "../../shared/promo.ts";
+import { normalizeCode, validatePromo } from "../../shared/promo.ts";
 
 const addDays = (date, days) => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 
@@ -12,18 +12,36 @@ export default async function(req) {
     if (!user) return Response.json({ error: "Sign in before applying a code." }, { status: 401 });
 
     const { code } = await req.json();
-    const { promo, campaign, partner } = await validatePromo(base44, code);
-    if (promo.benefit_type !== "COMPLIMENTARY_PLAN") return Response.json({ error: "This code cannot be applied to an existing subscription." }, { status: 400 });
-
+    const normalizedCode = normalizeCode(code);
     const records = await base44.asServiceRole.entities.OrganizationSubscription.filter({ owner_user_id: user.id });
     const subscription = records[0];
     if (!subscription) return Response.json({ error: "Complete account setup before applying a code." }, { status: 400 });
-    const hasActiveBilling = Boolean(subscription.stripe_subscription_id && ["ACTIVE", "TRIALING"].includes(subscription.subscription_status));
 
-    const priorRedemptions = await base44.asServiceRole.entities.AcquisitionEvent.filter({ owner_user_id: user.id, event_name: "promo_code_redeemed" });
-    if (priorRedemptions.some((event) => event.properties?.promo_code === promo.code)) {
-      return Response.json({ error: "This code has already been applied to your account." }, { status: 409 });
+    const [promoMatches, priorRedemptions] = await Promise.all([
+      base44.asServiceRole.entities.PromotionalCode.filter({ code: normalizedCode }),
+      base44.asServiceRole.entities.AcquisitionEvent.filter({ owner_user_id: user.id, event_name: "promo_code_redeemed" })
+    ]);
+    const existingPromo = promoMatches[0];
+    const priorRedemption = priorRedemptions.find((event) => event.properties?.promo_code === normalizedCode);
+    const existingPromotionalEnd = subscription.promotional_ends_at ? new Date(subscription.promotional_ends_at) : null;
+    if (existingPromo && priorRedemption && existingPromotionalEnd && existingPromotionalEnd > new Date()) {
+      const hasActiveBilling = Boolean(subscription.stripe_subscription_id && ["ACTIVE", "TRIALING"].includes(subscription.subscription_status));
+      if (!hasActiveBilling) {
+        await base44.asServiceRole.entities.OrganizationSubscription.update(subscription.id, {
+          plan: existingPromo.eligible_plan,
+          subscription_status: "PROMOTIONAL",
+          billing_interval: "none",
+          promotional_access: true,
+          payment_status: "NOT_REQUIRED",
+          workspace_mode: "ACTIVE"
+        });
+      }
+      return Response.json({ success: true, already_applied: true, plan: existingPromo.eligible_plan, promotional_starts_at: subscription.promotional_started_at, promotional_ends_at: subscription.promotional_ends_at, message: "Your complimentary access is active." });
     }
+
+    const { promo, campaign, partner } = await validatePromo(base44, normalizedCode);
+    if (promo.benefit_type !== "COMPLIMENTARY_PLAN") return Response.json({ error: "This code cannot be applied to an existing subscription." }, { status: 400 });
+    const hasActiveBilling = Boolean(subscription.stripe_subscription_id && ["ACTIVE", "TRIALING"].includes(subscription.subscription_status));
 
     const durationDays = Number(promo.benefit_duration_days || campaign.benefit_duration_days || 0);
     const durationMonths = Number(promo.benefit_duration_months || campaign.benefit_duration_months || 0);

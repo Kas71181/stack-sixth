@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Gift } from "lucide-react";
 import { base44 } from "@/api/base44Client";
@@ -8,6 +9,7 @@ import { Label } from "@/components/ui/label";
 
 export default function PromoRedemptionCard({ hasActiveBilling = false }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -21,7 +23,11 @@ export default function PromoRedemptionCard({ hasActiveBilling = false }) {
       const response = await base44.functions.invoke("redeemPromoCode", { code });
       setSuccess(response.data);
       setCode("");
-      await queryClient.invalidateQueries({ queryKey: ["settings-subscription"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["settings-subscription"] }),
+        queryClient.invalidateQueries({ queryKey: ["subscription-access"] })
+      ]);
+      navigate("/app", { replace: true });
     } catch (requestError) {
       setError(requestError.response?.data?.error || requestError.message);
     } finally {
