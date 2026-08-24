@@ -111,7 +111,7 @@ export default function PurchaseRequests({ embedded = false }) {
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
           {isAdmin
-            ? "Review and approve software purchase requests from your team — evaluated by AI against your stack, budget, and policies."
+            ? "Review and approve software purchase requests from your team. Each request is evaluated by AI against your stack, budget, and policies."
             : "Submit software requests for IT manager review. Each request is evaluated by AI before approval."}
         </p>
       </motion.div>}

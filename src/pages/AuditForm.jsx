@@ -33,6 +33,7 @@ Rules:
 6. Keep recommendations practical and budget-aware.
 7. Use concise, specific business reasoning that references the company's ICP where relevant (industry, growth stage, customer type).
 8. If ICP data is available, tailor why_it_fits bullets to explicitly reference the company's industry, business model, or growth stage.
+9. Do not use em dashes or en dashes. Use commas, periods, or words instead.
 
 Now generate the JSON response from the input context.`;
 

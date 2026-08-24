@@ -82,14 +82,14 @@ function ComparisonCell({ rec, auditName, monthlyBudget, discount }) {
           <div>
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Monthly Cost</p>
             <p className={`text-base font-bold font-mono ${overBudget ? "text-destructive" : "text-foreground"}`}>
-              {rec.estimated_monthly_cost != null ? `$${rec.estimated_monthly_cost}` : "—"}
+              {rec.estimated_monthly_cost != null ? `$${rec.estimated_monthly_cost}` : "N/A"}
               {overBudget && <span className="text-[10px] font-normal ml-1 text-destructive">over budget</span>}
             </p>
           </div>
           <div className="text-right">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Potential Savings</p>
             <p className="text-base font-bold text-emerald-600 font-mono">
-              {rec.estimated_savings_opportunity ? `$${rec.estimated_savings_opportunity}/mo` : "—"}
+              {rec.estimated_savings_opportunity ? `$${rec.estimated_savings_opportunity}/mo` : "N/A"}
             </p>
           </div>
         </div>

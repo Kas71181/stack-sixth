@@ -108,7 +108,7 @@ export default function Dashboard() {
             <span className="text-gradient">software spend</span>
           </h1>
           <p className="text-muted-foreground text-base sm:text-lg leading-relaxed mb-8 max-w-[460px] mx-auto">
-            SMBs waste <strong className="text-foreground font-semibold">30–40%</strong> of their SaaS budget on duplicate tools, idle licenses, and overpriced plans. Stack Sixth finds it — in minutes.
+            SMBs waste <strong className="text-foreground font-semibold">30 to 40%</strong> of their SaaS budget on duplicate tools, idle licenses, and overpriced plans. Stack Sixth finds it in minutes.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
             <Link to="/audit">
@@ -132,7 +132,7 @@ export default function Dashboard() {
           {/* Value props */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
             {[
-              { emoji: "🔍", title: "Find wasted spend", desc: "Duplicate tools, idle licenses, overpriced plans — all surfaced automatically." },
+              { emoji: "🔍", title: "Find wasted spend", desc: "Duplicate tools, idle licenses, and overpriced plans are surfaced automatically." },
               { emoji: "💡", title: "Get a savings plan", desc: "AI ranks your biggest opportunities with estimated monthly savings." },
               { emoji: "📈", title: "Track & act", desc: "Assign actions, monitor renewals, and measure savings over time." },
             ].map(({ emoji, title, desc }, i) => (
@@ -197,10 +197,10 @@ export default function Dashboard() {
 
       {/* KPIs + Score */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <KpiCard label="Monthly Spend" value={totalMonthlySpend ? `$${Math.round(totalMonthlySpend).toLocaleString()}` : "—"} sub={totalMonthlySpend ? `${totalApps} apps` : "No financial evidence"} icon={DollarSign} color="blue" />
+        <KpiCard label="Monthly Spend" value={totalMonthlySpend ? `$${Math.round(totalMonthlySpend).toLocaleString()}` : "N/A"} sub={totalMonthlySpend ? `${totalApps} apps` : "No financial evidence"} icon={DollarSign} color="blue" />
         <KpiCard label="Verified Savings" value={potentialSavings ? `$${Math.round(potentialSavings).toLocaleString()}` : "$0"} sub="per month identified" icon={TrendingDown} color="emerald" />
         <KpiCard label="Wasted Licenses" value={dormantSeats} sub={dormantSeats ? "verified dormant seats" : "No verified dormancy"} icon={AlertTriangle} color="amber" />
-        <KpiCard label="Active Tools" value={activeTools || "—"} sub={activeTools ? "with verified live usage" : "No live usage evidence"} icon={Activity} color="violet" />
+        <KpiCard label="Active Tools" value={activeTools || "N/A"} sub={activeTools ? "with verified live usage" : "No live usage evidence"} icon={Activity} color="violet" />
         <div className="col-span-2 lg:col-span-1 min-w-0">
           <StackScore totalSpend={totalMonthlySpend} totalSavings={potentialSavings} totalTools={totalApps} dormantTools={Array.from({ length: trustedSummary.dormantApplications || 0 })} urgentRenewals={urgentRenewals} openRecs={openRecs} userActivity={[]} inventoryTools={integrations} />
         </div>

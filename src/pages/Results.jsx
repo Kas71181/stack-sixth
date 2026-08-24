@@ -13,6 +13,7 @@ import ProjectedROICalculator from "../components/results/ProjectedROICalculator
 import ExportPptxButton from "../components/results/ExportPptxButton";
 import DataConfidenceScore from "../components/results/DataConfidenceScore";
 import useDiscountOpportunities from "@/hooks/useDiscountOpportunities";
+import { sanitizeAiContent } from "@/lib/textFormatting";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -34,7 +35,8 @@ Rules:
 3. Do not recommend exact duplicates from existing_software unless replacement_candidate_for is set.
 4. For startup users, bias toward essential low-friction tools.
 5. For optimize users, bias toward integration, consolidation, and savings.
-6. Keep recommendations practical and budget-aware.`;
+6. Keep recommendations practical and budget-aware.
+7. Do not use em dashes or en dashes. Use commas, periods, or words instead.`;
 
 export default function Results() {
   const { id } = useParams();
@@ -168,7 +170,7 @@ export default function Results() {
         <div className="w-12 h-12 border-4 border-muted border-t-primary rounded-full animate-spin" />
         <div>
           <p className="font-bold text-lg">Analyzing your stack…</p>
-          <p className="text-sm text-muted-foreground mt-1">Our AI is generating your recommendations. This usually takes 15–30 seconds.</p>
+          <p className="text-sm text-muted-foreground mt-1">Our AI is generating your recommendations. This usually takes 15 to 30 seconds.</p>
         </div>
       </div>
     );
@@ -208,8 +210,8 @@ export default function Results() {
     );
   }
 
-  const result = audit.analysis_result || {};
-  const icp = audit.icp_profile;
+  const result = sanitizeAiContent(audit.analysis_result || {});
+  const icp = sanitizeAiContent(audit.icp_profile);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">

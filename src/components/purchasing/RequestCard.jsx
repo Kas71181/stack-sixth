@@ -1,6 +1,7 @@
 import { CheckCircle2, XCircle, Clock, AlertTriangle, TrendingDown, Sparkles, ExternalLink, ShieldCheck, Rocket } from "lucide-react";
 import { useState } from "react";
 import ProvisioningModal from "@/components/purchasing/ProvisioningModal";
+import { withoutLongDashes } from "@/lib/textFormatting";
 
 const STATUS_STYLES = {
   pending: { label: "Pending", cls: "bg-amber-50 text-amber-700 border-amber-200", icon: Clock },
@@ -62,7 +63,7 @@ export default function RequestCard({ request, onDecision, isSaving, onProvision
                 <Sparkles className="w-3.5 h-3.5 text-primary" />
                 <p className="text-[10px] font-bold uppercase tracking-wider text-primary">AI Assessment</p>
               </div>
-              <p className="text-sm leading-relaxed">{request.decision_reason}</p>
+              <p className="text-sm leading-relaxed">{withoutLongDashes(request.decision_reason)}</p>
             </div>
           )}
 
@@ -72,7 +73,7 @@ export default function RequestCard({ request, onDecision, isSaving, onProvision
               {request.conflict_flags.map((flag, i) => (
                 <div key={i} className="flex items-start gap-2 text-xs text-destructive">
                   <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                  <span>{flag}</span>
+                  <span>{withoutLongDashes(flag)}</span>
                 </div>
               ))}
             </div>
@@ -84,7 +85,7 @@ export default function RequestCard({ request, onDecision, isSaving, onProvision
               {request.redundancy_warnings.map((w, i) => (
                 <div key={i} className="flex items-start gap-2 text-xs text-amber-600">
                   <TrendingDown className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                  <span>{w}</span>
+                  <span>{withoutLongDashes(w)}</span>
                 </div>
               ))}
             </div>
@@ -172,7 +173,7 @@ export default function RequestCard({ request, onDecision, isSaving, onProvision
 
           {request.status === "provisioned" && (
             <div className="flex items-center gap-1.5 text-xs text-primary font-medium pt-1">
-              <Rocket className="w-3.5 h-3.5" /> Provisioned — added to your stack
+              <Rocket className="w-3.5 h-3.5" /> Provisioned and added to your stack
             </div>
           )}
         </div>

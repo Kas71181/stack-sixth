@@ -49,8 +49,8 @@ export default function RenewalTimeline({ contracts }) {
 
   const buckets = [
     { label: "Next 14 days", color: "text-red-600", items: all.filter((t) => t.days <= 14) },
-    { label: "15–30 days", color: "text-amber-600", items: all.filter((t) => t.days > 14 && t.days <= 30) },
-    { label: "31–90 days", color: "text-muted-foreground", items: all.filter((t) => t.days > 30) },
+    { label: "15 to 30 days", color: "text-amber-600", items: all.filter((t) => t.days > 14 && t.days <= 30) },
+    { label: "31 to 90 days", color: "text-muted-foreground", items: all.filter((t) => t.days > 30) },
   ].filter((b) => b.items.length > 0);
 
   return (

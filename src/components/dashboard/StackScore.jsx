@@ -158,10 +158,10 @@ export default function StackScore({
           <TrendingDown className="w-3.5 h-3.5 text-rose-500 flex-shrink-0" />
         )}
         <p className="text-[11px] text-muted-foreground leading-snug">
-          {score >= 85 && "Your stack is well-optimized — keep monitoring renewals."}
-          {score >= 70 && score < 85 && "Solid shape — a few actions could push you higher."}
-          {score >= 50 && score < 70 && "Several areas to improve — tackle your open actions first."}
-          {score < 50 && "Needs attention — start by addressing dormant tools and renewals."}
+          {score >= 85 && "Your stack is well-optimized. Keep monitoring renewals."}
+          {score >= 70 && score < 85 && "Solid shape. A few actions could push you higher."}
+          {score >= 50 && score < 70 && "Several areas need improvement. Tackle your open actions first."}
+          {score < 50 && "Needs attention. Start by addressing dormant tools and renewals."}
         </p>
       </div>
     </div>

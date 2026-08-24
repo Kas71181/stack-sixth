@@ -155,7 +155,7 @@ export default function ROISimulator({ recommendations }) {
               <span className="font-semibold">
                 {monthlySavings > 0
                   ? `Month ${Math.ceil((migrationCost / monthlySavings) + 3) || 1}`
-                  : "—"}
+                  : "N/A"}
               </span>
             </div>
           </div>

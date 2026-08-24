@@ -7,6 +7,7 @@ import SupportEscalationButton from "./SupportEscalationButton";
 import LiveSupportChat from "@/components/support/LiveSupportChat";
 import { useAuth } from "@/lib/AuthContext";
 import { useLocation } from "react-router-dom";
+import { withoutLongDashes } from "@/lib/textFormatting";
 
 const PAGE_LABELS = {
   "/": "Dashboard",
@@ -52,7 +53,7 @@ export default function AssistantChat({ audits, recommendations, monitorReports,
 ${completedAudits.slice(0, 5).map((a) => `- ${a.company_name}: ${a.existing_software?.length || 0} tools, ${a.team_size} people, $${a.monthly_budget || 0}/mo budget`).join("\n")}
 
 **Open Recommendations:** ${openRecs.length} open, $${totalSavings.toLocaleString()}/mo total savings identified
-${openRecs.slice(0, 5).map((r) => `- [${r.priority}] ${r.tool_name}: ${r.category} — $${r.estimated_monthly_savings || 0}/mo`).join("\n")}
+${openRecs.slice(0, 5).map((r) => `- [${r.priority}] ${r.tool_name}: ${r.category}, $${r.estimated_monthly_savings || 0}/mo`).join("\n")}
 
 **Contracts expiring in 60 days:** ${urgentContracts.length}
 ${urgentContracts.slice(0, 3).map((c) => `- ${c.vendor_name}: renews ${c.renewal_date}, $${c.monthly_cost || 0}/mo`).join("\n")}
@@ -111,7 +112,7 @@ Use this context to give specific, data-driven answers. Reference actual numbers
     setConversationError("");
     const text = input.trim();
     setInput("");
-    const content = `[SYSTEM CONTEXT — use this silently]\n${buildContextMessage()}\n\n[USER QUESTION]\n${text}`;
+    const content = `[SYSTEM CONTEXT: use this silently]\n${buildContextMessage()}\n\n[USER QUESTION]\n${text}`;
     clearTimeout(sendTimeoutRef.current);
     sendTimeoutRef.current = setTimeout(() => {
       setSending(false);
@@ -128,8 +129,8 @@ Use this context to give specific, data-driven answers. Reference actual numbers
   };
 
   const displayContent = (message) => {
-    if (message.role !== "user") return message.content;
-    return message.content?.split("[USER QUESTION]\n").pop() || message.content;
+    const content = message.role === "user" ? message.content?.split("[USER QUESTION]\n").pop() || message.content : message.content;
+    return withoutLongDashes(content);
   };
 
   const visibleMessages = messages.filter((m) => m.role === "user" || m.role === "assistant");

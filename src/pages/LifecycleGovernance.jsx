@@ -56,12 +56,12 @@ export default function LifecycleGovernance({ embedded = false }) {
         if (action === "cancel") {
           await base44.entities.SaasIntegration.update(alert.integration_id, {
             connection_status: "Manual Upload",
-            notes: `Cancelled — ${alert.inactive_pct}% inactive users. ${new Date().toLocaleDateString()}`,
+            notes: `Cancelled. ${alert.inactive_pct}% inactive users. ${new Date().toLocaleDateString()}`,
           });
           toast.success(`${alert.tool_name} marked for cancellation`);
         } else if (action === "downgrade") {
           await base44.entities.SaasIntegration.update(alert.integration_id, {
-            notes: `Downgrade recommended — ${alert.inactive_pct}% inactive. Downgrading seats from ${alert.licensed_seats}.`,
+            notes: `Downgrade recommended. ${alert.inactive_pct}% inactive. Downgrading seats from ${alert.licensed_seats}.`,
           });
           toast.success(`${alert.tool_name} marked for downgrade`);
         }
@@ -69,7 +69,7 @@ export default function LifecycleGovernance({ embedded = false }) {
         if (action === "cancel") {
           await base44.entities.Contract.update(alert.contract_id, {
             status: "Cancelled",
-            negotiation_leverage: `Cancelled — low activity (${alert.avg_activity_score}/100). ${new Date().toLocaleDateString()}`,
+            negotiation_leverage: `Cancelled due to low activity (${alert.avg_activity_score}/100). ${new Date().toLocaleDateString()}`,
           });
           toast.success(`${alert.tool_name} contract cancelled`);
         } else if (action === "renew") {
@@ -84,12 +84,12 @@ export default function LifecycleGovernance({ embedded = false }) {
             last_reviewed: new Date().toISOString(),
             needs_confirmation: false,
             status: days <= 60 ? "Expiring Soon" : "Active",
-            negotiation_leverage: `Renewed — good usage. ${new Date().toLocaleDateString()}`,
+            negotiation_leverage: `Renewed with good usage. ${new Date().toLocaleDateString()}`,
           });
           toast.success(`${alert.tool_name} renewed through ${nextRenewalDate}`);
         } else if (action === "negotiate") {
           await base44.entities.Contract.update(alert.contract_id, {
-            negotiation_leverage: `Negotiating — activity score ${alert.avg_activity_score}/100. Target 10-15% discount. ${new Date().toLocaleDateString()}`,
+            negotiation_leverage: `Negotiating with activity score ${alert.avg_activity_score}/100. Target 10-15% discount. ${new Date().toLocaleDateString()}`,
           });
           toast.success(`${alert.tool_name} marked for negotiation`);
         }
@@ -126,7 +126,7 @@ export default function LifecycleGovernance({ embedded = false }) {
           <ShieldCheck className="w-6 h-6 text-primary" />
           Lifecycle Governance
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">Automated guardrails — dormant tools get flagged for downgrade, renewals hit a decision gate before auto-renewing.</p>
+        <p className="text-sm text-muted-foreground mt-1">Automated guardrails flag dormant tools for downgrade and send renewals through a decision gate before auto-renewing.</p>
       </motion.div>}
 
       {/* Summary stats */}
@@ -183,7 +183,7 @@ export default function LifecycleGovernance({ embedded = false }) {
           <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center mx-auto mb-4">
             <ShieldCheck className="w-6 h-6 text-emerald-500" />
           </div>
-          <p className="font-semibold text-sm">All clear — no lifecycle alerts</p>
+          <p className="font-semibold text-sm">All clear. No lifecycle alerts</p>
           <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">Your tools are healthy and no renewals need immediate attention.</p>
         </motion.div>
       ) : (

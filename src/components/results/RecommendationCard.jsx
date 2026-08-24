@@ -79,7 +79,7 @@ export default function RecommendationCard({ rec, index, auditName = "", onUpdat
     setCreatingIssue(true);
     try {
       const res = await base44.functions.invoke("createLinearIssue", {
-        title: `[Stack Sixth] ${rec.name} — ${rec.category}`,
+        title: `[Stack Sixth] ${rec.name}: ${rec.category}`,
         description: `**Recommendation from Stack Sixth**\n\n${rec.savings_or_roi_note || ""}\n\n**Why it fits:**\n${(rec.why_it_fits || []).map((w) => `- ${w}`).join("\n")}\n\nPriority: ${rec.implementation_priority}\nEstimated savings: $${rec.estimated_savings_opportunity || 0}/mo`,
         priority: rec.implementation_priority === "high" ? 1 : rec.implementation_priority === "medium" ? 2 : 3,
       });

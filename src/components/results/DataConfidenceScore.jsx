@@ -13,7 +13,7 @@ function computeConfidence(audit) {
     score += 20;
     reasons.push("ICP profile detected from website");
   } else {
-    warnings.push("No website provided — recommendations use manual input only");
+    warnings.push("No website provided. Recommendations use manual input only");
   }
 
   // Has existing software — 20pts
@@ -23,7 +23,7 @@ function computeConfidence(audit) {
     score += 20;
     reasons.push(`${sw.length} existing tool${sw.length > 1 ? "s" : ""} provided`);
   } else {
-    warnings.push("No existing software entered — stack recommendations may be generic");
+    warnings.push("No existing software entered. Stack recommendations may be generic");
   }
 
   // Costs provided on tools — 20pts
@@ -34,7 +34,7 @@ function computeConfidence(audit) {
     reasons.push(`Cost data provided for ${withCosts.length}/${sw.length} tools`);
   } else if (sw.length > 0) {
     score += 8;
-    warnings.push("Most tools are missing cost data — savings estimates may be inaccurate");
+    warnings.push("Most tools are missing cost data. Savings estimates may be inaccurate");
   }
 
   // Monthly budget set — 15pts
@@ -43,7 +43,7 @@ function computeConfidence(audit) {
     score += 15;
     reasons.push("Monthly budget defined");
   } else {
-    warnings.push("No budget set — budget-fit analysis is approximate");
+    warnings.push("No budget set. Budget-fit analysis is approximate");
   }
 
   // Business processes filled — 15pts
@@ -52,7 +52,7 @@ function computeConfidence(audit) {
     score += 15;
     reasons.push("Business processes documented");
   } else {
-    warnings.push("Few business processes selected — workflow fit may be generic");
+    warnings.push("Few business processes selected. Workflow fit may be generic");
   }
 
   // Pain points filled — 10pts

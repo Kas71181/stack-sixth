@@ -22,7 +22,7 @@ export default function QuickScan() {
       wasteMax,
       tools: estimatedTools,
       categories: ["Communication tools", "Project management", "CRM & Sales"],
-      insight: `Companies with ${size} people typically waste 28–40% of their SaaS budget on unused licenses and duplicate tools.`,
+      insight: `Companies with ${size} people typically waste 28 to 40% of their SaaS budget on unused licenses and duplicate tools.`,
       budget: monthlyBudget,
     });
   };
@@ -37,7 +37,7 @@ export default function QuickScan() {
 
         <div className="grid grid-cols-3 gap-3 text-center">
           <div className="bg-white/80 rounded-xl p-3 border border-white">
-            <p className="text-2xl font-extrabold text-destructive">${estimate.wasteMin.toLocaleString()}–${estimate.wasteMax.toLocaleString()}</p>
+            <p className="text-2xl font-extrabold text-destructive">${estimate.wasteMin.toLocaleString()} to $${estimate.wasteMax.toLocaleString()}</p>
             <p className="text-[10px] text-muted-foreground mt-0.5">Estimated monthly waste</p>
           </div>
           <div className="bg-white/80 rounded-xl p-3 border border-white">
@@ -76,7 +76,7 @@ export default function QuickScan() {
         <p className="font-bold text-sm">30-Second Waste Estimate</p>
       </div>
       <p className="text-xs text-muted-foreground mb-4">
-        Tell us two numbers — we'll estimate your monthly SaaS waste instantly.
+        Tell us two numbers, and we'll estimate your monthly SaaS waste instantly.
       </p>
 
       <div className="flex gap-2 mb-3">

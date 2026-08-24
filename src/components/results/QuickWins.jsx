@@ -1,4 +1,5 @@
 import { Zap } from "lucide-react";
+import { withoutLongDashes } from "@/lib/textFormatting";
 
 export default function QuickWins({ wins }) {
   if (!wins?.length) return null;
@@ -15,7 +16,7 @@ export default function QuickWins({ wins }) {
             <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
               {i + 1}
             </span>
-            {w}
+            {withoutLongDashes(w)}
           </li>
         ))}
       </ul>

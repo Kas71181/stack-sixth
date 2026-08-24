@@ -71,7 +71,7 @@ export default function SavingsScoreboard({ recommendations, audits }) {
       {inProgress.length > 0 && (
         <div className="mt-3 flex items-center gap-1.5 text-xs text-emerald-700">
           <Clock className="w-3.5 h-3.5" />
-          <span>{inProgress.length} action{inProgress.length > 1 ? "s" : ""} in progress — keep going!</span>
+          <span>{inProgress.length} action{inProgress.length > 1 ? "s" : ""} in progress. Keep going!</span>
         </div>
       )}
     </div>
