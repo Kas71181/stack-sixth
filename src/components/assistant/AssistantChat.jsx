@@ -134,6 +134,7 @@ Use this context to give specific, data-driven answers. Reference actual numbers
   };
 
   const visibleMessages = messages.filter((m) => m.role === "user" || m.role === "assistant");
+  const supportRecommended = !!conversationError || visibleMessages.filter((message) => message.role === "user").length >= 4;
 
   return (
     <>
@@ -218,7 +219,7 @@ Use this context to give specific, data-driven answers. Reference actual numbers
 
           {/* Human support */}
           <div className="px-3 pt-2 border-t border-border">
-            <SupportEscalationButton conversation={conversation} messages={visibleMessages} page={PAGE_LABELS[location.pathname] || location.pathname} onEscalated={setSupportConversation} />
+            <SupportEscalationButton conversation={conversation} messages={visibleMessages} page={PAGE_LABELS[location.pathname] || location.pathname} onEscalated={setSupportConversation} recommended={supportRecommended} />
           </div>
 
           {/* Input */}
