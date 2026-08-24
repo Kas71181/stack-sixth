@@ -7,6 +7,7 @@ import { ClipboardList, Plus, CheckCircle2, Sparkles, ShieldCheck, AlertTriangle
 import RequestForm from "@/components/purchasing/RequestForm";
 import RequestCard from "@/components/purchasing/RequestCard";
 import { toast } from "sonner";
+import useCompanyContext from "@/hooks/useCompanyContext";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -19,16 +20,16 @@ const RESOLVED_STATUSES = ["approved", "rejected", "deferred", "provisioned"];
 export default function PurchaseRequests({ embedded = false }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const isAdmin = user?.role === "admin";
-  const [view, setView] = useState(isAdmin ? "queue" : "mine");
+  const { company, isManager, isLoading: isLoadingCompany } = useCompanyContext();
+  const isAdmin = isManager;
+  const [view, setView] = useState("mine");
   const [evaluating, setEvaluating] = useState(false);
   const [savingId, setSavingId] = useState(null);
 
-  // Fetch all — RLS ensures non-admins only see their own
   const { data: requests, isLoading } = useQuery({
-    queryKey: ["purchase-requests", user?.id],
-    queryFn: () => base44.entities.PurchaseRequest.filter({}, "-created_date", 100),
-    enabled: !!user?.id,
+    queryKey: ["purchase-requests", company?.id],
+    queryFn: () => base44.entities.PurchaseRequest.filter({ company_id: company.id }, "-created_date", 100),
+    enabled: !!company?.id,
   });
 
   const handleSubmit = async (formData) => {
@@ -37,19 +38,8 @@ export default function PurchaseRequests({ embedded = false }) {
       const evalRes = await base44.functions.invoke("evaluatePurchaseRequest", formData);
       const evaluation = evalRes.data;
 
-      const status = evaluation.ai_recommendation === "approve" ? "auto_approved" : "pending";
-
-      await base44.entities.PurchaseRequest.create({
-        ...formData,
-        status,
-        ai_recommendation: evaluation.ai_recommendation,
-        decision_reason: evaluation.decision_reason,
-        conflict_flags: evaluation.conflict_flags || [],
-        redundancy_warnings: evaluation.redundancy_warnings || [],
-        budget_impact_pct: evaluation.budget_impact_pct || 0,
-      });
-
-      queryClient.invalidateQueries({ queryKey: ["purchase-requests", user?.id] });
+      const status = evaluation.request?.status || (evaluation.ai_recommendation === "approve" ? "auto_approved" : "pending");
+      queryClient.invalidateQueries({ queryKey: ["purchase-requests", company?.id] });
       toast.success(
         status === "auto_approved"
           ? "Request auto-approved! 🎉"
@@ -72,7 +62,7 @@ export default function PurchaseRequests({ embedded = false }) {
         status,
         reviewer_note: note,
       });
-      queryClient.invalidateQueries({ queryKey: ["purchase-requests", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["purchase-requests", company?.id] });
       toast.success(`Request ${status}`);
     } catch {
       toast.error("Failed to update request");
@@ -81,8 +71,11 @@ export default function PurchaseRequests({ embedded = false }) {
     }
   };
 
+  if (isLoadingCompany) return <div className="py-16 text-center text-sm text-muted-foreground">Loading company workspace…</div>;
+  if (!company) return <div className="glass-card p-8 text-center text-sm text-muted-foreground">Complete company setup before using purchase requests.</div>;
+
   // Split data
-  const myRequests = requests?.filter((r) => r.created_by_id === user?.id) || [];
+  const myRequests = requests?.filter((r) => r.requester_user_id === user?.id || r.created_by_id === user?.id) || [];
   const queuePending = requests?.filter((r) => r.status === "pending" || r.status === "auto_approved") || [];
   const queueResolved = requests?.filter((r) => RESOLVED_STATUSES.includes(r.status)) || [];
   const myPending = myRequests.filter((r) => r.status === "pending" || r.status === "auto_approved");
@@ -208,10 +201,10 @@ export default function PurchaseRequests({ embedded = false }) {
         ) : (
           <div className="space-y-6">
             {queuePending.length > 0 && (
-              <RequestSection title="Awaiting Review" icon={AlertTriangle} iconClass="text-amber-500" items={queuePending} onDecision={handleDecision} isSaving={savingId} isAdmin={isAdmin} onProvisioned={() => queryClient.invalidateQueries({ queryKey: ["purchase-requests", user?.id] })} />
+              <RequestSection title="Awaiting Review" icon={AlertTriangle} iconClass="text-amber-500" items={queuePending} onDecision={handleDecision} isSaving={savingId} isAdmin={isAdmin} onProvisioned={() => queryClient.invalidateQueries({ queryKey: ["purchase-requests", company?.id] })} />
             )}
             {queueResolved.length > 0 && (
-              <RequestSection title="Resolved" icon={CheckCircle2} iconClass="text-emerald-500" items={queueResolved} onDecision={handleDecision} isSaving={savingId} isAdmin={isAdmin} onProvisioned={() => queryClient.invalidateQueries({ queryKey: ["purchase-requests", user?.id] })} />
+              <RequestSection title="Resolved" icon={CheckCircle2} iconClass="text-emerald-500" items={queueResolved} onDecision={handleDecision} isSaving={savingId} isAdmin={isAdmin} onProvisioned={() => queryClient.invalidateQueries({ queryKey: ["purchase-requests", company?.id] })} />
             )}
           </div>
         )
@@ -220,10 +213,10 @@ export default function PurchaseRequests({ embedded = false }) {
       ) : (
         <div className="space-y-6">
           {myPending.length > 0 && (
-            <RequestSection title="Awaiting Review" icon={AlertTriangle} iconClass="text-amber-500" items={myPending} onDecision={handleDecision} isSaving={savingId} isAdmin={isAdmin} onProvisioned={() => queryClient.invalidateQueries({ queryKey: ["purchase-requests", user?.id] })} />
+            <RequestSection title="Awaiting Review" icon={AlertTriangle} iconClass="text-amber-500" items={myPending} onDecision={handleDecision} isSaving={savingId} isAdmin={isAdmin} onProvisioned={() => queryClient.invalidateQueries({ queryKey: ["purchase-requests", company?.id] })} />
           )}
           {myResolved.length > 0 && (
-            <RequestSection title="Resolved" icon={CheckCircle2} iconClass="text-emerald-500" items={myResolved} onDecision={handleDecision} isSaving={savingId} isAdmin={isAdmin} onProvisioned={() => queryClient.invalidateQueries({ queryKey: ["purchase-requests", user?.id] })} />
+            <RequestSection title="Resolved" icon={CheckCircle2} iconClass="text-emerald-500" items={myResolved} onDecision={handleDecision} isSaving={savingId} isAdmin={isAdmin} onProvisioned={() => queryClient.invalidateQueries({ queryKey: ["purchase-requests", company?.id] })} />
           )}
         </div>
       )}

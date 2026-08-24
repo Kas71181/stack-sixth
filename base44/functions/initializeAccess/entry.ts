@@ -13,7 +13,8 @@ export default async function(req) {
     const companyData = body.company || {};
     if (!String(companyData.name || "").trim()) return Response.json({ error: "Company name is required" }, { status: 400 });
     const companies = await base44.entities.Company.filter({ created_by_id: user.id });
-    const safeCompany = { name: String(companyData.name).trim(), industry: String(companyData.industry || "Other"), employee_count: Number(companyData.employee_count || 0), company_size: companyData.company_size || "1-9", estimated_software_apps: Number(companyData.estimated_software_apps || 0), contact_role: String(companyData.contact_role || "Other"), contact_first_name: String(companyData.contact_first_name || ""), contact_last_name: String(companyData.contact_last_name || "") };
+    const ownerEmail = String(user.email || "").trim().toLowerCase();
+    const safeCompany = { name: String(companyData.name).trim(), owner_user_id: user.id, member_ids: [user.id], member_emails: ownerEmail ? [ownerEmail] : [], manager_ids: [user.id], manager_emails: ownerEmail ? [ownerEmail] : [], industry: String(companyData.industry || "Other"), employee_count: Number(companyData.employee_count || 0), company_size: companyData.company_size || "1-9", estimated_software_apps: Number(companyData.estimated_software_apps || 0), contact_role: String(companyData.contact_role || "Other"), contact_first_name: String(companyData.contact_first_name || ""), contact_last_name: String(companyData.contact_last_name || "") };
     const company = companies[0] ? await base44.entities.Company.update(companies[0].id, safeCompany) : await base44.entities.Company.create(safeCompany);
     const now = new Date();
     const existing = await base44.asServiceRole.entities.OrganizationSubscription.filter({ owner_user_id: user.id });

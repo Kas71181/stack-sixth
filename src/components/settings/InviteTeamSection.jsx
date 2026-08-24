@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 export default function InviteTeamSection() {
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("user");
+  const [role, setRole] = useState("member");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState([]);
 
@@ -15,7 +15,8 @@ export default function InviteTeamSection() {
     if (!email.trim() || !email.includes("@")) return toast.error("Enter a valid email address");
     setSending(true);
     try {
-      await base44.users.inviteUser(email.trim(), role);
+      await base44.users.inviteUser(email.trim(), "user");
+      await base44.functions.invoke("inviteCompanyMember", { email: email.trim(), company_role: role });
       setSent((prev) => [...prev, email.trim()]);
       setEmail("");
       toast.success(`Invite sent to ${email.trim()}`);
@@ -53,8 +54,8 @@ export default function InviteTeamSection() {
           onChange={(e) => setRole(e.target.value)}
           className="h-9 rounded-lg border border-input bg-background px-3 text-sm"
         >
-          <option value="user">Member</option>
-          <option value="admin">Admin</option>
+          <option value="member">Member</option>
+          <option value="manager">Company Manager</option>
         </select>
         <Button size="sm" onClick={handleInvite} disabled={sending || !email.trim()} className="gap-1.5">
           {sending ? <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <UserPlus className="w-3.5 h-3.5" />}

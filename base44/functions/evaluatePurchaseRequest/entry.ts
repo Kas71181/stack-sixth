@@ -1,4 +1,5 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { resolveOrganizationContext, companyScope } from '../../shared/organizationContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -13,15 +14,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'tool_name and category are required' }, { status: 400 });
     }
 
-    // Fetch user's existing data in parallel
-    const [integrations, companies, policies, rolePolicies] = await Promise.all([
-      base44.entities.SaasIntegration.filter({ created_by_id: user.id }),
-      base44.entities.Company.filter({ created_by_id: user.id }),
-      base44.entities.PurchasePolicy.filter({ is_active: true }),
-      base44.entities.RolePolicy.filter({ created_by_id: user.id }),
+    const context = await resolveOrganizationContext(base44, user);
+    if (!context) return Response.json({ error: 'Complete company setup before submitting a purchase request' }, { status: 400 });
+    const ownerId = context.company.owner_user_id || context.company.created_by_id;
+    const [integrations, policies, rolePolicies] = await Promise.all([
+      base44.asServiceRole.entities.SaasIntegration.filter({ company_id: context.companyId }),
+      base44.asServiceRole.entities.PurchasePolicy.filter({ is_active: true, created_by_id: ownerId }),
+      base44.asServiceRole.entities.RolePolicy.filter({ created_by_id: ownerId }),
     ]);
 
-    const company = companies[0];
+    const company = context.company;
     const monthlyBudget = company?.monthly_saas_budget || 0;
     const cost = estimated_monthly_cost || 0;
     const seats = requested_seats || 1;
@@ -128,7 +130,29 @@ Write a 2-3 sentence decision reason explaining why this request should be ${aiR
         : `Request requires human review due to: ${conflictFlags.join('; ') || 'cost or category considerations'}.`;
     }
 
+    const status = aiRecommendation === 'approve' ? 'auto_approved' : 'pending';
+    const request = await base44.asServiceRole.entities.PurchaseRequest.create({
+      ...companyScope(context),
+      requester_user_id: user.id,
+      requester_name: user.full_name || '',
+      requester_email: user.email || '',
+      tool_name,
+      category,
+      estimated_monthly_cost: cost,
+      requested_seats: seats,
+      justification: justification || '',
+      team_affected: team_affected || '',
+      use_case: use_case || '',
+      vendor_url: vendor_url || '',
+      status,
+      ai_recommendation: aiRecommendation,
+      decision_reason: decisionReason,
+      conflict_flags: conflictFlags,
+      redundancy_warnings: redundancyWarnings,
+      budget_impact_pct: budgetImpactPct,
+    });
     return Response.json({
+      request,
       ai_recommendation: aiRecommendation,
       decision_reason: decisionReason,
       conflict_flags: conflictFlags,

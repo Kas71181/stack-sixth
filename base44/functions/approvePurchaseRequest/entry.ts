@@ -1,11 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { resolveOrganizationContext } from '../../shared/organizationContext.ts';
 
 export default async function(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'admin') return Response.json({ error: 'Forbidden — admin access required' }, { status: 403 });
+    const context = await resolveOrganizationContext(base44, user);
+    if (!context?.isManager) return Response.json({ error: 'Company manager access required' }, { status: 403 });
 
     const { request_id, status, reviewer_note } = await req.json();
     if (!request_id || !status) return Response.json({ error: 'request_id and status are required' }, { status: 400 });
@@ -17,8 +19,8 @@ export default async function(req: Request): Promise<Response> {
     } catch {
       return Response.json({ error: 'Request not found' }, { status: 404 });
     }
-    if (!request) return Response.json({ error: 'Request not found' }, { status: 404 });
-    if (request.created_by_id === user.id) return Response.json({ error: 'Administrators cannot approve their own purchase requests' }, { status: 403 });
+    if (!request || request.company_id !== context.companyId) return Response.json({ error: 'Request not found' }, { status: 404 });
+    if (request.requester_user_id === user.id || request.created_by_id === user.id) return Response.json({ error: 'Company managers cannot approve their own purchase requests' }, { status: 403 });
 
     const updated = await base44.asServiceRole.entities.PurchaseRequest.update(request.id, {
       status,
