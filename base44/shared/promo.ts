@@ -1,5 +1,7 @@
 import { addMonths } from "./entitlements.ts";
 
+const addDays = (date, days) => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+
 export const normalizeCode = (value) => String(value || "").trim().toUpperCase();
 
 export async function validatePromo(base44, rawCode) {
@@ -22,5 +24,9 @@ export async function validatePromo(base44, rawCode) {
   const partners = await base44.asServiceRole.entities.Partner.filter({ partner_id: promo.partner_id });
   const partner = partners[0];
   if (!partner || partner.status !== "ACTIVE") throw new Error("This partner is not active.");
-  return { promo, campaign, partner, promotionalEndsAt: addMonths(now, promo.benefit_duration_months || campaign.benefit_duration_months || 1) };
+  const durationDays = promo.benefit_duration_days || campaign.benefit_duration_days;
+  const promotionalEndsAt = durationDays
+    ? addDays(now, durationDays)
+    : addMonths(now, promo.benefit_duration_months || campaign.benefit_duration_months || 1);
+  return { promo, campaign, partner, promotionalEndsAt };
 }

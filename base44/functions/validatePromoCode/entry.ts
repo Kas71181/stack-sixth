@@ -13,7 +13,7 @@ export default async function(req) {
     try {
       const result = await validatePromo(base44, code);
       await base44.asServiceRole.entities.PromoCodeAttempt.create({ user_id: user.id, code_prefix: normalizeCode(code).slice(0, 12), successful: true, reason: "VALID", attempted_at: new Date().toISOString() });
-      return Response.json({ valid: true, code: result.promo.code, partner_name: result.partner.partner_name, campaign_name: result.campaign.campaign_name, eligible_plan: result.promo.eligible_plan, benefit_type: result.promo.benefit_type, benefit_duration_months: result.promo.benefit_duration_months || result.campaign.benefit_duration_months });
+      return Response.json({ valid: true, code: result.promo.code, partner_name: result.partner.partner_name, campaign_name: result.campaign.campaign_name, eligible_plan: result.promo.eligible_plan, benefit_type: result.promo.benefit_type, benefit_duration_days: result.promo.benefit_duration_days || result.campaign.benefit_duration_days, benefit_duration_months: result.promo.benefit_duration_months || result.campaign.benefit_duration_months, code_type: result.promo.single_use ? "unique" : "reusable" });
     } catch (error) {
       await base44.asServiceRole.entities.PromoCodeAttempt.create({ user_id: user.id, code_prefix: normalizeCode(code).slice(0, 12), successful: false, reason: error.message, attempted_at: new Date().toISOString() });
       return Response.json({ error: error.message }, { status: 400 });

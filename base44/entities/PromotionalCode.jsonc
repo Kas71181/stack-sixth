@@ -17,6 +17,9 @@
     "benefit_value": {
       "type": "number"
     },
+    "benefit_duration_days": {
+      "type": "number"
+    },
     "benefit_duration_months": {
       "type": "number"
     },
