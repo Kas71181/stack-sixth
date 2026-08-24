@@ -6,6 +6,38 @@
       "type": "string",
       "title": "Company Name"
     },
+    "owner_user_id": {
+      "type": "string",
+      "title": "Workspace Owner User ID"
+    },
+    "member_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Workspace Member User IDs"
+    },
+    "member_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Workspace Member Emails"
+    },
+    "manager_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Workspace Manager User IDs"
+    },
+    "manager_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Workspace Manager Emails"
+    },
     "industry": {
       "type": "string",
       "title": "Industry"
@@ -100,7 +132,7 @@
   ],
   "rls": {
     "create": {
-      "created_by_id": "{{user.id}}"
+      "data.owner_user_id": "{{user.id}}"
     },
     "read": {
       "$or": [
@@ -108,9 +140,13 @@
           "created_by_id": "{{user.id}}"
         },
         {
-          "user_condition": {
-            "role": "admin"
-          }
+          "data.owner_user_id": "{{user.id}}"
+        },
+        {
+          "data.member_ids": "{{user.id}}"
+        },
+        {
+          "data.member_emails": "{{user.email}}"
         }
       ]
     },
@@ -120,8 +156,20 @@
           "created_by_id": "{{user.id}}"
         },
         {
-          "user_condition": {
-            "role": "admin"
+          "data.owner_user_id": "{{user.id}}"
+        },
+        {
+          "data.manager_ids": {
+            "$in": [
+              "{{user.id}}"
+            ]
+          }
+        },
+        {
+          "data.manager_emails": {
+            "$in": [
+              "{{user.email}}"
+            ]
           }
         }
       ]
@@ -132,9 +180,7 @@
           "created_by_id": "{{user.id}}"
         },
         {
-          "user_condition": {
-            "role": "admin"
-          }
+          "data.owner_user_id": "{{user.id}}"
         }
       ]
     }
