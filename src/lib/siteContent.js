@@ -23,7 +23,7 @@ export const site = {
     ["What is Stack Sixth?","Stack Sixth is a software-stack management platform that helps businesses organize applications, monitor subscriptions, understand access and usage evidence, prepare for renewals, and make better software decisions."],
     ["Do I need technical knowledge to use Stack Sixth?","No. Stack Sixth gives business, operations, finance, procurement, and IT teams a clearer way to manage software without complicated technical setup."],
     ["How do software connections work?","Supported applications can be connected through secure authorization flows. Availability depends on the provider and integration status."],
-    ["When will I receive access?","Your workspace is activated after account creation, payment-method verification, and confirmation of your 90-day trial subscription."],
+    ["When will I receive access?","Your workspace is activated after account creation, payment-method verification, and confirmation of your 30-day trial subscription."],
     ["Can I change my plan?","Yes. Eligible customers can manage their subscription, payment method, and plan through billing settings."],
     ["What happens if my payment fails?","You will be asked to update your payment method. Access may be limited after the configured grace period."],
     ["Can I cancel my subscription?","Yes. You can cancel through the billing portal. Access normally continues until the end of the current paid period or trial."],
