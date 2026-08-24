@@ -8,19 +8,33 @@
     },
     "industry": {
       "type": "string",
-      "enum": [
-        "SaaS",
-        "Agency",
-        "E-commerce",
-        "Healthcare",
-        "Finance",
-        "Other"
-      ],
       "title": "Industry"
     },
     "employee_count": {
       "type": "number",
       "title": "Employee Count"
+    },
+    "company_size": {
+      "type": "string",
+      "enum": [
+        "1-9",
+        "10-49",
+        "50-249",
+        "250-999",
+        "1000+"
+      ]
+    },
+    "estimated_software_apps": {
+      "type": "number"
+    },
+    "contact_role": {
+      "type": "string"
+    },
+    "contact_first_name": {
+      "type": "string"
+    },
+    "contact_last_name": {
+      "type": "string"
     },
     "monthly_saas_budget": {
       "type": "number",
@@ -28,51 +42,42 @@
     },
     "audit_score": {
       "type": "number",
-      "title": "Audit Score (0-100)"
+      "title": "Audit Score"
     },
     "last_audit_date": {
       "type": "string",
-      "format": "date",
-      "title": "Last Audit Date"
+      "format": "date"
     },
     "currency": {
       "type": "string",
-      "default": "USD",
-      "title": "Currency"
+      "default": "USD"
     },
     "fiscal_year_start": {
       "type": "string",
-      "default": "January",
-      "title": "Fiscal Year Start Month"
+      "default": "January"
     },
     "cost_alert_threshold": {
-      "type": "number",
-      "title": "Cost Alert Threshold ($)"
+      "type": "number"
     },
     "notif_weekly_digest": {
       "type": "boolean",
-      "default": true,
-      "title": "Notification: Weekly Digest"
+      "default": true
     },
     "notif_inactive_alerts": {
       "type": "boolean",
-      "default": true,
-      "title": "Notification: Inactive User Alerts"
+      "default": true
     },
     "notif_cost_spike": {
       "type": "boolean",
-      "default": true,
-      "title": "Notification: Cost Spike Alerts"
+      "default": true
     },
     "notif_renewal_reminders": {
       "type": "boolean",
-      "default": true,
-      "title": "Notification: Renewal Reminders"
+      "default": true
     },
     "notif_audit_complete": {
       "type": "boolean",
-      "default": false,
-      "title": "Notification: Audit Complete"
+      "default": false
     }
   },
   "required": [
@@ -83,13 +88,40 @@
       "created_by_id": "{{user.id}}"
     },
     "read": {
-      "created_by_id": "{{user.id}}"
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "update": {
-      "created_by_id": "{{user.id}}"
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "delete": {
-      "created_by_id": "{{user.id}}"
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     }
   }
 }
