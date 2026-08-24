@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
+import { ArrowLeft, LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
 
@@ -122,6 +122,12 @@ export default function Login() {
           )}
         </Button>
       </form>
+      <Button asChild variant="ghost" className="mt-4 w-full active:scale-[0.96]">
+        <Link to="/">
+          <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
+          Back to main site
+        </Link>
+      </Button>
     </AuthLayout>
   );
 }
