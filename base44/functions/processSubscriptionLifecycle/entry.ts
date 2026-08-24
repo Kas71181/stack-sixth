@@ -41,7 +41,7 @@ export default async function(req) {
       }
       if (subscription.promotional_access || !start) continue;
       const day = Math.floor((now.getTime() - new Date(start).getTime()) / 86400000);
-      const milestone = [90, 89, 85, 75, 60].find((value) => day >= value);
+      const milestone = [29, 25, 15].find((value) => day >= value);
       if (!milestone) continue;
       const eventName = `free_launch_day_${milestone}`;
       const prior = await base44.asServiceRole.entities.AcquisitionEvent.filter({ organization_id: subscription.organization_id, event_name: eventName });

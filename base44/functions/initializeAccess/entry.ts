@@ -9,7 +9,7 @@ export default async function(req) {
     if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
     const plan = String(body.plan || "STARTER").toUpperCase();
-    if (!["FREE_LAUNCH", "STARTER", "GROWTH", "SCALE", "ENTERPRISE"].includes(plan)) return Response.json({ error: "Invalid plan" }, { status: 400 });
+    if (!["STARTER", "GROWTH", "SCALE", "ENTERPRISE"].includes(plan)) return Response.json({ error: "Invalid plan" }, { status: 400 });
     const companyData = body.company || {};
     if (!String(companyData.name || "").trim()) return Response.json({ error: "Company name is required" }, { status: 400 });
     const companies = await base44.entities.Company.filter({ created_by_id: user.id });

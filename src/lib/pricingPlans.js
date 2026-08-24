@@ -6,4 +6,4 @@ export const FALLBACK_PLANS = [
   { plan_key: "ENTERPRISE", name: "Enterprise", description: "For larger organizations with custom requirements.", target: "Larger organizations", monthly_price: null, annual_price: null, integration_limit: -1, cta: "Contact Sales", features: ["Custom limits", "Custom integrations", "Dedicated onboarding", "Contract-based access"] }
 ];
 
-export const recommendedPlan = (size) => size === "1-9" ? "FREE_LAUNCH" : size === "10-49" ? "STARTER" : size === "50-249" ? "GROWTH" : size === "250-999" ? "SCALE" : "ENTERPRISE";
+export const recommendedPlan = (size) => ["1-9", "10-49"].includes(size) ? "STARTER" : size === "50-249" ? "GROWTH" : size === "250-999" ? "SCALE" : "ENTERPRISE";
