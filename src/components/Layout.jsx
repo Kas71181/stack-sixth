@@ -202,7 +202,7 @@ export default function Layout() {
                       Sign in
                     </button>
                     <Link
-                      to="/register"
+                      to="/pricing"
                       className="px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200 active:scale-[0.96] shadow-sm shadow-primary/25"
                     >
                       Sign Up
