@@ -3,6 +3,7 @@ import { Layers, Plug } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { connectorFor } from "@/lib/inventoryConnectors";
+import { dedupeTools } from "@/lib/connectionStatus";
 import ConnectionGuide from "@/components/connections/ConnectionGuide";
 import InventoryConnectionCard from "@/components/connections/InventoryConnectionCard";
 
@@ -12,12 +13,11 @@ export default function InventoryConnections() {
   const { data, isLoading } = useQuery({
     queryKey: ["inventory-connections", user?.id], enabled: !!user?.id,
     queryFn: async () => {
-      const [tools, owned, company] = await Promise.all([
+      const [tools, activities] = await Promise.all([
         base44.entities.SaasIntegration.filter({ created_by_id: user.id }),
         base44.entities.UserActivity.filter({ created_by_id: user.id, source: "live" }),
-        base44.entities.UserActivity.filter({ company_id: user.id, source: "live" }),
       ]);
-      return { tools, activities: [...owned, ...company] };
+      return { tools: dedupeTools(tools), activities };
     },
   });
   const liveNames = new Set((data?.activities || []).map((item) => item.tool_name?.trim().toLowerCase()));

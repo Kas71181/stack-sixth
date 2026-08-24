@@ -31,7 +31,7 @@ export default function MyStack() {
         <h1 className="text-2xl font-extrabold tracking-tight">My Stack</h1>
         <p className="mt-1 text-sm text-muted-foreground">Manage your tools, connections, and usage in one place.</p>
       </div>
-      <div className="tab-track flex w-fit max-w-full overflow-x-auto">
+      <div className="tab-track grid w-full grid-cols-2 gap-1 sm:flex sm:w-fit">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}

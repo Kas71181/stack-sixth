@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { CheckCircle2, Loader2, Plug, RefreshCw, AlertCircle, Zap, ExternalLink, Key, PlayCircle, PencilLine, Users, Activity, TrendingUp, X } from "lucide-react";
 import { toast } from "sonner";
 import DataPrivacyModal from "@/components/usage/DataPrivacyModal";
+import { toolLogoUrl } from "@/lib/toolLogos";
 
 const CONNECTORS = [
   {
@@ -13,7 +14,7 @@ const CONNECTORS = [
     functionName: "getSlackActivity",
     label: "Slack",
     description: "Real member list & activity signals",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Slack_icon_2019.svg/2048px-Slack_icon_2019.svg.png",
+    logo: toolLogoUrl("Slack"),
     setupUrl: "https://api.slack.com/apps",
     setupLabel: "Create Slack App →",
     scopes: "users:read, users:read.email, channels:read, team:read",
@@ -25,7 +26,7 @@ const CONNECTORS = [
     functionName: "getGitHubActivity",
     label: "GitHub",
     description: "Org members & commit activity",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg",
+    logo: toolLogoUrl("GitHub"),
     setupUrl: "https://github.com/settings/developers",
     setupLabel: "Create GitHub OAuth App →",
     scopes: "read:user, user:email, read:org",
@@ -37,7 +38,7 @@ const CONNECTORS = [
     functionName: "getNotionActivity",
     label: "Notion",
     description: "Workspace members & page edits",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png",
+    logo: toolLogoUrl("Notion"),
     setupUrl: "https://www.notion.so/my-integrations",
     setupLabel: "Create Notion Integration →",
     scopes: "read_content, read_users",
@@ -51,7 +52,7 @@ const API_KEY_CONNECTORS = [
     functionName: "getZoomActivity",
     label: "Zoom",
     description: "Meeting participants & usage",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Zoom_Logo_2022.svg/2560px-Zoom_Logo_2022.svg.png",
+    logo: toolLogoUrl("Zoom"),
     setupUrl: "https://marketplace.zoom.us/develop/create",
     setupLabel: "Create Server-to-Server OAuth App →",
     fields: [
@@ -65,7 +66,7 @@ const API_KEY_CONNECTORS = [
     functionName: "getApolloActivity",
     label: "Apollo.io",
     description: "Sales team activity & seat usage",
-    logo: "https://assets-global.website-files.com/60b86da97e58f877a9d4e89f/60e5db46929e39b89bed2e96_apollo-logo.png",
+    logo: toolLogoUrl("Apollo.io"),
     setupUrl: "https://app.apollo.io/#/settings/integrations/api",
     setupLabel: "Get Apollo API Key →",
     secretKey: "APOLLO_API_KEY",
@@ -76,7 +77,7 @@ const API_KEY_CONNECTORS = [
     functionName: "getSalesforceActivity",
     label: "Salesforce",
     description: "CRM users & login activity",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Salesforce.com_logo.svg/2560px-Salesforce.com_logo.svg.png",
+    logo: toolLogoUrl("Salesforce"),
     setupUrl: "https://help.salesforce.com/s/articleView?id=sf.connected_app_create.htm",
     setupLabel: "Create Connected App →",
     secretKey: "SALESFORCE_CLIENT_ID",
@@ -88,7 +89,7 @@ const API_KEY_CONNECTORS = [
     functionName: "getHubSpotActivity",
     label: "HubSpot",
     description: "CRM users & engagement activity",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/HubSpot_Logo.svg/2560px-HubSpot_Logo.svg.png",
+    logo: toolLogoUrl("HubSpot"),
     setupUrl: "https://app.hubspot.com/private-apps",
     setupLabel: "Create HubSpot Private App →",
     fields: [
@@ -102,7 +103,7 @@ const API_KEY_CONNECTORS = [
     functionName: "getQuickBooksActivity",
     label: "QuickBooks",
     description: "Employee list & account activity",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Intuit_QuickBooks_logo.svg/2560px-Intuit_QuickBooks_logo.svg.png",
+    logo: toolLogoUrl("QuickBooks"),
     setupUrl: "https://developer.intuit.com/app/developer/playground",
     setupLabel: "Generate Access Token (Intuit Playground) →",
     fields: [
@@ -115,7 +116,7 @@ const API_KEY_CONNECTORS = [
     functionName: "getBambooHRHeadcount",
     label: "BambooHR",
     description: "True headcount — employee list & departments",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/BambooHR_logo.svg/2560px-BambooHR_logo.svg.png",
+    logo: toolLogoUrl("BambooHR"),
     setupUrl: "https://app.bamboohr.com/settings/account/apikeys",
     setupLabel: "Generate BambooHR API Key →",
     hrisTag: true,
@@ -129,7 +130,7 @@ const API_KEY_CONNECTORS = [
     functionName: "getGoogleWorkspaceApps",
     label: "Google Workspace",
     description: "Auto-discover all OAuth apps org-wide",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/2048px-Google_%22G%22_Logo.svg.png",
+    logo: toolLogoUrl("Google Workspace"),
     setupUrl: "https://console.cloud.google.com/iam-admin/serviceaccounts",
     setupLabel: "Create Service Account →",
     discoveryTag: true,
