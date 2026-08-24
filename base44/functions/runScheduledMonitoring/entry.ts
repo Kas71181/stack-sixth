@@ -1,10 +1,11 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { requireAdmin } from '../../shared/requireAdmin.ts';
 
 // Called by scheduled automation — no user context, uses service role
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
+    const { dry_run = false } = await req.json().catch(() => ({}));
 
     // Only authenticated administrators may trigger system-wide monitoring.
     const access = await requireAdmin(base44);
@@ -16,8 +17,15 @@ export default async function(req) {
     const reportPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
     const results = [];
+    const seenAuditIds = new Set();
 
     for (const monitor of monitors) {
+      if (seenAuditIds.has(monitor.audit_id)) {
+        results.push({ audit_id: monitor.audit_id, skipped: true, reason: 'duplicate_monitor' });
+        continue;
+      }
+      seenAuditIds.add(monitor.audit_id);
+
       // Skip if a report for this period already exists
       const existing = await base44.asServiceRole.entities.ToolMonitor.filter({
         audit_id: monitor.audit_id,
@@ -29,8 +37,20 @@ export default async function(req) {
         continue;
       }
 
-      const audit = await base44.asServiceRole.entities.SoftwareAudit.get(monitor.audit_id);
-      if (!audit || audit.status !== 'completed') continue;
+      const audits = await base44.asServiceRole.entities.SoftwareAudit.filter({ id: monitor.audit_id });
+      const audit = audits[0];
+      if (!audit) {
+        results.push({ audit_id: monitor.audit_id, skipped: true, reason: 'audit_not_found' });
+        continue;
+      }
+      if (audit.status !== 'completed') {
+        results.push({ audit_id: monitor.audit_id, skipped: true, reason: 'audit_not_completed' });
+        continue;
+      }
+      if (dry_run) {
+        results.push({ audit_id: monitor.audit_id, ready: true });
+        continue;
+      }
 
       const recommendations = audit.analysis_result?.recommendations || [];
       const existingSoftware = audit.existing_software || [];
@@ -95,6 +115,7 @@ Respond as JSON:
         tools_snapshot: result.tools_snapshot,
         is_active: false,
         status: 'generated',
+        created_by_id: audit.created_by_id,
       });
 
       // Send email only to the audit owner
@@ -199,6 +220,7 @@ Respond as JSON:
 
     return Response.json({ success: true, processed: results.length, results });
   } catch (error) {
+    console.error('Scheduled monitoring failed', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 }

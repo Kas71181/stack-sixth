@@ -90,32 +90,36 @@ export default function OnboardingChecklist({ audits, recommendations, monitorRe
   return (
     <div className="glass-card overflow-hidden">
       {/* Header */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/30 transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-primary" />
-          </div>
-          <div className="text-left">
-            <p className="font-bold text-sm">Get the most out of Stack Sixth</p>
-            <p className="text-xs text-muted-foreground">{doneCount} of {totalCount} steps complete · {pct}% there</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2">
-            <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
-              <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+      <div className="flex items-center px-5 py-4 hover:bg-muted/30 transition-colors">
+        <button
+          type="button"
+          onClick={() => setCollapsed(!collapsed)}
+          className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left"
+          aria-expanded={!collapsed}
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-primary" />
             </div>
-            <span className="text-xs font-semibold text-primary">{pct}%</span>
+            <div className="min-w-0">
+              <p className="font-bold text-sm">Get the most out of Stack Sixth</p>
+              <p className="text-xs text-muted-foreground">{doneCount} of {totalCount} steps complete · {pct}% there</p>
+            </div>
           </div>
-          <button onClick={handleDismiss} className="p-1 hover:bg-muted rounded-md transition-colors" title="Dismiss">
-            <X className="w-3.5 h-3.5 text-muted-foreground" />
-          </button>
-          {collapsed ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronUp className="w-4 h-4 text-muted-foreground" />}
-        </div>
-      </button>
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-2">
+              <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+              </div>
+              <span className="text-xs font-semibold text-primary">{pct}%</span>
+            </div>
+            {collapsed ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronUp className="w-4 h-4 text-muted-foreground" />}
+          </div>
+        </button>
+        <button type="button" onClick={handleDismiss} className="ml-3 p-1 hover:bg-muted rounded-md transition-colors" title="Dismiss" aria-label="Dismiss onboarding checklist">
+          <X className="w-3.5 h-3.5 text-muted-foreground" />
+        </button>
+      </div>
 
       {/* Steps */}
       {!collapsed && (
