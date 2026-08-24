@@ -108,7 +108,7 @@ Use this context to give specific, data-driven answers. Reference actual numbers
 
       {/* Chat Window */}
       {open && (
-        <div className="fixed bottom-24 right-6 z-50 w-80 sm:w-96 bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden" style={{ height: "480px" }}>
+        <div className="fixed bottom-24 left-3 right-3 w-auto max-w-[calc(100vw-1.5rem)] sm:left-auto sm:right-6 sm:w-96 sm:max-w-none z-50 bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden" style={{ height: "480px" }}>
           {/* Header */}
           <div className="flex items-center gap-3 px-4 py-3 bg-primary text-primary-foreground">
             <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
