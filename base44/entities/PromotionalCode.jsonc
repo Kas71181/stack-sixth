@@ -80,7 +80,7 @@
     },
     "create": {
       "user_condition": {
-        "role": "admin"
+        "id": "6a188e324c7d088bf6af68e4"
       }
     },
     "update": {
