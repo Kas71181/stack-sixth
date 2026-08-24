@@ -220,6 +220,12 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Spend analysis */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <SpendByCategoryChart audits={completedAudits} />
+        <MonthlySpendTrendChart audits={completedAudits} />
+      </div>
+
       {/* Recent activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Recent audits */}
