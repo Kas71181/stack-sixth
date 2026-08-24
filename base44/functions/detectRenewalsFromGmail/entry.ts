@@ -16,7 +16,13 @@ export default async function(req) {
     const headers = { Authorization: `Bearer ${accessToken}` };
     const query = 'newer_than:2y (invoice OR receipt OR renewal OR subscription OR billing OR discount OR "special offer" OR promo OR coupon OR "payment received")';
     const listRes = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=80&q=${encodeURIComponent(query)}`, { headers });
-    if (!listRes.ok) throw new Error(`Gmail search failed (${listRes.status})`);
+    if (!listRes.ok) {
+      const data = await listRes.json().catch(() => ({}));
+      const permissionError = listRes.status === 403
+        ? 'Gmail read permission is missing. Reconnect Gmail and approve read-only email access.'
+        : `Gmail search failed (${listRes.status})`;
+      throw new Error(data?.error?.message || permissionError);
+    }
     const messages = (await listRes.json()).messages || [];
     const decode = (value) => { if (!value) return ''; const normalized = value.replace(/-/g, '+').replace(/_/g, '/'); return atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=')); };
     const extractText = (payload) => { let text = payload?.body?.data ? decode(payload.body.data) : ''; for (const part of payload?.parts || []) text += `\n${extractText(part)}`; return text.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' '); };

@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 
 // Known SaaS tools by domain keyword
 const SAAS_DOMAIN_MAP = [
@@ -133,7 +133,7 @@ function extractEmailText(payload) {
   return text;
 }
 
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
@@ -149,6 +149,12 @@ Deno.serve(async (req) => {
       { headers }
     );
     const listData = await listRes.json();
+    if (!listRes.ok) {
+      const permissionError = listRes.status === 403
+        ? 'Gmail read permission is missing. Reconnect Gmail and approve read-only email access.'
+        : `Gmail search failed (${listRes.status})`;
+      throw new Error(listData?.error?.message || permissionError);
+    }
     const messages = listData.messages || [];
 
     const allDomains = new Set();
@@ -181,4 +187,4 @@ Deno.serve(async (req) => {
   } catch (error) {
     return Response.json({ not_configured: true, error: error.message }, { status: 200 });
   }
-});
+}
