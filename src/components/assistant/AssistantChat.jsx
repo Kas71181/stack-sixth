@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { MessageSquare, X, Send, Loader2, Bot } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import ProactiveInsights from "./ProactiveInsights";
+import SupportEscalationButton from "./SupportEscalationButton";
 import { useLocation } from "react-router-dom";
 
 const PAGE_LABELS = {
@@ -168,8 +169,13 @@ Use this context to give specific, data-driven answers. Reference actual numbers
             <div ref={bottomRef} />
           </div>
 
+          {/* Human support */}
+          <div className="px-3 pt-2 border-t border-border">
+            <SupportEscalationButton conversation={conversation} messages={visibleMessages} page={PAGE_LABELS[location.pathname] || location.pathname} />
+          </div>
+
           {/* Input */}
-          <div className="p-3 border-t border-border flex gap-2">
+          <div className="p-3 pt-2 flex gap-2">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
