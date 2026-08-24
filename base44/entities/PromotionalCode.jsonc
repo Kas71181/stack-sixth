@@ -75,22 +75,22 @@
   "rls": {
     "read": {
       "user_condition": {
-        "role": "admin"
+        "email": "info@smithsworkllc.com"
       }
     },
     "create": {
       "user_condition": {
-        "id": "6a188e324c7d088bf6af68e4"
+        "email": "info@smithsworkllc.com"
       }
     },
     "update": {
       "user_condition": {
-        "role": "admin"
+        "email": "info@smithsworkllc.com"
       }
     },
     "delete": {
       "user_condition": {
-        "role": "admin"
+        "email": "info@smithsworkllc.com"
       }
     }
   }
