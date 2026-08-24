@@ -1,0 +1,77 @@
+{
+  "name": "PartnerCampaign",
+  "type": "object",
+  "properties": {
+    "campaign_id": {
+      "type": "string"
+    },
+    "partner_id": {
+      "type": "string"
+    },
+    "campaign_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "INACTIVE"
+      ],
+      "default": "ACTIVE"
+    },
+    "benefit_type": {
+      "type": "string",
+      "enum": [
+        "COMPLIMENTARY_PLAN",
+        "PERCENT_DISCOUNT",
+        "FIXED_DISCOUNT"
+      ]
+    },
+    "benefit_value": {
+      "type": "number"
+    },
+    "benefit_duration_months": {
+      "type": "number"
+    },
+    "eligible_plan": {
+      "type": "string"
+    },
+    "starts_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ends_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "campaign_id",
+    "partner_id",
+    "campaign_name",
+    "benefit_type",
+    "eligible_plan"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

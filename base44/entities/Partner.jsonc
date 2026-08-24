@@ -1,0 +1,83 @@
+{
+  "name": "Partner",
+  "type": "object",
+  "properties": {
+    "partner_id": {
+      "type": "string"
+    },
+    "partner_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "INACTIVE"
+      ],
+      "default": "ACTIVE"
+    },
+    "campaign_name": {
+      "type": "string"
+    },
+    "campaign_start": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "campaign_end": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "benefit_type": {
+      "type": "string"
+    },
+    "benefit_duration": {
+      "type": "number"
+    },
+    "eligible_plan": {
+      "type": "string"
+    },
+    "total_codes": {
+      "type": "number",
+      "default": 0
+    },
+    "total_redemptions": {
+      "type": "number",
+      "default": 0
+    },
+    "total_activations": {
+      "type": "number",
+      "default": 0
+    },
+    "paid_conversions": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "partner_id",
+    "partner_name",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

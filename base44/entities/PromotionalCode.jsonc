@@ -1,0 +1,94 @@
+{
+  "name": "PromotionalCode",
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string"
+    },
+    "partner_id": {
+      "type": "string"
+    },
+    "campaign_id": {
+      "type": "string"
+    },
+    "benefit_type": {
+      "type": "string"
+    },
+    "benefit_value": {
+      "type": "number"
+    },
+    "benefit_duration_months": {
+      "type": "number"
+    },
+    "eligible_plan": {
+      "type": "string"
+    },
+    "valid_from": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "maximum_redemptions": {
+      "type": "number",
+      "default": 1
+    },
+    "current_redemptions": {
+      "type": "number",
+      "default": 0
+    },
+    "single_use": {
+      "type": "boolean",
+      "default": true
+    },
+    "redeemed_by": {
+      "type": "string"
+    },
+    "redeemed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "REDEEMED",
+        "EXPIRED",
+        "DISABLED"
+      ],
+      "default": "ACTIVE"
+    }
+  },
+  "required": [
+    "code",
+    "partner_id",
+    "campaign_id",
+    "benefit_type",
+    "eligible_plan",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

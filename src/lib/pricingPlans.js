@@ -1,0 +1,9 @@
+export const FALLBACK_PLANS = [
+  { plan_key: "FREE_LAUNCH", name: "Free Launch", target: "Companies evaluating Stack Sixth", monthly_price: 0, annual_price: 0, trial_days: 90, integration_limit: 2, cta: "Start My 90 Days Free", features: ["Full software inventory", "Spend visibility and discovery", "Up to 2 integrations", "Software audit", "Basic usage intelligence", "Savings opportunities", "Basic renewals and reporting"] },
+  { plan_key: "STARTER", name: "Starter", target: "10–49 employees", monthly_price: 199, annual_price: 1990, integration_limit: 5, cta: "Choose Starter", features: ["Everything in Free Launch", "Up to 5 integrations", "Full verified usage intelligence", "Savings management", "Contract and renewal intelligence", "AI software intelligence", "Standard reporting"] },
+  { plan_key: "GROWTH", name: "Growth", target: "50–249 employees", monthly_price: 499, annual_price: 4990, integration_limit: 15, popular: true, cta: "Choose Growth", features: ["Everything in Starter", "Up to 15 integrations", "Purchase governance", "Advanced reporting and audits", "Team oversight", "Advanced recommendations", "Priority support"] },
+  { plan_key: "SCALE", name: "Scale", target: "250–999 employees", monthly_price: 999, annual_price: 9990, integration_limit: -1, cta: "Choose Scale", features: ["Everything in Growth", "Unlimited integrations¹", "Advanced governance", "Advanced admin controls", "Procurement intelligence", "Executive reporting", "Priority onboarding"] },
+  { plan_key: "ENTERPRISE", name: "Enterprise", target: "1,000+ employees", monthly_price: null, annual_price: null, integration_limit: -1, cta: "Contact Stack Sixth", features: ["Custom integrations", "Advanced security", "Customized governance", "Enterprise onboarding", "Negotiated contracts"] }
+];
+
+export const recommendedPlan = (size) => size === "1-9" ? "FREE_LAUNCH" : size === "10-49" ? "STARTER" : size === "50-249" ? "GROWTH" : size === "250-999" ? "SCALE" : "ENTERPRISE";

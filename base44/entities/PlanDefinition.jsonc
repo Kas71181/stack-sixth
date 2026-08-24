@@ -1,0 +1,82 @@
+{
+  "name": "PlanDefinition",
+  "type": "object",
+  "properties": {
+    "plan_key": {
+      "type": "string",
+      "enum": [
+        "FREE_LAUNCH",
+        "STARTER",
+        "GROWTH",
+        "SCALE",
+        "ENTERPRISE"
+      ]
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "target": {
+      "type": "string"
+    },
+    "monthly_price": {
+      "type": "number"
+    },
+    "annual_price": {
+      "type": "number"
+    },
+    "monthly_price_id": {
+      "type": "string"
+    },
+    "annual_price_id": {
+      "type": "string"
+    },
+    "integration_limit": {
+      "type": "number"
+    },
+    "trial_days": {
+      "type": "number"
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "entitlements": {
+      "type": "object"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "sort_order": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "plan_key",
+    "name",
+    "active"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

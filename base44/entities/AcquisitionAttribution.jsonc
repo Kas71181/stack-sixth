@@ -1,0 +1,69 @@
+{
+  "name": "AcquisitionAttribution",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string"
+    },
+    "owner_user_id": {
+      "type": "string"
+    },
+    "acquisition_source": {
+      "type": "string",
+      "enum": [
+        "ORGANIC",
+        "PARTNER",
+        "DIRECT",
+        "OTHER"
+      ]
+    },
+    "partner_id": {
+      "type": "string"
+    },
+    "campaign_id": {
+      "type": "string"
+    },
+    "promo_code": {
+      "type": "string"
+    },
+    "attributed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "organization_id",
+    "owner_user_id",
+    "acquisition_source",
+    "attributed_at"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.owner_user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
