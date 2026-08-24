@@ -4,6 +4,8 @@ import { MessageSquare, X, Send, Loader2, Bot } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import ProactiveInsights from "./ProactiveInsights";
 import SupportEscalationButton from "./SupportEscalationButton";
+import LiveSupportChat from "@/components/support/LiveSupportChat";
+import { useAuth } from "@/lib/AuthContext";
 import { useLocation } from "react-router-dom";
 
 const PAGE_LABELS = {
@@ -22,8 +24,10 @@ export default function AssistantChat({ audits, recommendations, monitorReports,
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [supportConversation, setSupportConversation] = useState(null);
   const bottomRef = useRef(null);
   const location = useLocation();
+  const { user } = useAuth();
 
   const buildContextMessage = () => {
     const page = PAGE_LABELS[location.pathname] || location.pathname;
@@ -72,6 +76,14 @@ Use this context to give specific, data-driven answers. Reference actual numbers
   }, [open]);
 
   useEffect(() => {
+    if (!open || !user?.id || supportConversation) return;
+    base44.entities.SupportConversation.filter({ requester_id: user.id }, "-created_date", 10).then((items) => {
+      const active = items.find((item) => item.status === "waiting" || item.status === "active");
+      if (active) setSupportConversation(active);
+    });
+  }, [open, user?.id, supportConversation?.id]);
+
+  useEffect(() => {
     if (!conversation) return;
     const unsub = base44.agents.subscribeToConversation(conversation.id, (data) => {
       setMessages(data.messages || []);
@@ -109,6 +121,7 @@ Use this context to give specific, data-driven answers. Reference actual numbers
       {/* Chat Window */}
       {open && (
         <div className="fixed bottom-24 left-3 right-3 w-auto max-w-[calc(100vw-1.5rem)] sm:left-auto sm:right-6 sm:w-96 sm:max-w-none z-50 bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden" style={{ height: "480px" }}>
+          {supportConversation ? <LiveSupportChat conversation={supportConversation} /> : <>
           {/* Header */}
           <div className="flex items-center gap-3 px-4 py-3 bg-primary text-primary-foreground">
             <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
@@ -171,7 +184,7 @@ Use this context to give specific, data-driven answers. Reference actual numbers
 
           {/* Human support */}
           <div className="px-3 pt-2 border-t border-border">
-            <SupportEscalationButton conversation={conversation} messages={visibleMessages} page={PAGE_LABELS[location.pathname] || location.pathname} />
+            <SupportEscalationButton conversation={conversation} messages={visibleMessages} page={PAGE_LABELS[location.pathname] || location.pathname} onEscalated={setSupportConversation} />
           </div>
 
           {/* Input */}
@@ -191,6 +204,7 @@ Use this context to give specific, data-driven answers. Reference actual numbers
               <Send className="w-3.5 h-3.5" />
             </button>
           </div>
+          </>}
         </div>
       )}
     </>

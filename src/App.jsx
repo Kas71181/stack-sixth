@@ -31,6 +31,8 @@ import MyStack from './pages/MyStack';
 import Savings from './pages/Savings';
 import Governance from './pages/Governance';
 import UsageEvidenceAdmin from './pages/UsageEvidenceAdmin';
+import SupportInbox from './pages/SupportInbox';
+import SupportRoom from './pages/SupportRoom';
 
 
 const AuthenticatedApp = () => {
@@ -78,6 +80,8 @@ const AuthenticatedApp = () => {
         <Route path="/switch-planner" element={<SwitchPlanner />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/admin/usage-evidence" element={<UsageEvidenceAdmin />} />
+        <Route path="/support" element={<SupportInbox />} />
+        <Route path="/support/:id" element={<SupportRoom />} />
         <Route path="/data-coverage" element={<Navigate to="/my-stack?tab=connect" replace />} />
         <Route path="/shared-report" element={<SharedReport />} />
         <Route path="/purchase-requests" element={<Navigate to="/governance?tab=purchases" replace />} />
