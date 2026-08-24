@@ -9,7 +9,6 @@ import { useAuth } from "@/lib/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import SubscriptionStatusBanner from "@/components/subscription/SubscriptionStatusBanner";
-import DemoDataBanner from "@/components/DemoDataBanner";
 import { trackAcquisition } from "@/lib/acquisitionEvents";
 
 const primaryNav = [
@@ -216,7 +215,6 @@ export default function Layout() {
         </div>
       </header>
       <SubscriptionStatusBanner enabled={!!user?.id} />
-      <DemoDataBanner />
 
       {/* Page content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-28 sm:pb-12">
