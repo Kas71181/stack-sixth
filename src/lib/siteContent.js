@@ -31,6 +31,6 @@ export const site = {
     ["Can larger organizations request a custom plan?","Yes. Enterprise customers can contact Stack Sixth about custom limits, integrations, onboarding, security requirements, and support."]
   ],
   contact: { support: "hello@stacksixth.com", privacy: "[PRIVACY_EMAIL]" },
-  social: { instagram: "https://www.instagram.com/thestacksixth", twitter: "https://twitter.com/stacksixth" },
+  social: { instagram: "https://www.instagram.com/thestacksixth", twitter: "https://twitter.com/stacksixth", facebook: "https://www.facebook.com/profile.php?id=61593369792157" },
   legal: { company: "[LEGAL_COMPANY_NAME]", address: "[REGISTERED_ADDRESS]", law: "[GOVERNING_LAW]" }
 };
