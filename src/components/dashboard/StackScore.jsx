@@ -97,7 +97,7 @@ export default function StackScore({
       </div>
 
       {/* Score ring + breakdown */}
-      <div className="flex items-center gap-5">
+      <div className="flex items-center justify-center gap-5 2xl:justify-start">
         {/* Ring */}
         <div className="relative flex-shrink-0">
           <svg width="120" height="120" viewBox="0 0 120 120" className="-rotate-90">
@@ -128,7 +128,7 @@ export default function StackScore({
         </div>
 
         {/* Factor breakdown */}
-        <div className="flex-1 space-y-1.5 min-w-0">
+        <div className="hidden flex-1 space-y-1.5 min-w-0 2xl:block">
           {factors.map((f) => (
             <div key={f.label} className="flex items-center gap-2">
               <span className="text-[11px] font-medium text-foreground/80 w-24 flex-shrink-0 truncate">{f.label}</span>

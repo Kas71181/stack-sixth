@@ -152,14 +152,14 @@ export default function Dashboard() {
 
   // ── Returning user: Command Center ──────────────────────────────────────────
   const firstName = user?.full_name?.split(" ")[0] || "there";
-  const latestAudit = completedAudits[0];
-  const totalMonthlySpend = latestAudit?.total_monthly_spend || 0;
-  const totalApps = latestAudit?.existing_software?.length || 0;
-  const openRecs = recommendations.filter((r) => r.status === "Open");
-  const potentialSavings = openRecs.reduce((s, r) => s + (r.estimated_monthly_savings || 0), 0);
-  const wastedUsers = userActivity.filter((u) => u.wasted_cost_flag);
-  const wastedCost = wastedUsers.reduce((s, u) => s + (u.license_cost_per_month || 0), 0);
-  const activeTools = userActivity.filter((u) => u.usage_status === "Active").length;
+  const trustedSummary = evidenceAnalytics?.summary || {};
+  const totalMonthlySpend = trustedSummary.costsNeedReview ? 0 : trustedSummary.currentMonthlySpend || 0;
+  const totalApps = trustedSummary.totalApplications || 0;
+  const trustedRecommendations = recommendations.filter((r) => r.status === "Open" && r.validation_status === "valid");
+  const openRecs = trustedRecommendations;
+  const potentialSavings = trustedSummary.verifiedSavings || 0;
+  const dormantSeats = trustedSummary.dormantSeats || 0;
+  const activeTools = trustedSummary.verifiedUsageApplications || 0;
 
   // Renewals within 30 days
   const urgentRenewals = contracts.filter((c) => {
@@ -168,15 +168,6 @@ export default function Dashboard() {
     return d >= 0 && d <= 30;
   });
 
-  // Stack score
-  const coveragePct = evidenceAnalytics?.coverage?.overall || 0;
-  const stackScore = Math.min(100, Math.round(
-    (coveragePct * 0.35) +
-    (openRecs.length === 0 ? 25 : Math.max(0, 25 - openRecs.length * 3)) +
-    (urgentRenewals.length === 0 ? 20 : Math.max(0, 20 - urgentRenewals.length * 4)) +
-    (wastedUsers.length === 0 ? 20 : Math.max(0, 20 - wastedUsers.length * 2))
-  ));
-
   return (
     <div className="space-y-7">
       {/* Daily Pulse */}
@@ -184,7 +175,7 @@ export default function Dashboard() {
         pendingRequests={purchaseRequests}
         urgentRenewals={urgentRenewals}
         verifiedSavings={potentialSavings}
-        dormantToolCount={wastedUsers.length}
+        dormantToolCount={dormantSeats}
         isLoading={false}
       />
 
@@ -208,10 +199,10 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <KpiCard label="Monthly Spend" value={totalMonthlySpend ? `$${Math.round(totalMonthlySpend).toLocaleString()}` : "—"} sub={totalMonthlySpend ? `${totalApps} apps` : "No financial evidence"} icon={DollarSign} color="blue" />
         <KpiCard label="Verified Savings" value={potentialSavings ? `$${Math.round(potentialSavings).toLocaleString()}` : "$0"} sub="per month identified" icon={TrendingDown} color="emerald" />
-        <KpiCard label="Wasted Licenses" value={wastedUsers.length} sub={wastedCost ? `$${Math.round(wastedCost).toLocaleString()}/mo waste` : "No evidence yet"} icon={AlertTriangle} color="amber" />
-        <KpiCard label="Active Tools" value={activeTools || totalApps || "—"} sub="across your stack" icon={Activity} color="violet" />
-        <div className="col-span-2 lg:col-span-1">
-          <StackScore score={stackScore} />
+        <KpiCard label="Wasted Licenses" value={dormantSeats} sub={dormantSeats ? "verified dormant seats" : "No verified dormancy"} icon={AlertTriangle} color="amber" />
+        <KpiCard label="Active Tools" value={activeTools || "—"} sub={activeTools ? "with verified live usage" : "No live usage evidence"} icon={Activity} color="violet" />
+        <div className="col-span-2 lg:col-span-1 min-w-0">
+          <StackScore totalSpend={totalMonthlySpend} totalSavings={potentialSavings} totalTools={totalApps} dormantTools={Array.from({ length: trustedSummary.dormantApplications || 0 })} urgentRenewals={urgentRenewals} openRecs={openRecs} userActivity={[]} inventoryTools={integrations} />
         </div>
       </div>
 
@@ -219,11 +210,9 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div className="lg:col-span-2 glass-card p-5">
           <ActionCenter
-            recommendations={recommendations}
-            contracts={contracts}
-            monitors={monitorReports}
-            purchaseRequests={purchaseRequests}
-            maxItems={5}
+            audits={completedAudits}
+            recommendations={trustedRecommendations}
+            monitorReports={monitorReports}
           />
         </div>
         <div className="glass-card p-5">
