@@ -13,7 +13,7 @@ export const INVENTORY_CONNECTORS = {
   },
   apollo: {
     id: "apollo", label: "Apollo.io", oauthFunction: "apolloOAuth", functionName: "getApolloActivity",
-    connectionMode: "access", idleLabel: "OAuth connection available",
+    idleLabel: "Connect Apollo to verify credit and API usage",
     logo: "https://assets-global.website-files.com/60b86da97e58f877a9d4e89f/60e5db46929e39b89bed2e96_apollo-logo.png",
   },
   hubspot: { id: "hubspot", label: "HubSpot", setupRequired: true, authMode: "API token", functionName: "getHubSpotActivity" },

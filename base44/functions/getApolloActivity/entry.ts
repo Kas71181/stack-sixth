@@ -1,5 +1,7 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { secrets } from 'base44:runtime';
 import { authorizeTargetUser } from '../../shared/authorizeTargetUser.ts';
+import { ingestConnectorMembership } from '../../shared/evidenceIngestion.ts';
 
 export default async function(req) {
   try {
@@ -23,8 +25,8 @@ export default async function(req) {
         body: new URLSearchParams({
           grant_type: 'refresh_token',
           refresh_token: credential.extra_fields.refresh_token,
-          client_id: Deno.env.get('APOLLO_OAUTH_CLIENT_ID') || '',
-          client_secret: Deno.env.get('APOLLO_OAUTH_CLIENT_SECRET') || '',
+          client_id: secrets.get('APOLLO_OAUTH_CLIENT_ID'),
+          client_secret: secrets.get('APOLLO_OAUTH_CLIENT_SECRET'),
         }),
       });
       const refreshed = await refreshRes.json();
@@ -41,15 +43,38 @@ export default async function(req) {
     }
 
     if (isOAuth) {
-      const profileRes = await fetch('https://api.apollo.io/api/v1/users/api_profile', {
-        headers: { 'Authorization': `Bearer ${apiKey}`, 'accept': 'application/json' },
-      });
+      const headers = { Authorization: `Bearer ${apiKey}`, accept: 'application/json', 'Content-Type': 'application/json' };
+      const [profileRes, apiUsageRes] = await Promise.all([
+        fetch('https://api.apollo.io/api/v1/users/api_profile?include_credit_usage=true', { headers }),
+        fetch('https://api.apollo.io/api/v1/usage_stats/api_usage_stats', { method: 'POST', headers }),
+      ]);
       if (!profileRes.ok) {
         const err = await profileRes.json().catch(() => ({}));
-        return Response.json({ success: false, error: `Apollo API error (${profileRes.status}): ${err.message || err.error || 'Reconnect Apollo and approve profile access'}` }, { status: 200 });
+        return Response.json({ success: false, error: `Apollo API error (${profileRes.status}): ${err.message || err.error || 'Reconnect Apollo'}` }, { status: 200 });
       }
       const profile = await profileRes.json();
-      return Response.json({ success: true, verified_access: true, total: 0, profile_email: profile.email || null });
+      const apiUsage = apiUsageRes.ok ? await apiUsageRes.json() : {};
+      const creditFields = ['num_lead_credits_used', 'num_direct_dial_credits_used', 'num_export_credits_used', 'num_ai_credits_used', 'num_power_up_credits_used'];
+      const creditsByType = Object.fromEntries(creditFields.map((field) => [field, Number(profile[field] || 0)]));
+      const totalCreditsUsed = Number(profile.total_unified_credits_used || Object.values(creditsByType).reduce((sum, value) => sum + value, 0));
+      const dailyApiCalls = Object.values(apiUsage).reduce((sum, endpoint) => sum + Number(endpoint?.day?.consumed || 0), 0);
+      const observedUsage = totalCreditsUsed > 0 || dailyApiCalls > 0;
+      const evidenceStatus = dailyApiCalls > 0 ? 'VERIFIED_LIVE' : observedUsage ? 'OBSERVED' : 'INSUFFICIENT_EVIDENCE';
+      const now = new Date().toISOString();
+      const membership = await ingestConnectorMembership(base44, user, { appName: 'Apollo.io', connectorType: 'apollo', workspaceId: profile.team_id || null, organizationVerified: true, capabilities: ['profile', 'credit_usage', ...(apiUsageRes.ok ? ['api_usage'] : [])], seatAssignments: false, members: [{ id: profile.id, email: profile.email, name: [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email }], limitations: apiUsageRes.ok ? ['Credit and API usage are workspace signals, not complete Apollo UI activity'] : ['Credit consumption is verified; reconnect after enabling api_usage_stats_read for API activity'] });
+      const apps = await base44.entities.OrganizationApp.filter({ organization_id: user.id, canonical_app_id: 'apollo' });
+      const connections = await base44.entities.IntegrationConnection.filter({ organization_id: user.id, connector_type: 'apollo' });
+      const evidenceData = { organization_id: user.id, organization_app_id: apps[0]?.id, evidence_category: 'USAGE', evidence_status: evidenceStatus, source_type: 'apollo_credit_usage', source_connection_id: connections[0]?.id, source_record_id: profile.id, observed_at: now, valid_from: now, freshness_status: 'fresh', verification_method: 'Apollo OAuth credit and API usage endpoints', derived_metadata: { credits_by_type: creditsByType, total_credits_used: totalCreditsUsed, api_calls_today: dailyApiCalls, api_usage_scope_granted: apiUsageRes.ok } };
+      const usageEvidence = apps[0] ? await base44.entities.EvidenceRecord.filter({ organization_id: user.id, organization_app_id: apps[0].id, source_type: 'apollo_credit_usage' }) : [];
+      if (usageEvidence[0]) await base44.entities.EvidenceRecord.update(usageEvidence[0].id, evidenceData);
+      else if (apps[0]) await base44.entities.EvidenceRecord.create(evidenceData);
+      if (apps[0]) await base44.entities.OrganizationApp.update(apps[0].id, { usage_status: evidenceStatus, last_validated_at: now });
+      if (connections[0]) await base44.entities.IntegrationConnection.update(connections[0].id, { usage_supported: observedUsage, usage_events_created: dailyApiCalls, provider_data_current_through: now, last_successful_sync_at: now });
+      const activity = { tool_name: 'Apollo.io', user_email: profile.email, user_name: [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email, last_active_date: dailyApiCalls > 0 ? now.slice(0, 10) : undefined, days_active_last_30: dailyApiCalls > 0 ? 1 : 0, activity_score: dailyApiCalls > 0 ? 90 : totalCreditsUsed > 0 ? 50 : 0, status: dailyApiCalls > 0 ? 'Active' : totalCreditsUsed > 0 ? 'Dormant' : 'Inactive', wasted_cost_flag: false, source: 'live', logins_last_30: 0, features_used: Object.values(creditsByType).filter((value) => value > 0).length, transactions_last_30: 0, content_created_last_30: 0, api_calls_last_30: dailyApiCalls };
+      const existing = await base44.asServiceRole.entities.UserActivity.filter({ tool_name: 'Apollo.io', user_email: profile.email, created_by_id: user.id });
+      if (existing[0]) await base44.asServiceRole.entities.UserActivity.update(existing[0].id, activity);
+      else await base44.asServiceRole.entities.UserActivity.create({ ...activity, created_by_id: user.id });
+      return Response.json({ success: true, total: 1, evidence_status: evidenceStatus, usage_status: evidenceStatus, credits_used: totalCreditsUsed, api_calls_today: dailyApiCalls, api_usage_scope_granted: apiUsageRes.ok, requires_reconnect: !apiUsageRes.ok, evidence_note: membership.limitations.join('; ') });
     }
 
     const usersRes = await fetch(isOAuth

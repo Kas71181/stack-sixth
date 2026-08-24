@@ -1,10 +1,11 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { secrets } from 'base44:runtime';
 
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
-    const clientId = Deno.env.get('APOLLO_OAUTH_CLIENT_ID');
-    const clientSecret = Deno.env.get('APOLLO_OAUTH_CLIENT_SECRET');
+    const clientId = secrets.get('APOLLO_OAUTH_CLIENT_ID');
+    const clientSecret = secrets.get('APOLLO_OAUTH_CLIENT_SECRET');
     if (!clientId || !clientSecret) return Response.json({ error: 'Apollo OAuth is not configured' }, { status: 500 });
 
     const body = req.method === 'GET' ? {} : await req.json().catch(() => ({}));
@@ -43,6 +44,7 @@ Deno.serve(async (req) => {
           auth_type: 'oauth',
           refresh_token: tokens.refresh_token || '',
           expires_at: new Date(Date.now() + (tokens.expires_in || 2592000) * 1000).toISOString(),
+          scope: tokens.scope || 'read_user_profile',
         },
       };
       if (existing[0]) await base44.asServiceRole.entities.ApiCredential.update(existing[0].id, credential);
@@ -65,10 +67,11 @@ Deno.serve(async (req) => {
       client_id: clientId,
       redirect_uri: callbackUrl,
       response_type: 'code',
+      scope: 'read_user_profile api_usage_stats_read',
       state: `${payloadPart}.${signaturePart}`,
     });
     return Response.json({ url: `https://app.apollo.io/#/oauth/authorize?${params.toString()}`, callback_url: callbackUrl });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
-});
+}
