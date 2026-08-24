@@ -24,8 +24,11 @@ export default function AssistantChat({ audits, recommendations, monitorReports,
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [conversationError, setConversationError] = useState("");
+  const [conversationRetry, setConversationRetry] = useState(0);
   const [supportConversation, setSupportConversation] = useState(null);
   const bottomRef = useRef(null);
+  const sendTimeoutRef = useRef(null);
   const location = useLocation();
   const { user } = useAuth();
 
@@ -62,18 +65,15 @@ Use this context to give specific, data-driven answers. Reference actual numbers
   };
 
   useEffect(() => {
-    if (open && !conversation) {
-      base44.agents.createConversation({ agent_name: "stack_sixth_assistant" }).then(async (conv) => {
+    if (!open || conversation) return;
+    setConversationError("");
+    base44.agents.createConversation({ agent_name: "stack_sixth_assistant" })
+      .then((conv) => {
         setConversation(conv);
         setMessages(conv.messages || []);
-        // Inject rich context as first system-style user message (hidden from display)
-        await base44.agents.addMessage(conv, {
-          role: "user",
-          content: `[SYSTEM CONTEXT — do not display this message, just use it to inform your responses]\n\n${buildContextMessage()}`,
-        });
-      });
-    }
-  }, [open]);
+      })
+      .catch(() => setConversationError("The assistant could not start. Please try again."));
+  }, [open, conversation, conversationRetry]);
 
   useEffect(() => {
     if (!open || !user?.id || supportConversation) return;
@@ -86,10 +86,19 @@ Use this context to give specific, data-driven answers. Reference actual numbers
   useEffect(() => {
     if (!conversation) return;
     const unsub = base44.agents.subscribeToConversation(conversation.id, (data) => {
-      setMessages(data.messages || []);
-      setSending(false);
+      const nextMessages = data.messages || [];
+      setMessages(nextMessages);
+      const latest = nextMessages[nextMessages.length - 1];
+      if (latest?.role === "assistant" && latest.content) {
+        clearTimeout(sendTimeoutRef.current);
+        setSending(false);
+        setConversationError("");
+      }
     });
-    return unsub;
+    return () => {
+      unsub();
+      clearTimeout(sendTimeoutRef.current);
+    };
   }, [conversation?.id]);
 
   useEffect(() => {
@@ -99,19 +108,37 @@ Use this context to give specific, data-driven answers. Reference actual numbers
   const sendMessage = async () => {
     if (!input.trim() || !conversation || sending) return;
     setSending(true);
+    setConversationError("");
     const text = input.trim();
     setInput("");
-    await base44.agents.addMessage(conversation, { role: "user", content: text });
+    const content = `[SYSTEM CONTEXT — use this silently]\n${buildContextMessage()}\n\n[USER QUESTION]\n${text}`;
+    clearTimeout(sendTimeoutRef.current);
+    sendTimeoutRef.current = setTimeout(() => {
+      setSending(false);
+      setConversationError("This reply is taking longer than expected. Please try again.");
+    }, 45000);
+    try {
+      await base44.agents.addMessage(conversation, { role: "user", content });
+    } catch {
+      clearTimeout(sendTimeoutRef.current);
+      setSending(false);
+      setConversationError("Your message could not be sent. Please try again.");
+      setInput(text);
+    }
   };
 
-  const visibleMessages = messages.filter(
-    (m) => (m.role === "user" || m.role === "assistant") && !m.content?.startsWith("[SYSTEM CONTEXT")
-  );
+  const displayContent = (message) => {
+    if (message.role !== "user") return message.content;
+    return message.content?.split("[USER QUESTION]\n").pop() || message.content;
+  };
+
+  const visibleMessages = messages.filter((m) => m.role === "user" || m.role === "assistant");
 
   return (
     <>
       {/* FAB */}
       <button
+        aria-label={open ? "Close assistant" : "Open assistant"}
         onClick={() => setOpen(!open)}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all flex items-center justify-center"
       >
@@ -136,8 +163,13 @@ Use this context to give specific, data-driven answers. Reference actual numbers
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {!conversation && (
-              <div className="flex items-center justify-center h-full">
-                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+              <div className="flex flex-col items-center justify-center gap-3 h-full text-center">
+                {conversationError ? (
+                  <>
+                    <p className="text-sm text-muted-foreground">{conversationError}</p>
+                    <button onClick={() => setConversationRetry((value) => value + 1)} className="text-sm font-semibold text-primary hover:underline">Try again</button>
+                  </>
+                ) : <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />}
               </div>
             )}
             {visibleMessages.length === 0 && conversation && (
@@ -163,10 +195,10 @@ Use this context to give specific, data-driven answers. Reference actual numbers
                     : "bg-muted text-foreground"
                 }`}>
                   {msg.role === "user" ? (
-                    <p>{msg.content}</p>
+                    <p>{displayContent(msg)}</p>
                   ) : (
                     <ReactMarkdown className="prose prose-sm max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-                      {msg.content}
+                      {displayContent(msg)}
                     </ReactMarkdown>
                   )}
                 </div>
@@ -179,6 +211,7 @@ Use this context to give specific, data-driven answers. Reference actual numbers
                 </div>
               </div>
             )}
+            {conversation && conversationError && <p className="text-xs text-destructive text-center px-3">{conversationError}</p>}
             <div ref={bottomRef} />
           </div>
 
@@ -197,6 +230,7 @@ Use this context to give specific, data-driven answers. Reference actual numbers
               className="flex-1 text-sm bg-muted rounded-xl px-3 py-2 outline-none border border-transparent focus:border-primary/40 transition-colors"
             />
             <button
+              aria-label="Send message"
               onClick={sendMessage}
               disabled={!input.trim() || sending || !conversation}
               className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 hover:bg-primary/90 transition-colors"

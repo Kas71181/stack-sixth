@@ -72,10 +72,13 @@ export default function ProactiveInsights({ audits, recommendations, monitorRepo
       <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">Suggested questions</p>
       <div className="space-y-1.5">
         {insights.map((insight) => (
-          <button
+          <div
             key={insight.id}
+            role="button"
+            tabIndex={0}
             onClick={() => onSelectInsight(insight.text)}
-            className="w-full group flex items-center justify-between gap-2 text-left px-3 py-2.5 rounded-xl bg-accent/60 hover:bg-accent border border-border/40 transition-colors"
+            onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") onSelectInsight(insight.text); }}
+            className="w-full group flex items-center justify-between gap-2 text-left px-3 py-2.5 rounded-xl bg-accent/60 hover:bg-accent border border-border/40 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2 min-w-0">
               <Lightbulb className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
@@ -87,7 +90,7 @@ export default function ProactiveInsights({ audits, recommendations, monitorRepo
             >
               <X className="w-3 h-3 text-muted-foreground" />
             </button>
-          </button>
+          </div>
         ))}
       </div>
     </div>
