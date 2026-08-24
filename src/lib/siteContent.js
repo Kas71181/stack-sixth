@@ -30,7 +30,7 @@ export const site = {
     ["Does Stack Sixth sell software?","Stack Sixth may provide software discovery and supported purchasing options. Availability depends on provider, plan, and region."],
     ["Can larger organizations request a custom plan?","Yes. Enterprise customers can contact Stack Sixth about custom limits, integrations, onboarding, security requirements, and support."]
   ],
-  contact: { support: "[SUPPORT_EMAIL]", privacy: "[PRIVACY_EMAIL]" },
-  social: { linkedin: "#", x: "#", facebook: "#", instagram: "#" },
+  contact: { support: "hello@stacksixth.com", privacy: "[PRIVACY_EMAIL]" },
+  social: { instagram: "https://www.instagram.com/thestacksixth", twitter: "https://twitter.com/stacksixth" },
   legal: { company: "[LEGAL_COMPANY_NAME]", address: "[REGISTERED_ADDRESS]", law: "[GOVERNING_LAW]" }
 };
