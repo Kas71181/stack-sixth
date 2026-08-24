@@ -8,7 +8,7 @@ export default async function(req) {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
-    if (user.role !== "admin") return Response.json({ error: "Forbidden" }, { status: 403 });
+    if (user.role !== "admin" || user.id !== "6a188e324c7d088bf6af68e4") return Response.json({ error: "Forbidden" }, { status: 403 });
     const body = await req.json();
     const mode = body.mode === "reusable" ? "reusable" : "unique";
     const count = Math.min(1000, Math.max(1, Number(body.count || 1)));
