@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 
-export default async function(req) {
+export default async function(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
@@ -17,7 +17,8 @@ export default async function(req) {
     } catch {
       return Response.json({ error: 'Request not found' }, { status: 404 });
     }
-    if (!request || request.created_by_id !== user.id) return Response.json({ error: 'Request not found' }, { status: 404 });
+    if (!request) return Response.json({ error: 'Request not found' }, { status: 404 });
+    if (request.created_by_id === user.id) return Response.json({ error: 'Administrators cannot approve their own purchase requests' }, { status: 403 });
 
     const updated = await base44.asServiceRole.entities.PurchaseRequest.update(request.id, {
       status,
