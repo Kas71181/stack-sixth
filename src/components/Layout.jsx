@@ -194,12 +194,20 @@ export default function Layout() {
                     )}
                   </>
                 ) : (
-                  <button
-                    onClick={navigateToLogin}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200 active:scale-[0.96] shadow-sm shadow-primary/25"
-                  >
-                    Sign in
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={navigateToLogin}
+                      className="px-3 py-2 rounded-xl text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/6 transition-all duration-200 active:scale-[0.96]"
+                    >
+                      Sign in
+                    </button>
+                    <Link
+                      to="/register"
+                      className="px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200 active:scale-[0.96] shadow-sm shadow-primary/25"
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
                 )}
               </div>
             </nav>
