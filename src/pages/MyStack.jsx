@@ -6,6 +6,7 @@ import InventoryConnections from "@/components/connections/InventoryConnections"
 import MyStackEvidencePanel from "@/components/evidence/MyStackEvidencePanel";
 import EvidenceUsagePanel from "@/components/evidence/EvidenceUsagePanel";
 import EvidenceConnectionsPanel from "@/components/evidence/EvidenceConnectionsPanel";
+import ActiveSubscriptionGate from "@/components/subscription/ActiveSubscriptionGate";
 
 const tabs = [
   { id: "evidence", label: "Evidence", icon: ShieldCheck },
@@ -45,7 +46,7 @@ export default function MyStack() {
       {activeTab === "evidence" && <MyStackEvidencePanel />}
       {activeTab === "inventory" && <ToolStack />}
       {activeTab === "usage" && <EvidenceUsagePanel />}
-      {activeTab === "connect" && <div className="space-y-6"><EvidenceConnectionsPanel /><InventoryConnections /></div>}
+      {activeTab === "connect" && <ActiveSubscriptionGate><div className="space-y-6"><EvidenceConnectionsPanel /><InventoryConnections /></div></ActiveSubscriptionGate>}
     </div>
   );
 }

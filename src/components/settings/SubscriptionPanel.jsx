@@ -1,0 +1,9 @@
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { FALLBACK_PLANS } from "@/lib/pricingPlans";
+export default function SubscriptionPanel() {
+  const { data } = useQuery({ queryKey: ["settings-subscription"], queryFn: async () => (await base44.functions.invoke("getSubscriptionAccess", {})).data });
+  const upgrade = async (plan) => { if (window.self !== window.top) { alert("Secure checkout is available from the published app."); return; } const response = await base44.functions.invoke("createSubscriptionCheckout", { plan, billing_interval: "monthly" }); window.location.href = response.data.checkout_url || response.data.redirect_url; };
+  if (!data) return <div className="glass-card p-5 text-sm text-muted-foreground">Loading subscription…</div>;
+  return <div className="glass-card p-5"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Subscription</p><h2 className="mt-1 text-xl font-extrabold">{data.subscription.plan.replaceAll("_", " ")}</h2><p className="mt-1 text-xs text-muted-foreground">{data.days_remaining !== null ? `${data.days_remaining} days remaining` : data.subscription.subscription_status}</p></div><a href="/pricing" className="rounded-xl border px-3 py-2 text-xs font-bold">View pricing</a></div><div className="mt-4 flex flex-wrap gap-2">{FALLBACK_PLANS.filter((p) => ["STARTER","GROWTH","SCALE"].includes(p.plan_key) && p.plan_key !== data.subscription.plan).map((plan) => <button key={plan.plan_key} onClick={() => upgrade(plan.plan_key)} className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground">Upgrade to {plan.name}</button>)}</div></div>;
+}

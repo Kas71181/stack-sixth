@@ -33,6 +33,10 @@ import Governance from './pages/Governance';
 import UsageEvidenceAdmin from './pages/UsageEvidenceAdmin';
 import SupportInbox from './pages/SupportInbox';
 import SupportRoom from './pages/SupportRoom';
+import Pricing from './pages/Pricing';
+import SignupSetup from './pages/SignupSetup';
+import PricingPartners from './pages/PricingPartners';
+import ActiveSubscriptionGate from '@/components/subscription/ActiveSubscriptionGate';
 
 
 const AuthenticatedApp = () => {
@@ -65,13 +69,15 @@ const AuthenticatedApp = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/pricing" element={<Pricing />} />
+      <Route path="/signup/setup" element={<SignupSetup />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/my-stack" element={<MyStack />} />
         <Route path="/savings" element={<Savings />} />
         <Route path="/governance" element={<Governance />} />
         <Route path="/renewals" element={<Navigate to="/governance?tab=renewals" replace />} />
-        <Route path="/audit" element={<AuditForm />} />
+        <Route path="/audit" element={<ActiveSubscriptionGate><AuditForm /></ActiveSubscriptionGate>} />
         <Route path="/results/:id" element={<Results />} />
         <Route path="/history" element={<History />} />
         <Route path="/it-dashboard" element={<Navigate to="/savings" replace />} />
@@ -80,6 +86,7 @@ const AuthenticatedApp = () => {
         <Route path="/switch-planner" element={<SwitchPlanner />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/admin/usage-evidence" element={<UsageEvidenceAdmin />} />
+        <Route path="/admin/pricing-partners" element={<PricingPartners />} />
         <Route path="/support" element={<SupportInbox />} />
         <Route path="/support/:id" element={<SupportRoom />} />
         <Route path="/data-coverage" element={<Navigate to="/my-stack?tab=connect" replace />} />

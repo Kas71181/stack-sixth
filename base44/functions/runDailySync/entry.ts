@@ -30,6 +30,8 @@ export default async function(req) {
 
     const results = [];
     for (const userId of userIds) {
+      const subscriptions = await base44.asServiceRole.entities.OrganizationSubscription.filter({ owner_user_id: userId });
+      if (subscriptions[0]?.workspace_mode === 'READ_ONLY') continue;
       let syncedTools = 0;
       let totalUsers = 0;
 

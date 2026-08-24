@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { Home, LogOut, User, ArrowLeftRight, Settings, ChevronDown, Layers, TrendingDown, ShieldCheck, Activity, Headphones } from "lucide-react";
+import { Home, LogOut, User, ArrowLeftRight, Settings, ChevronDown, Layers, TrendingDown, ShieldCheck, Activity, Headphones, BadgeDollarSign } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useState, useRef, useEffect } from "react";
 import { base44 as analyticsClient } from "@/api/base44Client";
@@ -8,6 +8,8 @@ import GlobalSearch from "@/components/GlobalSearch";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import SubscriptionStatusBanner from "@/components/subscription/SubscriptionStatusBanner";
+import { trackAcquisition } from "@/lib/acquisitionEvents";
 
 const primaryNav = [
   { path: "/", label: "Overview", icon: Home },
@@ -20,6 +22,7 @@ const primaryNav = [
 export default function Layout() {
   const location = useLocation();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const { user, logout, navigateToLogin } = useAuth();
 
   // Track page views on every route change
   useEffect(() => {
@@ -45,7 +48,12 @@ export default function Layout() {
     };
     const page = pageNames[location.pathname] || location.pathname.replace("/", "").replace(/\//g, "_") || "unknown";
     analyticsClient.analytics.track({ eventName: "page_view", properties: { page } });
-  }, [location.pathname]);
+    const today = new Date().toISOString().slice(0, 10);
+    if (user?.id && localStorage.getItem("stackSixthActiveDay") !== today) {
+      localStorage.setItem("stackSixthActiveDay", today);
+      trackAcquisition("app_active", { day: today });
+    }
+  }, [location.pathname, user?.id]);
   const userMenuRef = useRef(null);
 
   useEffect(() => {
@@ -53,7 +61,6 @@ export default function Layout() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
-  const { user, logout, navigateToLogin } = useAuth();
 
   const { data: audits } = useQuery({
     queryKey: ["audits-layout", user?.id],
@@ -75,6 +82,7 @@ export default function Layout() {
     queryFn: () => base44.entities.Contract.filter({ created_by_id: user?.id }),
     enabled: !!user?.id,
   });
+  const { data: subscriptionAccess } = useQuery({ queryKey: ["subscription-access"], queryFn: async () => (await base44.functions.invoke("getSubscriptionAccess", {})).data, enabled: !!user?.id });
   const { data: userActivity } = useQuery({
     queryKey: ["activity-layout", user?.id],
     queryFn: () => base44.entities.UserActivity.filter({ created_by_id: user?.id }, "-updated_date", 50),
@@ -171,6 +179,7 @@ export default function Layout() {
                           Settings
                         </Link>
                         {user.role === "admin" && <Link to="/support" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2.5 px-3.5 py-2 text-sm text-foreground/90 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/6 transition-colors mx-1 rounded-lg"><Headphones className="w-3.5 h-3.5 text-muted-foreground" />Support inbox</Link>}
+                        {user.role === "admin" && <Link to="/admin/pricing-partners" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2.5 px-3.5 py-2 text-sm text-foreground/90 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/6 transition-colors mx-1 rounded-lg"><BadgeDollarSign className="w-3.5 h-3.5 text-muted-foreground" />Pricing & partners</Link>}
                         {user.role === "admin" && <Link to="/admin/usage-evidence" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2.5 px-3.5 py-2 text-sm text-foreground/90 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/6 transition-colors mx-1 rounded-lg"><Activity className="w-3.5 h-3.5 text-muted-foreground" />Usage evidence</Link>}
                         <div className="my-1 border-t border-border/40 mx-2" />
                         <button
@@ -197,6 +206,7 @@ export default function Layout() {
           </div>
         </div>
       </header>
+      <SubscriptionStatusBanner enabled={!!user?.id} />
 
       {/* Page content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-28 sm:pb-12">
@@ -237,7 +247,7 @@ export default function Layout() {
         </div>
       </nav>
 
-      {!location.pathname.startsWith("/support") && <AssistantChat audits={audits} recommendations={recommendations} monitorReports={monitorReports} contracts={contracts} userActivity={userActivity} />}
+      {!subscriptionAccess?.read_only && !location.pathname.startsWith("/support") && <AssistantChat audits={audits} recommendations={recommendations} monitorReports={monitorReports} contracts={contracts} userActivity={userActivity} />}
 
 
     </div>

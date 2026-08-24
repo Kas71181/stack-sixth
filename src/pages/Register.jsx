@@ -11,6 +11,9 @@ import GoogleIcon from "@/components/GoogleIcon";
 import { toast } from "@/components/ui/use-toast";
 
 export default function Register() {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -28,6 +31,8 @@ export default function Register() {
     }
     setLoading(true);
     try {
+      base44.analytics.track({ eventName: "signup_started", properties: { method: "email" } });
+      sessionStorage.setItem("stackSixthSignup", JSON.stringify({ first_name: firstName, last_name: lastName, company_name: companyName }));
       await base44.auth.register({ email, password });
       setShowOtp(true);
     } catch (err) {
@@ -45,7 +50,8 @@ export default function Register() {
       if (result?.access_token) {
         base44.auth.setToken(result.access_token);
       }
-      window.location.href = "/";
+      await base44.entities.AcquisitionEvent.create({ event_name: "account_created", properties: { method: "email" }, occurred_at: new Date().toISOString() });
+      window.location.href = "/signup/setup";
     } catch (err) {
       setError(err.message || "Invalid verification code");
     } finally {
@@ -67,7 +73,9 @@ export default function Register() {
   };
 
   const handleGoogle = () => {
-    base44.auth.loginWithProvider("google", "/");
+    base44.analytics.track({ eventName: "signup_started", properties: { method: "google" } });
+    sessionStorage.setItem("stackSixthSignup", JSON.stringify({ first_name: firstName, last_name: lastName, company_name: companyName }));
+    base44.auth.loginWithProvider("google", "/signup/setup");
   };
 
   if (showOtp) {
@@ -163,8 +171,13 @@ export default function Register() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2"><Label htmlFor="firstName">First name</Label><Input id="firstName" autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required /></div>
+          <div className="space-y-2"><Label htmlFor="lastName">Last name</Label><Input id="lastName" autoComplete="family-name" value={lastName} onChange={(e) => setLastName(e.target.value)} required /></div>
+        </div>
+        <div className="space-y-2"><Label htmlFor="companyName">Company name</Label><Input id="companyName" autoComplete="organization" value={companyName} onChange={(e) => setCompanyName(e.target.value)} required /></div>
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">Work email</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input

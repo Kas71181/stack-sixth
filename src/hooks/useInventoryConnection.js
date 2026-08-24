@@ -28,6 +28,13 @@ export default function useInventoryConnection({ tool, connector, isLive, onSync
     try {
       const authenticated = await base44.auth.isAuthenticated();
       if (!authenticated) return base44.auth.redirectToLogin(window.location.href);
+      const access = (await base44.functions.invoke("getSubscriptionAccess", {})).data;
+      if (access.read_only) throw new Error("Choose a plan to reactivate data connections.");
+      if (access.entitlements.integration_limit !== -1 && !isLive) {
+        const tools = await base44.entities.SaasIntegration.list();
+        const connectedCount = tools.filter((item) => ["Connected", "Evidence", "Manual Auth"].includes(item.connection_status)).length;
+        if (connectedCount >= access.entitlements.integration_limit) throw new Error(`Your ${access.subscription.plan.replaceAll("_", " ")} plan supports ${access.entitlements.integration_limit} integrations. Upgrade to connect another source.`);
+      }
       const popup = window.open("", "_blank", "width=620,height=760");
       if (!popup) throw new Error("Please allow pop-ups to connect this tool.");
       const liveOrigin = window.location.origin.replace("preview--", "");

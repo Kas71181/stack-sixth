@@ -10,6 +10,7 @@ import ApiCredentialsSection from "@/components/settings/ApiCredentialsSection";
 import DangerZoneSection from "@/components/settings/DangerZoneSection";
 import InviteTeamSection from "@/components/settings/InviteTeamSection";
 import DataPrivacySection from "@/components/settings/DataPrivacySection";
+import SubscriptionPanel from "@/components/settings/SubscriptionPanel";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 14 },
@@ -31,6 +32,7 @@ export default function SettingsPage() {
       <h1 className="text-2xl font-extrabold tracking-tight">Settings</h1>
 
       <OnboardingChecklist audits={audits} recommendations={recommendations} monitorReports={monitorReports} userActivity={userActivity} contracts={contracts} />
+      <SubscriptionPanel />
 
       <motion.div {...fadeUp(0)} className="glass-card divide-y divide-border/40 overflow-hidden">
         <AccountSection />
