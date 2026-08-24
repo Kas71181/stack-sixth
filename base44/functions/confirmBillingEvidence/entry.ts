@@ -19,9 +19,18 @@ export default async function(req) {
     const metadata = { subject: candidate.subject, invoice_number: candidate.invoice_number, invoice_date: candidate.invoice_date, plan_name: candidate.plan_name, file_uri: candidate.file_uri, confidence: candidate.confidence, evidence_types: candidate.evidence_types };
     await base44.entities.EvidenceRecord.create({ organization_id: organizationId, organization_app_id: app.id, evidence_category: 'OWNERSHIP', evidence_status: 'OBSERVED', source_type: candidate.source_type, source_record_id: candidate.source_record_id, observed_at: now, freshness_status: 'fresh', verification_method: 'user_confirmed', derived_metadata: metadata });
     let financialRecord = null;
+    let costStatus = 'unknown';
     if (amount > 0) {
       const evidence = await base44.entities.EvidenceRecord.create({ organization_id: organizationId, organization_app_id: app.id, evidence_category: 'FINANCIAL', evidence_status: 'FINANCIAL_EVIDENCE', source_type: candidate.source_type, source_record_id: `${candidate.source_record_id}:financial`, observed_at: now, valid_from: candidate.invoice_date ? new Date(candidate.invoice_date).toISOString() : now, freshness_status: 'fresh', verification_method: 'user_confirmed', derived_metadata: metadata });
-      financialRecord = await base44.entities.FinancialRecord.create({ organization_id: organizationId, organization_app_id: app.id, record_type: 'invoice', amount, currency: candidate.currency || 'USD', billing_period: candidate.billing_period || candidate.billing_frequency || 'unknown', quantity: Number(candidate.quantity) || undefined, unit_price: Number(candidate.unit_price) || undefined, evidence_id: evidence.id, verified_at: now });
+      const current = await base44.entities.FinancialRecord.filter({ organization_id: organizationId, organization_app_id: app.id });
+      const active = current.filter((record) => record.status !== 'superseded');
+      const monthly = (value, period) => String(period || '').toLowerCase().includes('annual') ? Number(value) / 12 : String(period || '').toLowerCase().includes('quarter') ? Number(value) / 3 : Number(value);
+      const candidateMonthly = monthly(amount, candidate.billing_period || candidate.billing_frequency);
+      const conflict = active.some((record) => Math.abs(monthly(record.amount, record.billing_period) - candidateMonthly) > 0.01);
+      costStatus = conflict ? 'needs_review' : 'confirmed';
+      if (active.length) await base44.entities.FinancialRecord.bulkUpdate(active.map((record) => ({ id: record.id, authoritative: false, status: conflict ? 'needs_review' : 'superseded', ...(conflict ? {} : { superseded_at: now }) })));
+      financialRecord = await base44.entities.FinancialRecord.create({ organization_id: organizationId, organization_app_id: app.id, record_type: candidate.source_type === 'manual' ? 'verified_manual' : 'invoice', amount, currency: candidate.currency || 'USD', billing_period: candidate.billing_period || candidate.billing_frequency || 'monthly', quantity: Number(candidate.quantity) || undefined, unit_price: Number(candidate.unit_price) || undefined, evidence_id: evidence.id, source_name: candidate.source_type === 'gmail' ? 'Gmail invoice' : candidate.source_type, source_date: candidate.invoice_date ? new Date(candidate.invoice_date).toISOString() : now, status: costStatus, authoritative: !conflict, verified_at: now });
+      if (conflict) await base44.asServiceRole.entities.ValidationIssue.create({ organization_id: organizationId, organization_app_id: app.id, rule_code: 'COST_SOURCE_CONFLICT', severity: 'error', message: `${candidate.vendor_name} has conflicting cost evidence`, metric_name: 'currentMonthlySpend', suppressed_value: String(candidateMonthly), resolved: false, created_by_id: user.id });
     }
     let contract = null;
     if (candidate.renewal_date) {
@@ -30,7 +39,7 @@ export default async function(req) {
       const contractData = { vendor_name: candidate.vendor_name, contract_name: candidate.plan_name || `${candidate.vendor_name} subscription`, renewal_date: candidate.renewal_date, billing_frequency: candidate.billing_frequency || 'unknown', renewal_source: candidate.source_type === 'gmail' ? 'gmail' : 'billing', renewal_confidence: Number(candidate.confidence) || 100, needs_confirmation: false, decision_state: 'undecided', status: 'Active' };
       contract = existing[0] ? await base44.entities.Contract.update(existing[0].id, contractData) : await base44.entities.Contract.create(contractData);
     }
-    return Response.json({ success: true, application_id: app.id, financial_record_id: financialRecord?.id || null, contract_id: contract?.id || null });
+    return Response.json({ success: true, application_id: app.id, financial_record_id: financialRecord?.id || null, cost_status: costStatus, contract_id: contract?.id || null });
   } catch (error) {
     console.error('Billing evidence confirmation failed', error);
     return Response.json({ error: error.message }, { status: 500 });
