@@ -7,20 +7,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
-
-const getSafeReturnTo = () => {
-  const returnTo = new URLSearchParams(window.location.search).get("returnTo");
-  if (!returnTo?.startsWith("/") || returnTo.startsWith("//") || returnTo.includes("\\")) return "/app";
-
-  try {
-    const url = new URL(returnTo, window.location.origin);
-    return url.origin === window.location.origin
-      ? `${url.pathname}${url.search}${url.hash}`
-      : "/app";
-  } catch {
-    return "/app";
-  }
-};
+import { safeReturnTo } from "@/lib/authReturnTo";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -34,7 +21,7 @@ export default function Login() {
     setLoading(true);
     try {
       await base44.auth.loginViaEmailPassword(email, password);
-      window.location.href = getSafeReturnTo();
+      window.location.href = safeReturnTo("/app");
     } catch (err) {
       setError(err.message || "Invalid email or password");
     } finally {
@@ -43,7 +30,7 @@ export default function Login() {
   };
 
   const handleGoogle = () => {
-    base44.auth.loginWithProvider("google", getSafeReturnTo());
+    base44.auth.loginWithProvider("google", safeReturnTo("/app"));
   };
 
   return (
