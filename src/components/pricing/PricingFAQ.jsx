@@ -1,5 +1,5 @@
 const items = [
-  ["Do I need a credit card for Free Launch?", "No. Free Launch gives you 90 days of access without payment details."],
+  ["Do I need a credit card for Free Launch?", "No. Free Launch gives you 30 days of access without payment details."],
   ["What happens when free access ends?", "Your data remains intact and your workspace becomes read-only until you choose a paid plan."],
   ["Can I change plans later?", "Yes. Upgrade at any time without resetting your software inventory, evidence, or reports."],
   ["Will a partner promotion auto-renew?", "Not unless you explicitly add payment details and consent to renewal."],
