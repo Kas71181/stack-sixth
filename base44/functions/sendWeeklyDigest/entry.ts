@@ -1,16 +1,23 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
+    const { dry_run = false } = await req.json().catch(() => ({}));
 
     // Fetch all users to email — one digest per user based on their own data
     const allUsers = await base44.asServiceRole.entities.User.list();
 
     let sent = 0;
+    const escapeHtml = (value) => String(value ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
 
     for (const user of allUsers) {
       if (!user.email) continue;
@@ -60,16 +67,16 @@ Deno.serve(async (req) => {
       // Build email HTML
       const recRows = highPriorityRecs.slice(0, 3).map((r) =>
         `<tr>
-          <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;">${r.tool_name}</td>
-          <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;">${r.category}</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;">${escapeHtml(r.tool_name)}</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;">${escapeHtml(r.category)}</td>
           <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;color:#16a34a;font-weight:600;">$${(r.estimated_monthly_savings || 0).toLocaleString()}/mo</td>
         </tr>`
       ).join('');
 
       const contractRows = expiringContracts.slice(0, 3).map((c) =>
         `<tr>
-          <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;">${c.vendor_name}</td>
-          <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;">${c.renewal_date}</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;">${escapeHtml(c.vendor_name)}</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;">${escapeHtml(c.renewal_date)}</td>
           <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;">$${(c.monthly_cost || 0).toLocaleString()}/mo</td>
         </tr>`
       ).join('');
@@ -91,7 +98,7 @@ Deno.serve(async (req) => {
 
     <!-- Company -->
     <div style="padding:28px 36px 0;">
-      <p style="margin:0 0 20px;font-size:14px;color:#6b7280;">Here's your weekly SaaS health summary for <strong>${company.name}</strong>.</p>
+      <p style="margin:0 0 20px;font-size:14px;color:#6b7280;">Here's your weekly SaaS health summary for <strong>${escapeHtml(company.name)}</strong>.</p>
 
       <!-- KPI row -->
       <div style="display:flex;gap:12px;margin-bottom:24px;">
@@ -156,17 +163,19 @@ Deno.serve(async (req) => {
 </body>
 </html>`;
 
-      // Send one email to this user
-      await base44.asServiceRole.integrations.Core.SendEmail({
-        to: user.email,
-        subject: `📊 Your Weekly SaaS Digest — ${company.name}`,
-        body: emailBody,
-      });
-      sent++;
+      // Send one email to this user unless explicitly validating the template.
+      if (!dry_run) {
+        await base44.asServiceRole.integrations.Core.SendEmail({
+          to: user.email,
+          subject: `📊 Your Weekly SaaS Digest — ${company.name}`,
+          body: emailBody,
+        });
+        sent++;
+      }
     }
 
-    return Response.json({ success: true, sent });
+    return Response.json({ success: true, sent, dry_run });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
-});
+}

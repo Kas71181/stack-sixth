@@ -8,6 +8,20 @@ import { ArrowLeft, LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
 
+const getSafeReturnTo = () => {
+  const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+  if (!returnTo?.startsWith("/") || returnTo.startsWith("//") || returnTo.includes("\\")) return "/app";
+
+  try {
+    const url = new URL(returnTo, window.location.origin);
+    return url.origin === window.location.origin
+      ? `${url.pathname}${url.search}${url.hash}`
+      : "/app";
+  } catch {
+    return "/app";
+  }
+};
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,8 +34,7 @@ export default function Login() {
     setLoading(true);
     try {
       await base44.auth.loginViaEmailPassword(email, password);
-      const returnTo = new URLSearchParams(window.location.search).get("returnTo");
-      window.location.href = returnTo?.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/app";
+      window.location.href = getSafeReturnTo();
     } catch (err) {
       setError(err.message || "Invalid email or password");
     } finally {
@@ -30,8 +43,7 @@ export default function Login() {
   };
 
   const handleGoogle = () => {
-    const returnTo = new URLSearchParams(window.location.search).get("returnTo");
-    base44.auth.loginWithProvider("google", returnTo?.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/app");
+    base44.auth.loginWithProvider("google", getSafeReturnTo());
   };
 
   return (

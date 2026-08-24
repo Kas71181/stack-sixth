@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // Aggregates all NegotiationPlaybook records into crowd-sourced vendor intelligence
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
@@ -9,8 +9,8 @@ Deno.serve(async (req) => {
 
     const { vendor_name } = await req.json().catch(() => ({}));
 
-    // Fetch all playbooks (RLS ensures user-scoped or admin sees all)
-    const allPlaybooks = await base44.asServiceRole.entities.NegotiationPlaybook.filter({});
+    // Use the caller-scoped client so entity RLS prevents cross-organization access.
+    const allPlaybooks = await base44.entities.NegotiationPlaybook.filter({});
 
     // Filter by vendor if specified
     const playbooks = vendor_name
@@ -104,4 +104,4 @@ Deno.serve(async (req) => {
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
-});
+}
