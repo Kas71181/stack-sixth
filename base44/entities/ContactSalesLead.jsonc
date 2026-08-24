@@ -1,0 +1,83 @@
+{
+  "name": "ContactSalesLead",
+  "type": "object",
+  "properties": {
+    "first_name": {
+      "type": "string"
+    },
+    "last_name": {
+      "type": "string"
+    },
+    "work_email": {
+      "type": "string",
+      "format": "email"
+    },
+    "company": {
+      "type": "string"
+    },
+    "company_size": {
+      "type": "string"
+    },
+    "job_title": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "preferred_contact": {
+      "type": "string",
+      "enum": [
+        "email",
+        "phone"
+      ]
+    },
+    "consent": {
+      "type": "boolean"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "contacted",
+        "closed"
+      ],
+      "default": "new"
+    }
+  },
+  "required": [
+    "first_name",
+    "last_name",
+    "work_email",
+    "company",
+    "company_size",
+    "job_title",
+    "message",
+    "preferred_contact",
+    "consent"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

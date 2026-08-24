@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /signup
+Disallow: /register
+Disallow: /checkout
+Disallow: /onboarding
+Disallow: /settings
+Disallow: /app
+Disallow: /my-stack
+Disallow: /savings
+Disallow: /governance
+Sitemap: https://stacksixth.com/sitemap.xml

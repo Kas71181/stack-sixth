@@ -1,0 +1,4 @@
+import { Link } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
+import { XCircle } from "lucide-react";
+export default function CheckoutCancelled(){base44.analytics.track({eventName:"checkout_cancelled"});return <main className="flex min-h-screen items-center justify-center px-4"><div className="max-w-lg rounded-2xl border bg-card p-8 text-center"><XCircle className="mx-auto h-10 w-10 text-muted-foreground"/><h1 className="mt-5 text-2xl font-black">Checkout was cancelled.</h1><p className="mt-3 text-sm text-muted-foreground">No trial was activated and no charge was made. Your account is still available when you are ready.</p><Link to="/pricing" className="mt-6 inline-flex rounded-xl bg-primary px-5 py-3 font-bold text-primary-foreground">Return to pricing</Link></div></main>}

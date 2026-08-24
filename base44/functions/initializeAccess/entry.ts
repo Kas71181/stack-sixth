@@ -1,5 +1,4 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.40";
-import { addDays } from "../../shared/entitlements.ts";
 import { validatePromo } from "../../shared/promo.ts";
 import { accessPayload } from "../../shared/subscriptionState.ts";
 
@@ -9,7 +8,7 @@ export default async function(req) {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
-    const plan = String(body.plan || "FREE_LAUNCH").toUpperCase();
+    const plan = String(body.plan || "STARTER").toUpperCase();
     if (!["FREE_LAUNCH", "STARTER", "GROWTH", "SCALE", "ENTERPRISE"].includes(plan)) return Response.json({ error: "Invalid plan" }, { status: 400 });
     const companyData = body.company || {};
     if (!String(companyData.name || "").trim()) return Response.json({ error: "Company name is required" }, { status: 400 });
@@ -28,8 +27,8 @@ export default async function(req) {
       await base44.asServiceRole.entities.Partner.update(partner.id, { total_redemptions: (partner.total_redemptions || 0) + 1, total_activations: (partner.total_activations || 0) + 1 });
       await base44.entities.AcquisitionEvent.create({ organization_id: company.id, owner_user_id: user.id, event_name: "promo_code_redeemed", properties: { partner_id: partner.partner_id, campaign_id: campaign.campaign_id }, occurred_at: now.toISOString() });
       attributionData = { ...attributionData, acquisition_source: "PARTNER", partner_id: partner.partner_id, campaign_id: campaign.campaign_id, promo_code: promo.code };
-    } else if (!subscription || ["FREE", "PENDING_PAYMENT"].includes(subscription.subscription_status)) {
-      const update = plan === "FREE_LAUNCH" ? { organization_id: company.id, owner_user_id: user.id, plan, subscription_status: "FREE", billing_interval: "none", trial_started_at: now.toISOString(), trial_ends_at: addDays(now, 90).toISOString(), promotional_access: false, payment_status: "NOT_REQUIRED", workspace_mode: "ACTIVE" } : { organization_id: company.id, owner_user_id: user.id, plan, subscription_status: "PENDING_PAYMENT", billing_interval: body.billing_interval === "annual" ? "annual" : "monthly", payment_status: "PENDING", workspace_mode: "ACTIVE" };
+    } else if (!subscription || ["FREE", "PENDING_PAYMENT", "READ_ONLY", "EXPIRED"].includes(subscription.subscription_status)) {
+      const update = { organization_id: company.id, owner_user_id: user.id, plan, subscription_status: "PENDING_PAYMENT", billing_interval: body.billing_interval === "annual" ? "annual" : "monthly", promotional_access: false, payment_status: "PENDING", workspace_mode: "READ_ONLY" };
       subscription = subscription ? await base44.asServiceRole.entities.OrganizationSubscription.update(subscription.id, update) : await base44.asServiceRole.entities.OrganizationSubscription.create(update);
     }
     const attribution = await base44.asServiceRole.entities.AcquisitionAttribution.filter({ owner_user_id: user.id });

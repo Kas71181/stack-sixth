@@ -21,6 +21,14 @@ export default async function(req) {
           if (activity[0]) await base44.asServiceRole.entities.AcquisitionEvent.create({ organization_id: subscription.organization_id, owner_user_id: subscription.owner_user_id, event_name: eventName, properties: {}, occurred_at: new Date().toISOString() });
         }
       }
+      if (subscription.subscription_status === "PAST_DUE") {
+        const pastDueAt = subscription.past_due_started_at ? new Date(subscription.past_due_started_at) : null;
+        if (pastDueAt && Date.now() - pastDueAt.getTime() >= 7 * 86400000) {
+          await base44.asServiceRole.entities.OrganizationSubscription.update(subscription.id, { subscription_status: "UNPAID", workspace_mode: "READ_ONLY" });
+          expired += 1;
+        }
+        continue;
+      }
       if (!["FREE", "PROMOTIONAL"].includes(subscription.subscription_status)) continue;
       const start = subscription.promotional_access ? subscription.promotional_started_at : subscription.trial_started_at;
       const end = subscription.promotional_access ? subscription.promotional_ends_at : subscription.trial_ends_at;

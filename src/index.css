@@ -95,6 +95,7 @@
 }
 
 @layer base {
+  html { scroll-behavior: smooth; }
   * {
     @apply border-border outline-ring/50;
   }
@@ -349,4 +350,9 @@ body::after {
   .animate-fade-up {
     animation: fade-up 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }

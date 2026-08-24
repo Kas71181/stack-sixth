@@ -1,0 +1,9 @@
+import HeroSection from "@/components/marketing/HeroSection";
+import ProblemFeatureSections from "@/components/marketing/ProblemFeatureSections";
+import ProductShowcase from "@/components/marketing/ProductShowcase";
+import EvidenceHowSection from "@/components/marketing/EvidenceHowSection";
+import IntegrationsTeamSection from "@/components/marketing/IntegrationsTeamSection";
+import PricingSection from "@/components/marketing/PricingSection";
+import SecurityFaqSection from "@/components/marketing/SecurityFaqSection";
+import { Link } from "react-router-dom";
+export default function MarketingHome(){return <><HeroSection/><div className="border-b bg-background"><div className="mx-auto flex max-w-7xl flex-wrap justify-center gap-x-10 gap-y-3 px-4 py-6 text-sm font-bold text-muted-foreground">{["One workspace","Clear visibility","Authorized connections","Smarter decisions","Subscription control"].map(v=><span key={v}>{v}</span>)}</div></div><ProblemFeatureSections/><ProductShowcase/><EvidenceHowSection/><IntegrationsTeamSection/><PricingSection/><SecurityFaqSection/><section className="bg-primary px-4 py-16 text-center text-primary-foreground"><h2 className="text-3xl font-black sm:text-4xl">Bring clarity to your software stack.</h2><p className="mx-auto mt-4 max-w-2xl opacity-90">Organize applications, understand subscriptions, and make more informed software decisions.</p><div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row"><Link to="/pricing" className="rounded-xl bg-white px-6 py-3 font-bold text-slate-950">Choose a Plan</Link><Link to="/contact-sales" className="rounded-xl border border-white/30 px-6 py-3 font-bold">Contact Sales</Link></div></section></>}

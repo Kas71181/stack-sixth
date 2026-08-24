@@ -51,6 +51,7 @@ export default function Register() {
         base44.auth.setToken(result.access_token);
       }
       await base44.entities.AcquisitionEvent.create({ event_name: "account_created", properties: { method: "email" }, occurred_at: new Date().toISOString() });
+      base44.analytics.track({ eventName: "signup_completed", properties: { method: "email" } });
       window.location.href = "/signup/setup";
     } catch (err) {
       setError(err.message || "Invalid verification code");

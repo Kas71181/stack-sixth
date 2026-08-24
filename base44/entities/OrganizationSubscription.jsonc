@@ -23,13 +23,17 @@
       "enum": [
         "FREE",
         "PROMOTIONAL",
+        "INCOMPLETE",
+        "TRIALING",
         "ACTIVE",
         "PAST_DUE",
         "CANCELLED",
+        "UNPAID",
+        "EXPIRED",
         "READ_ONLY",
         "PENDING_PAYMENT"
       ],
-      "default": "FREE"
+      "default": "PENDING_PAYMENT"
     },
     "billing_interval": {
       "type": "string",
@@ -70,7 +74,26 @@
       "type": "string",
       "format": "date-time"
     },
+    "current_period_start": {
+      "type": "string",
+      "format": "date-time"
+    },
     "current_period_end": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "stripe_price_id": {
+      "type": "string"
+    },
+    "cancel_at_period_end": {
+      "type": "boolean",
+      "default": false
+    },
+    "canceled_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "past_due_started_at": {
       "type": "string",
       "format": "date-time"
     },
@@ -79,11 +102,12 @@
       "enum": [
         "NOT_REQUIRED",
         "PENDING",
+        "METHOD_ON_FILE",
         "PAID",
         "FAILED",
         "NO_PAYMENT_METHOD"
       ],
-      "default": "NOT_REQUIRED"
+      "default": "PENDING"
     },
     "stripe_customer_id": {
       "type": "string"
@@ -100,7 +124,7 @@
         "ACTIVE",
         "READ_ONLY"
       ],
-      "default": "ACTIVE"
+      "default": "READ_ONLY"
     }
   },
   "required": [

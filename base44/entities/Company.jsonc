@@ -36,6 +36,21 @@
     "contact_last_name": {
       "type": "string"
     },
+    "country": {
+      "type": "string"
+    },
+    "website": {
+      "type": "string"
+    },
+    "primary_use_case": {
+      "type": "string"
+    },
+    "departments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "monthly_saas_budget": {
       "type": "number",
       "title": "Monthly SaaS Budget"

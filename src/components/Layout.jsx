@@ -12,7 +12,7 @@ import SubscriptionStatusBanner from "@/components/subscription/SubscriptionStat
 import { trackAcquisition } from "@/lib/acquisitionEvents";
 
 const primaryNav = [
-  { path: "/", label: "Overview", icon: Home },
+  { path: "/app", label: "Overview", icon: Home },
   { path: "/my-stack", label: "My Stack", icon: Layers },
   { path: "/savings", label: "Savings", icon: TrendingDown },
   { path: "/governance", label: "Governance", icon: ShieldCheck },
@@ -27,7 +27,7 @@ export default function Layout() {
   // Track page views on every route change
   useEffect(() => {
     const pageNames = {
-      "/": "overview",
+      "/app": "overview",
       "/my-stack": "my_stack",
       "/savings": "savings",
       "/renewals": "renewals",
@@ -106,7 +106,7 @@ export default function Layout() {
           <div className="flex items-center justify-between h-[3.75rem]">
 
             {/* Logo */}
-            <Link to="/" className="flex items-center flex-shrink-0 group">
+            <Link to="/app" className="flex items-center flex-shrink-0 group">
               <img
                 src="https://media.base44.com/images/public/69f28176704facfd454194e1/d3ef5da50_StackSixth.svg"
                 alt="Stack Sixth"

@@ -1,5 +1,4 @@
-import { addDays, getEntitlements } from "./entitlements.ts";
-
+import { getEntitlements } from "./entitlements.ts";
 export async function ensureSubscription(base44, user) {
   const existing = await base44.asServiceRole.entities.OrganizationSubscription.filter({ owner_user_id: user.id });
   if (existing[0]) return existing[0];
@@ -7,13 +6,11 @@ export async function ensureSubscription(base44, user) {
   const company = companies[0] || await base44.entities.Company.create({ name: user.full_name ? `${user.full_name}'s workspace` : "My workspace" });
   const now = new Date();
   await base44.asServiceRole.entities.AcquisitionAttribution.create({ organization_id: company.id, owner_user_id: user.id, acquisition_source: "DIRECT", attributed_at: now.toISOString() });
-  return await base44.asServiceRole.entities.OrganizationSubscription.create({ organization_id: company.id, owner_user_id: user.id, plan: "FREE_LAUNCH", subscription_status: "FREE", billing_interval: "none", trial_started_at: now.toISOString(), trial_ends_at: addDays(now, 90).toISOString(), payment_status: "NOT_REQUIRED", workspace_mode: "ACTIVE" });
+  return await base44.asServiceRole.entities.OrganizationSubscription.create({ organization_id: company.id, owner_user_id: user.id, plan: "STARTER", subscription_status: "PENDING_PAYMENT", billing_interval: "monthly", payment_status: "PENDING", workspace_mode: "READ_ONLY" });
 }
-
 export function accessPayload(subscription, planDefinition = null) {
-  const end = subscription.promotional_access ? subscription.promotional_ends_at : subscription.trial_ends_at;
+  const end = subscription.promotional_access ? subscription.promotional_ends_at : subscription.subscription_status === "TRIALING" ? subscription.trial_ends_at : subscription.current_period_end;
   const daysRemaining = end ? Math.max(0, Math.ceil((new Date(end).getTime() - Date.now()) / 86400000)) : null;
-  const defaults = getEntitlements(subscription.plan);
-  const entitlements = { ...defaults, ...(planDefinition?.entitlements || {}), integration_limit: planDefinition?.integration_limit ?? defaults.integration_limit };
+  const defaults = getEntitlements(subscription.plan); const entitlements = { ...defaults, ...(planDefinition?.entitlements || {}), integration_limit: planDefinition?.integration_limit ?? defaults.integration_limit };
   return { subscription, entitlements, days_remaining: daysRemaining, read_only: subscription.workspace_mode === "READ_ONLY" };
 }

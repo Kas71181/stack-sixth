@@ -1,0 +1,3 @@
+import { Link } from "react-router-dom";
+import SubscriptionPanel from "@/components/settings/SubscriptionPanel";
+export default function BillingSettings(){return <main className="min-h-screen bg-background px-4 py-12"><div className="mx-auto max-w-2xl"><div className="mb-7 flex items-center justify-between"><div><p className="text-xs font-bold uppercase tracking-widest text-primary">Account</p><h1 className="mt-2 text-3xl font-black">Billing and subscription</h1></div><Link to="/app" className="text-sm font-bold text-primary">Back to app</Link></div><SubscriptionPanel/></div></main>}
