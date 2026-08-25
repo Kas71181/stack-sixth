@@ -36,7 +36,8 @@ Rules:
 4. For startup users, bias toward essential low-friction tools.
 5. For optimize users, bias toward integration, consolidation, and savings.
 6. Keep recommendations practical and budget-aware.
-7. Do not use em dashes or en dashes. Use commas, periods, or words instead.`;
+7. Do not use em dashes or en dashes. Use commas, periods, or words instead.
+8. Treat each existing tool's stated purpose, current price, usage score, business processes, and pain points as primary inputs when recommending alternatives and writing the ROI note.`;
 
 export default function Results() {
   const { id } = useParams();

@@ -55,8 +55,18 @@
           "category": {
             "type": "string"
           },
+          "purpose": {
+            "type": "string"
+          },
           "monthly_cost": {
             "type": "number"
+          },
+          "usage_score": {
+            "type": "number"
+          },
+          "last_verified": {
+            "type": "string",
+            "format": "date"
           }
         }
       },

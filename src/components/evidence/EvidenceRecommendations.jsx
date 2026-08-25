@@ -1,25 +1,28 @@
-import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, CircleDollarSign } from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import EvidenceBadge from "@/components/evidence/EvidenceBadge";
-import { withoutLongDashes } from "@/lib/textFormatting";
+import AuditRecommendationCard from "@/components/savings/AuditRecommendationCard";
 
 export default function EvidenceRecommendations() {
   const { user } = useAuth();
-  const { data = [], isLoading } = useQuery({ queryKey: ["evidence-recommendations", user?.id], queryFn: () => base44.entities.Recommendation.filter({ created_by_id: user.id, status: "Open" }, "-created_date", 100), enabled: !!user?.id });
+  const queryClient = useQueryClient();
+  const [savingIndex, setSavingIndex] = useState(null);
+  const { data: audit, isLoading } = useQuery({
+    queryKey: ["latest-audit-recommendations", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => (await base44.entities.SoftwareAudit.filter({ created_by_id: user.id, status: "completed" }, "-created_date", 1))[0] || null,
+  });
+  const recommendations = audit?.analysis_result?.recommendations || [];
+  const decide = async (index, decision) => {
+    setSavingIndex(index);
+    const updated = recommendations.map((rec, i) => i === index ? { ...rec, decision_state: decision, decision_at: new Date().toISOString() } : rec);
+    await base44.entities.SoftwareAudit.update(audit.id, { analysis_result: { ...audit.analysis_result, recommendations: updated } });
+    await queryClient.invalidateQueries({ queryKey: ["latest-audit-recommendations", user.id] });
+    setSavingIndex(null);
+  };
   if (isLoading) return <div className="skeleton h-32 rounded-2xl" />;
-  return (
-    <div className="space-y-3">
-      {data.map((item) => (
-        <div key={item.id} className="glass-card p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><p className="font-semibold">{item.tool_name}</p><p className="mt-1 text-sm text-muted-foreground"><strong className="text-foreground">What we found:</strong> {withoutLongDashes(item.description)}</p></div><EvidenceBadge value={item.evidence_level} /></div>
-          <div className="mt-4 flex flex-wrap items-center gap-3 text-xs"><span className="badge-pill bg-muted text-muted-foreground">{item.financial_impact_status?.replaceAll("_", " ").toLowerCase()}</span>{item.financial_impact != null && item.validation_status === "valid" && <span className="flex items-center gap-1 font-mono font-bold text-emerald-700 dark:text-emerald-300"><CircleDollarSign className="h-4 w-4" />${item.financial_impact.toLocaleString()}/mo</span>}<span className="badge-pill bg-primary/10 text-primary">Confidence: {item.confidence_level || "insufficient"}</span></div>
-          <div className="mt-4 flex items-center gap-2 border-t border-border/50 pt-3 text-xs font-medium"><ArrowRight className="h-3.5 w-3.5 text-primary" /><span><strong>Next action:</strong> {withoutLongDashes(item.recommended_action)}</span></div>
-          <p className="mt-2 text-[10px] text-muted-foreground">Method: {item.calculation_method || "Insufficient evidence"} · {item.evidence_sources?.length || 0} source record(s)</p>
-        </div>
-      ))}
-      {!data.length && <div className="glass-card p-8 text-center text-sm text-muted-foreground">No open evidence-backed recommendations.</div>}
-    </div>
-  );
+  if (!recommendations.length) return <div className="glass-card p-8 text-center"><p className="font-semibold">No tool recommendations yet</p><p className="mt-1 text-sm text-muted-foreground">Run an audit using your tools, processes, purposes, and pricing to generate alternatives.</p><Link to="/audit" className="mt-4 inline-flex rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground active:scale-[0.96]">Run an audit</Link></div>;
+  return <div className="space-y-3"><p className="text-sm text-muted-foreground">Based on the latest audit of your tools, their purposes, your processes, and pricing.</p>{recommendations.map((rec, index) => <AuditRecommendationCard key={`${rec.name}-${index}`} recommendation={rec} index={index} saving={savingIndex === index} onDecision={decide} />)}</div>;
 }

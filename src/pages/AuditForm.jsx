@@ -34,6 +34,7 @@ Rules:
 7. Use concise, specific business reasoning that references the company's ICP where relevant (industry, growth stage, customer type).
 8. If ICP data is available, tailor why_it_fits bullets to explicitly reference the company's industry, business model, or growth stage.
 9. Do not use em dashes or en dashes. Use commas, periods, or words instead.
+10. Treat each existing tool's stated purpose, current price, usage score, business processes, and pain points as primary inputs when recommending alternatives and writing the ROI note.
 
 Now generate the JSON response from the input context.`;
 

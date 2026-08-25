@@ -36,19 +36,20 @@ const CATEGORY_OPTIONS = [
 
 export default function StepExistingSoftware({ data, onChange }) {
   const software = data.existing_software || [];
-  const [draft, setDraft] = useState({ name: "", category: "", monthly_cost: "", usage_score: "", last_verified: "" });
+  const [draft, setDraft] = useState({ name: "", category: "", purpose: "", monthly_cost: "", usage_score: "", last_verified: "" });
 
   const addSoftware = () => {
     if (!draft.name.trim()) return;
     const entry = {
       name: draft.name.trim(),
       category: draft.category || "Other",
+      purpose: draft.purpose.trim(),
       monthly_cost: draft.monthly_cost ? parseFloat(draft.monthly_cost) : null,
       usage_score: draft.usage_score ? parseInt(draft.usage_score) : null,
       last_verified: draft.last_verified || new Date().toISOString().split("T")[0],
     };
     onChange({ existing_software: [...software, entry] });
-    setDraft({ name: "", category: "", monthly_cost: "", usage_score: "", last_verified: "" });
+    setDraft({ name: "", category: "", purpose: "", monthly_cost: "", usage_score: "", last_verified: "" });
   };
 
   const handleImported = (tools) => {
@@ -89,6 +90,7 @@ export default function StepExistingSoftware({ data, onChange }) {
                   <div className="min-w-0">
                     <p className="font-medium text-sm truncate">{s.name}</p>
                     <p className="text-xs text-muted-foreground">{s.category}</p>
+                    {s.purpose && <p className="mt-0.5 text-xs text-muted-foreground">{s.purpose}</p>}
                   </div>
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0">
@@ -154,6 +156,12 @@ export default function StepExistingSoftware({ data, onChange }) {
               className="h-10 rounded-lg"
             />
           </div>
+          <Input
+            placeholder="What does your team use this tool for?"
+            value={draft.purpose}
+            onChange={(e) => setDraft({ ...draft, purpose: e.target.value })}
+            className="mt-3 h-10 rounded-lg"
+          />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
             <div className="flex items-center gap-2">
               <Star className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
