@@ -9,9 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import AddToolModal from "@/components/stack/AddToolModal";
 import ToolLogo from "@/components/stack/ToolLogo";
-import { dedupeTools, getLiveToolNames, normalizeToolName } from "@/lib/connectionStatus";
+import { dedupeTools, getLiveToolNames, getToolConnectionDisplay, normalizeToolName } from "@/lib/connectionStatus";
 
 const LIVE_STATUS = "bg-emerald-500/12 text-emerald-600 border-emerald-500/25";
+const CONNECTED_STATUS = "bg-primary/10 text-primary border-primary/20";
+const PENDING_STATUS = "bg-amber-500/10 text-amber-600 border-amber-500/25";
 const OFFLINE_STATUS = "bg-muted text-muted-foreground border-border";
 
 const CATEGORIES = ["All", "Communication", "Project Management", "CRM & Sales", "Productivity & Docs", "Analytics & BI", "Marketing", "Customer Support", "Identity & Security", "Dev Tools", "Finance & HR"];
@@ -190,7 +192,9 @@ export default function ToolStack() {
       ) : (
         <div className="space-y-2">
           {filtered.map((tool, idx) => {
-            const isLive = liveNames.has(normalizeToolName(tool.tool_name));
+            const hasLiveActivity = liveNames.has(normalizeToolName(tool.tool_name));
+            const connection = getToolConnectionDisplay(tool, hasLiveActivity);
+            const statusClass = connection.key === "live" ? LIVE_STATUS : connection.key === "pending" ? PENDING_STATUS : connection.connected ? CONNECTED_STATUS : OFFLINE_STATUS;
             const util = tool.licensed_seats > 0 ? Math.round((tool.active_users / tool.licensed_seats) * 100) : 0;
             const inactive = (tool.licensed_seats || 0) - (tool.active_users || 0);
             const utilColor = util >= 70 ? "bg-emerald-500" : util >= 40 ? "bg-amber-400" : "bg-red-500";
@@ -202,7 +206,7 @@ export default function ToolStack() {
                   <p className="font-semibold text-sm">{tool.tool_name}</p>
                   <Badge variant="outline" className="text-[10px] mt-0.5">{tool.category}</Badge>
                 </div>
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${isLive ? LIVE_STATUS : OFFLINE_STATUS}`}>{isLive ? "Live" : "Not connected"}</span>
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusClass}`}>{connection.label}</span>
                 <div className="text-sm font-mono font-medium w-20 text-right">${(tool.monthly_cost || 0).toLocaleString()}/mo</div>
                 <div className="flex items-center gap-2 min-w-[140px]">
                   <Users className="w-3.5 h-3.5 text-muted-foreground" />
@@ -212,7 +216,7 @@ export default function ToolStack() {
                   </div>
                   <span className="text-xs font-semibold w-8">{util}%</span>
                 </div>
-                {isLive && tool.last_synced && <span className="text-[10px] text-muted-foreground hidden md:block">Live sync {tool.last_synced}</span>}
+                {connection.connected && tool.last_synced && <span className="text-[10px] text-muted-foreground hidden md:block">Updated {tool.last_synced}</span>}
                 {inactive > 0 && <span className="text-[10px] text-amber-500 bg-amber-500/10 border border-amber-500/25 px-2 py-0.5 rounded-full">{inactive} idle</span>}
                 {/* Actions */}
                 <div className="flex items-center gap-1 ml-auto">

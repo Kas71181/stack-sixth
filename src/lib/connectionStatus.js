@@ -35,3 +35,12 @@ export function getLiveToolNames(activities = []) {
 export function isToolLive(toolName, activities = []) {
   return getLiveToolNames(activities).has(normalizeToolName(toolName));
 }
+
+export function getToolConnectionDisplay(tool = {}, hasLiveActivity = false) {
+  if (hasLiveActivity || (tool.connection_status === "Connected" && tool.evidence_type === "live")) return { key: "live", label: "Live", connected: true };
+  if (tool.connection_status === "Connected") return { key: "connected", label: "Connected", connected: true };
+  if (tool.connection_status === "Evidence") return { key: "evidence", label: "Evidence connected", connected: true };
+  if (tool.connection_status === "Manual Upload") return { key: "evidence", label: "Report connected", connected: true };
+  if (tool.connection_status === "Manual Auth") return { key: "pending", label: "Verification pending", connected: true };
+  return { key: "offline", label: "Not connected", connected: false };
+}
