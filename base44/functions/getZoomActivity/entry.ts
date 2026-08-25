@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { authorizeTargetUser } from '../../shared/authorizeTargetUser.ts';
+import { decryptCredential } from '../../shared/credentialCrypto.ts';
 
 export default async function(req) {
   try {
@@ -13,14 +14,14 @@ export default async function(req) {
     const stored = await base44.asServiceRole.entities.ApiCredential.filter({ service: 'zoom', created_by_id: user.id });
     const cred = stored[0];
 
-    if (!cred?.api_key) {
+    if (!cred) {
       return Response.json({ success: false, not_configured: true, error: 'Zoom credentials not configured' }, { status: 200 });
     }
 
-    // cred.api_key = Client ID, cred.extra_fields.client_secret = Client Secret, cred.extra_fields.account_id = Account ID
-    const clientId = cred.api_key;
-    const clientSecret = cred.extra_fields?.client_secret;
-    const accountId = cred.extra_fields?.account_id;
+    const decrypted = await decryptCredential(cred);
+    const clientId = decrypted.api_key;
+    const clientSecret = decrypted.extra_fields?.client_secret;
+    const accountId = decrypted.extra_fields?.account_id;
 
     if (!clientSecret || !accountId) {
       return Response.json({ success: false, not_configured: true, error: 'Missing client_secret or account_id. Please reconnect Zoom.' }, { status: 200 });
@@ -28,7 +29,7 @@ export default async function(req) {
 
     // Exchange for an access token using Server-to-Server OAuth
     const tokenRes = await fetch(
-      `https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${accountId}`,
+      `https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${encodeURIComponent(accountId)}`,
       {
         method: 'POST',
         headers: {

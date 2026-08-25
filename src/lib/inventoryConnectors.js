@@ -19,6 +19,15 @@ export const INVENTORY_CONNECTORS = {
     logo: toolLogoUrl("Apollo.io"),
   },
   hubspot: { id: "hubspot", label: "HubSpot", setupRequired: true, authMode: "API token", functionName: "getHubSpotActivity" },
+  vercel: { id: "vercel", label: "Vercel", functionName: "getVercelActivity" },
+  zoom: {
+    id: "zoom", label: "Zoom", functionName: "getZoomActivity",
+    credentialFields: [
+      { name: "api_key", label: "Client ID", placeholder: "Zoom Server-to-Server OAuth Client ID" },
+      { name: "client_secret", label: "Client secret", placeholder: "Zoom Server-to-Server OAuth Client Secret" },
+      { name: "account_id", label: "Account ID", placeholder: "Zoom Account ID" },
+    ],
+  },
   googlemeet: { id: "googlemeet", label: "Google Meet", setupRequired: true, authMode: "Per-user OAuth" },
   jira: { id: "jira", label: "Jira", setupRequired: true, authMode: "Per-user OAuth" },
   quickbooks: { id: "quickbooks", label: "QuickBooks", setupRequired: true, authMode: "Shared OAuth" },
