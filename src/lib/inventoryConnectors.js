@@ -18,7 +18,7 @@ export const INVENTORY_CONNECTORS = {
     idleLabel: "Connect Apollo to verify credit and API usage",
     logo: toolLogoUrl("Apollo.io"),
   },
-  hubspot: { id: "hubspot", label: "HubSpot", setupRequired: true, authMode: "API token", functionName: "getHubSpotActivity" },
+  hubspot: { id: "hubspot", label: "HubSpot", authMode: "API token", functionName: "getHubSpotActivity" },
   vercel: { id: "vercel", label: "Vercel", functionName: "getVercelActivity" },
   zoom: {
     id: "zoom", label: "Zoom", functionName: "getZoomActivity",

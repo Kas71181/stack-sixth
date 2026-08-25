@@ -12,15 +12,17 @@ export default function InventoryConnectionCard({ tool, connector, isLive, onSyn
   const flow = useInventoryConnection({ tool, connector: activeConnector, isLive, onSynced });
   const busy = flow.status === "authorizing" || flow.status === "syncing";
   const direct = Boolean(connector?.connectorId || connector?.oauthFunction);
+  const canConnect = Boolean(connector && !connector.setupRequired && (direct || connector.functionName));
   const verified = ["live", "evidence"].includes(flow.status);
   const configured = verified || flow.status === "manual";
   const connectionLabel = flow.status === "live" ? "Verified live"
     : flow.status === "evidence" ? tool.evidence_type === "access" ? "Verified access" : tool.evidence_type === "observed" ? "Observed membership evidence" : "Financial evidence found"
-      : flow.status === "manual" ? "API token saved — verification pending"
+      : flow.status === "manual" ? canConnect ? "API token saved, verification pending" : "Saved token cannot be verified"
         : direct ? connector?.idleLabel || "OAuth connection available"
-          : "Manual API token available";
+          : canConnect ? "Manual API credential available" : "Verified connection not available";
 
   const begin = () => {
+    if (!canConnect) return;
     setActiveConnector(connector);
     setModal(direct ? "privacy" : "token");
   };
@@ -37,9 +39,9 @@ export default function InventoryConnectionCard({ tool, connector, isLive, onSyn
       </div>
       <div className="sm:w-44">
         {flow.error && <p className="mb-2 flex gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5 shrink-0" />{flow.error}</p>}
-        <Button className="w-full" size="sm" variant={configured ? "outline" : "default"} disabled={busy} onClick={begin}>
-          {busy ? <Loader2 className="animate-spin" /> : flow.status === "manual" ? <KeyRound /> : verified ? <CheckCircle2 /> : <Plug />}
-          {flow.status === "authorizing" ? "Authorizing…" : flow.status === "syncing" ? "Verifying…" : flow.status === "manual" ? "Replace token" : verified ? "Reconnect" : "Connect"}
+        <Button className="w-full" size="sm" variant={configured ? "outline" : "default"} disabled={busy || !canConnect} onClick={begin}>
+          {busy ? <Loader2 className="animate-spin" /> : !canConnect ? <AlertCircle /> : flow.status === "manual" ? <KeyRound /> : verified ? <CheckCircle2 /> : <Plug />}
+          {flow.status === "authorizing" ? "Authorizing…" : flow.status === "syncing" ? "Verifying…" : !canConnect ? "Unavailable" : flow.status === "manual" ? "Replace token" : verified ? "Reconnect" : "Connect"}
         </Button>
       </div>
       {modal === "privacy" && <DataPrivacyModal connector={activeConnector} onCancel={() => setModal("")} onConfirm={() => { setModal(""); flow.connect(); }} />}
