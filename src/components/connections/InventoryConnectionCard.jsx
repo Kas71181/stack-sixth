@@ -23,10 +23,10 @@ export default function InventoryConnectionCard({ tool, connector, isLive, onSyn
       : flow.status === "manual" ? nativeConnection ? "API token saved, verification pending" : "Saved token cannot be verified"
         : flow.status === "snapshot" ? "Private report connected"
           : direct ? connector?.idleLabel || "OAuth connection available"
-            : nativeConnection ? "Manual API credential available" : "Evidence connection available";
+            : nativeConnection ? "Manual API credential available" : "Secure connection options available";
 
-  const begin = () => {
-    if (!nativeConnection) return setModal("fallback");
+  const begin = () => setModal("methods");
+  const startNative = () => {
     setActiveConnector(connector);
     setModal(direct ? "privacy" : "token");
   };
@@ -45,12 +45,12 @@ export default function InventoryConnectionCard({ tool, connector, isLive, onSyn
         {flow.error && <p className="mb-2 flex gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5 shrink-0" />{flow.error}</p>}
         <Button className="w-full" size="sm" variant={configured ? "outline" : "default"} disabled={busy} onClick={begin}>
           {busy ? <Loader2 className="animate-spin" /> : flow.status === "manual" ? <KeyRound /> : verified || flow.status === "snapshot" ? <CheckCircle2 /> : <Plug />}
-          {flow.status === "authorizing" ? "Authorizing…" : flow.status === "syncing" ? "Verifying…" : flow.status === "manual" ? "Replace token" : flow.status === "snapshot" ? "Replace report" : verified ? "Reconnect" : nativeConnection ? "Connect" : "Add evidence"}
+          {flow.status === "authorizing" ? "Authorizing…" : flow.status === "syncing" ? "Verifying…" : flow.status === "manual" ? "Replace token" : flow.status === "snapshot" ? "Replace report" : verified ? "Reconnect" : "Connect"}
         </Button>
       </div>
       {modal === "privacy" && <DataPrivacyModal connector={activeConnector} onCancel={() => setModal("")} onConfirm={() => { setModal(""); flow.connect(); }} />}
       {modal === "token" && <ApiTokenModal tool={tool} connector={connector} onClose={() => setModal("")} onSaved={() => { setModal(""); onSynced?.(); }} />}
-      {modal === "fallback" && <ConnectionFallbackModal toolName={tool.tool_name} onClose={() => setModal("")} onGmail={() => { setActiveConnector(GMAIL_EVIDENCE_CONNECTOR); setModal("privacy"); }} onUpload={() => setModal("upload")} />}
+      {modal === "methods" && <ConnectionFallbackModal toolName={tool.tool_name} primaryType={direct ? "oauth" : "api"} primaryLabel={direct ? `Connect with ${connector?.label}` : "Use API credentials"} onPrimary={nativeConnection ? startNative : undefined} onClose={() => setModal("")} onGmail={() => { setActiveConnector(GMAIL_EVIDENCE_CONNECTOR); setModal("privacy"); }} onUpload={() => setModal("upload")} />}
       {modal === "upload" && <ReportUploadModal tool={tool} onClose={() => setModal("")} onSaved={() => { setModal(""); onSynced?.(); }} />}
     </div>
   );
