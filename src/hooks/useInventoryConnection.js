@@ -10,17 +10,20 @@ const waitForClose = (popup) => new Promise((resolve) => {
   }, 500);
 });
 
-const savedStatus = (tool, isLive) => isLive
-  ? "live"
-  : tool.connection_status === "Evidence"
-    ? "evidence"
-    : tool.connection_status === "Manual Auth" ? "manual"
-      : tool.connection_status === "Manual Upload" ? "snapshot" : "idle";
+const savedStatus = (tool, isLive, connection) => {
+  if (tool.connection_status === "Manual Auth") return "manual";
+  if (tool.connection_status === "Manual Upload") return "snapshot";
+  if (tool.connection_status === "Evidence") return tool.evidence_type === "access" ? "access" : "evidence";
+  if (["Pending", "Failed"].includes(tool.connection_status)) return "idle";
+  if (connection?.connected && connection.authentication_status === "valid") return connection.usage_supported && isLive ? "live" : "access";
+  if (tool.connection_status === "Connected") return isLive && tool.evidence_type === "live" ? "live" : "access";
+  return isLive ? "live" : "idle";
+};
 
-export default function useInventoryConnection({ tool, connector, isLive, onSynced }) {
-  const [status, setStatus] = useState(savedStatus(tool, isLive));
+export default function useInventoryConnection({ tool, connector, connection, isLive, onSynced }) {
+  const [status, setStatus] = useState(savedStatus(tool, isLive, connection));
   const [error, setError] = useState("");
-  useEffect(() => setStatus(savedStatus(tool, isLive)), [isLive, tool.connection_status]);
+  useEffect(() => setStatus(savedStatus(tool, isLive, connection)), [isLive, tool.connection_status, tool.evidence_type, connection]);
 
   const connect = async () => {
     setStatus("authorizing");
@@ -75,16 +78,18 @@ export default function useInventoryConnection({ tool, connector, isLive, onSync
         onSynced?.();
         return;
       }
+      const liveUsage = result.data?.usage_status === "VERIFIED_LIVE" || result.data?.evidence_type === "live";
+      const verifiedAccess = result.data?.evidence_status === "VERIFIED_ACCESS" || result.data?.evidence_type === "access";
       const observedOnly = result.data?.evidence_status === "OBSERVED";
       const insufficient = result.data?.evidence_status === "INSUFFICIENT_EVIDENCE";
       await base44.entities.SaasIntegration.update(tool.id, {
-        connection_status: insufficient ? "Pending" : observedOnly ? "Evidence" : "Connected",
-        evidence_type: insufficient ? "insufficient" : observedOnly ? "observed" : "live",
+        connection_status: insufficient ? "Pending" : liveUsage ? "Connected" : "Evidence",
+        evidence_type: insufficient ? "insufficient" : liveUsage ? "live" : verifiedAccess ? "access" : "observed",
         last_synced: new Date().toISOString().slice(0, 10),
         evidence_checked_at: new Date().toISOString(),
-        evidence_note: result.data?.evidence_note || "Verified through a live OAuth connection",
+        evidence_note: result.data?.evidence_note || (liveUsage ? "Verified live usage data" : "Verified account access"),
       });
-      setStatus(insufficient ? "idle" : observedOnly ? "evidence" : "live");
+      setStatus(insufficient ? "idle" : liveUsage ? "live" : verifiedAccess ? "access" : "evidence");
       onSynced?.();
     } catch (err) {
       setError(err?.message || "Connection failed.");

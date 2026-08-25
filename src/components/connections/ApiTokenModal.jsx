@@ -20,7 +20,7 @@ export default function ApiTokenModal({ tool, connector, onClose, onSaved }) {
       if (connector?.functionName) {
         const sync = await base44.functions.invoke(connector.functionName, {});
         if (!sync.data?.success) throw new Error(sync.data?.error || "The credentials were saved but could not be verified.");
-        const evidenceType = sync.data.evidence_type || "live";
+        const evidenceType = sync.data.evidence_type || connector?.evidenceType || "access";
         await base44.entities.SaasIntegration.update(tool.id, {
           connection_status: evidenceType === "live" ? "Connected" : "Evidence", evidence_type: evidenceType,
           last_synced: new Date().toISOString().slice(0, 10),

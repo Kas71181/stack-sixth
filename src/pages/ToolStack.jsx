@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import AddToolModal from "@/components/stack/AddToolModal";
 import ToolLogo from "@/components/stack/ToolLogo";
-import { dedupeTools, getLiveToolNames, getToolConnectionDisplay, normalizeToolName } from "@/lib/connectionStatus";
+import { buildConnectionMap, dedupeTools, getLiveToolNames, getToolConnectionDisplay, normalizeToolName } from "@/lib/connectionStatus";
 
 const LIVE_STATUS = "bg-emerald-500/12 text-emerald-600 border-emerald-500/25";
 const CONNECTED_STATUS = "bg-primary/10 text-primary border-primary/20";
@@ -42,6 +42,12 @@ export default function ToolStack() {
       ]);
       return [...new Map([...owned, ...company].map((activity) => [activity.id, activity])).values()];
     },
+    enabled: !!user?.id,
+  });
+
+  const { data: connectionRecords = [] } = useQuery({
+    queryKey: ["integration-connections", user?.id],
+    queryFn: () => base44.entities.IntegrationConnection.filter({ organization_id: user.id }),
     enabled: !!user?.id,
   });
 
@@ -108,6 +114,7 @@ export default function ToolStack() {
   });
 
   const liveNames = getLiveToolNames(activities);
+  const connectionMap = buildConnectionMap(connectionRecords);
 
   let filtered = integrations.filter((i) => {
     const matchSearch = i.tool_name.toLowerCase().includes(search.toLowerCase());
@@ -193,7 +200,7 @@ export default function ToolStack() {
         <div className="space-y-2">
           {filtered.map((tool, idx) => {
             const hasLiveActivity = liveNames.has(normalizeToolName(tool.tool_name));
-            const connection = getToolConnectionDisplay(tool, hasLiveActivity);
+            const connection = getToolConnectionDisplay(tool, hasLiveActivity, connectionMap.get(normalizeToolName(tool.tool_name)));
             const statusClass = connection.key === "live" ? LIVE_STATUS : connection.key === "pending" ? PENDING_STATUS : connection.connected ? CONNECTED_STATUS : OFFLINE_STATUS;
             const util = tool.licensed_seats > 0 ? Math.round((tool.active_users / tool.licensed_seats) * 100) : 0;
             const inactive = (tool.licensed_seats || 0) - (tool.active_users || 0);

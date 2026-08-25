@@ -18,10 +18,10 @@ export const INVENTORY_CONNECTORS = {
     idleLabel: "Connect Apollo to verify credit and API usage",
     logo: toolLogoUrl("Apollo.io"),
   },
-  hubspot: { id: "hubspot", label: "HubSpot", authMode: "API token", functionName: "getHubSpotActivity" },
+  hubspot: { id: "hubspot", label: "HubSpot", authMode: "API token", functionName: "getHubSpotActivity", evidenceType: "live" },
   vercel: { id: "vercel", label: "Vercel", functionName: "getVercelActivity" },
   zoom: {
-    id: "zoom", label: "Zoom", functionName: "getZoomActivity",
+    id: "zoom", label: "Zoom", functionName: "getZoomActivity", evidenceType: "live",
     credentialFields: [
       { name: "api_key", label: "Client ID", placeholder: "Zoom Server-to-Server OAuth Client ID" },
       { name: "client_secret", label: "Client secret", placeholder: "Zoom Server-to-Server OAuth Client Secret" },

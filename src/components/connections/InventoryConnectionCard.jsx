@@ -9,17 +9,18 @@ import ToolLogo from "@/components/stack/ToolLogo";
 import useInventoryConnection from "@/hooks/useInventoryConnection";
 import { GMAIL_EVIDENCE_CONNECTOR } from "@/lib/inventoryConnectors";
 
-export default function InventoryConnectionCard({ tool, connector, isLive, onSynced }) {
+export default function InventoryConnectionCard({ tool, connector, connection, isLive, onSynced }) {
   const [modal, setModal] = useState("");
   const [activeConnector, setActiveConnector] = useState(connector);
-  const flow = useInventoryConnection({ tool, connector: activeConnector, isLive, onSynced });
+  const flow = useInventoryConnection({ tool, connector: activeConnector, connection, isLive, onSynced });
   const busy = flow.status === "authorizing" || flow.status === "syncing";
   const direct = Boolean(connector?.connectorId || connector?.oauthFunction);
   const nativeConnection = Boolean(connector && !connector.setupRequired && (direct || connector.functionName));
-  const verified = ["live", "evidence"].includes(flow.status);
+  const verified = ["live", "access", "evidence"].includes(flow.status);
   const configured = verified || ["manual", "snapshot"].includes(flow.status);
-  const connectionLabel = flow.status === "live" ? "Verified live"
-    : flow.status === "evidence" ? tool.evidence_type === "access" ? "Verified access" : tool.evidence_type === "observed" ? "Observed membership evidence" : "Financial evidence found"
+  const connectionLabel = flow.status === "live" ? "Verified live usage"
+    : flow.status === "access" ? "Verified account access, usage unavailable"
+      : flow.status === "evidence" ? tool.evidence_type === "observed" ? "Observed membership evidence" : "Financial evidence found"
       : flow.status === "manual" ? nativeConnection ? "API token saved, verification pending" : "Saved token cannot be verified"
         : flow.status === "snapshot" ? "Private report connected"
           : direct ? connector?.idleLabel || "OAuth connection available"

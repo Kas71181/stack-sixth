@@ -36,11 +36,37 @@ export function isToolLive(toolName, activities = []) {
   return getLiveToolNames(activities).has(normalizeToolName(toolName));
 }
 
-export function getToolConnectionDisplay(tool = {}, hasLiveActivity = false) {
-  if (hasLiveActivity || (tool.connection_status === "Connected" && tool.evidence_type === "live")) return { key: "live", label: "Live", connected: true };
-  if (tool.connection_status === "Connected") return { key: "connected", label: "Connected", connected: true };
-  if (tool.connection_status === "Evidence") return { key: "evidence", label: "Evidence connected", connected: true };
-  if (tool.connection_status === "Manual Upload") return { key: "evidence", label: "Report connected", connected: true };
+export function normalizeConnectorType(value = "") {
+  return normalizeToolName(value.replaceAll("-", " "));
+}
+
+export function buildConnectionMap(connections = []) {
+  const map = new Map();
+  connections.forEach((connection) => {
+    const key = normalizeConnectorType(connection.connector_type);
+    const current = map.get(key);
+    const score = Number(connection.connected) * 4 + Number(connection.authentication_status === "valid") * 2 + Number(Boolean(connection.last_successful_sync_at));
+    const currentScore = current ? Number(current.connected) * 4 + Number(current.authentication_status === "valid") * 2 + Number(Boolean(current.last_successful_sync_at)) : -1;
+    if (!current || score > currentScore) map.set(key, connection);
+  });
+  return map;
+}
+
+export function getToolConnectionDisplay(tool = {}, hasLiveActivity = false, connection = null) {
   if (tool.connection_status === "Manual Auth") return { key: "pending", label: "Verification pending", connected: true };
+  if (tool.connection_status === "Manual Upload") return { key: "evidence", label: "Report connected", connected: true };
+  if (tool.connection_status === "Evidence") return tool.evidence_type === "access"
+    ? { key: "connected", label: "Verified access", connected: true }
+    : { key: "evidence", label: "Evidence connected", connected: true };
+  if (["Pending", "Failed"].includes(tool.connection_status)) return { key: "offline", label: "Not connected", connected: false };
+  if (connection?.connected && connection.authentication_status === "valid") {
+    return connection.usage_supported && hasLiveActivity
+      ? { key: "live", label: "Live usage", connected: true }
+      : { key: "connected", label: "Verified access", connected: true };
+  }
+  if (tool.connection_status === "Connected") return hasLiveActivity && tool.evidence_type === "live"
+    ? { key: "live", label: "Live usage", connected: true }
+    : { key: "connected", label: "Verified access", connected: true };
+  if (hasLiveActivity) return { key: "live", label: "Live usage", connected: true };
   return { key: "offline", label: "Not connected", connected: false };
 }
