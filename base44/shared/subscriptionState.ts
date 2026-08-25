@@ -1,4 +1,7 @@
 import { getEntitlements } from "./entitlements.ts";
+
+const LEGACY_PLANS = new Set(["FREE_LAUNCH"]);
+
 export async function ensureSubscription(base44, user) {
   const existing = await base44.asServiceRole.entities.OrganizationSubscription.filter({ owner_user_id: user.id });
   if (existing[0]) return existing[0];
@@ -10,8 +13,9 @@ export async function ensureSubscription(base44, user) {
   return await base44.asServiceRole.entities.OrganizationSubscription.create({ organization_id: company.id, owner_user_id: user.id, plan: "STARTER", subscription_status: "PENDING_PAYMENT", billing_interval: "monthly", payment_status: "PENDING", workspace_mode: "READ_ONLY" });
 }
 export function accessPayload(subscription, planDefinition = null) {
-  const end = subscription.promotional_access ? subscription.promotional_ends_at : subscription.subscription_status === "TRIALING" ? subscription.trial_ends_at : subscription.current_period_end;
+  const end = subscription.promotional_access ? subscription.promotional_ends_at : ["FREE", "TRIALING"].includes(subscription.subscription_status) ? subscription.trial_ends_at : subscription.current_period_end;
   const daysRemaining = end ? Math.max(0, Math.ceil((new Date(end).getTime() - Date.now()) / 86400000)) : null;
   const defaults = getEntitlements(subscription.plan); const entitlements = { ...defaults, ...(planDefinition?.entitlements || {}), integration_limit: planDefinition?.integration_limit ?? defaults.integration_limit };
-  return { subscription, entitlements, days_remaining: daysRemaining, read_only: subscription.workspace_mode === "READ_ONLY" };
+  const planStatus = LEGACY_PLANS.has(subscription.plan) ? "legacy" : planDefinition?.active ? "active" : "inactive";
+  return { subscription, entitlements, plan_status: planStatus, entitlements_source: planDefinition ? "configured" : "built_in", days_remaining: daysRemaining, read_only: subscription.workspace_mode === "READ_ONLY" };
 }
