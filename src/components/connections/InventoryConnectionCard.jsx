@@ -3,8 +3,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import DataPrivacyModal from "@/components/usage/DataPrivacyModal";
 import ApiTokenModal from "@/components/connections/ApiTokenModal";
+import ConnectionFallbackModal from "@/components/connections/ConnectionFallbackModal";
+import ReportUploadModal from "@/components/connections/ReportUploadModal";
 import ToolLogo from "@/components/stack/ToolLogo";
 import useInventoryConnection from "@/hooks/useInventoryConnection";
+import { GMAIL_EVIDENCE_CONNECTOR } from "@/lib/inventoryConnectors";
 
 export default function InventoryConnectionCard({ tool, connector, isLive, onSynced }) {
   const [modal, setModal] = useState("");
@@ -12,17 +15,18 @@ export default function InventoryConnectionCard({ tool, connector, isLive, onSyn
   const flow = useInventoryConnection({ tool, connector: activeConnector, isLive, onSynced });
   const busy = flow.status === "authorizing" || flow.status === "syncing";
   const direct = Boolean(connector?.connectorId || connector?.oauthFunction);
-  const canConnect = Boolean(connector && !connector.setupRequired && (direct || connector.functionName));
+  const nativeConnection = Boolean(connector && !connector.setupRequired && (direct || connector.functionName));
   const verified = ["live", "evidence"].includes(flow.status);
-  const configured = verified || flow.status === "manual";
+  const configured = verified || ["manual", "snapshot"].includes(flow.status);
   const connectionLabel = flow.status === "live" ? "Verified live"
     : flow.status === "evidence" ? tool.evidence_type === "access" ? "Verified access" : tool.evidence_type === "observed" ? "Observed membership evidence" : "Financial evidence found"
-      : flow.status === "manual" ? canConnect ? "API token saved, verification pending" : "Saved token cannot be verified"
-        : direct ? connector?.idleLabel || "OAuth connection available"
-          : canConnect ? "Manual API credential available" : "Verified connection not available";
+      : flow.status === "manual" ? nativeConnection ? "API token saved, verification pending" : "Saved token cannot be verified"
+        : flow.status === "snapshot" ? "Private report connected"
+          : direct ? connector?.idleLabel || "OAuth connection available"
+            : nativeConnection ? "Manual API credential available" : "Evidence connection available";
 
   const begin = () => {
-    if (!canConnect) return;
+    if (!nativeConnection) return setModal("fallback");
     setActiveConnector(connector);
     setModal(direct ? "privacy" : "token");
   };
@@ -39,13 +43,15 @@ export default function InventoryConnectionCard({ tool, connector, isLive, onSyn
       </div>
       <div className="sm:w-44">
         {flow.error && <p className="mb-2 flex gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5 shrink-0" />{flow.error}</p>}
-        <Button className="w-full" size="sm" variant={configured ? "outline" : "default"} disabled={busy || !canConnect} onClick={begin}>
-          {busy ? <Loader2 className="animate-spin" /> : !canConnect ? <AlertCircle /> : flow.status === "manual" ? <KeyRound /> : verified ? <CheckCircle2 /> : <Plug />}
-          {flow.status === "authorizing" ? "Authorizing…" : flow.status === "syncing" ? "Verifying…" : !canConnect ? "Unavailable" : flow.status === "manual" ? "Replace token" : verified ? "Reconnect" : "Connect"}
+        <Button className="w-full" size="sm" variant={configured ? "outline" : "default"} disabled={busy} onClick={begin}>
+          {busy ? <Loader2 className="animate-spin" /> : flow.status === "manual" ? <KeyRound /> : verified || flow.status === "snapshot" ? <CheckCircle2 /> : <Plug />}
+          {flow.status === "authorizing" ? "Authorizing…" : flow.status === "syncing" ? "Verifying…" : flow.status === "manual" ? "Replace token" : flow.status === "snapshot" ? "Replace report" : verified ? "Reconnect" : nativeConnection ? "Connect" : "Add evidence"}
         </Button>
       </div>
       {modal === "privacy" && <DataPrivacyModal connector={activeConnector} onCancel={() => setModal("")} onConfirm={() => { setModal(""); flow.connect(); }} />}
       {modal === "token" && <ApiTokenModal tool={tool} connector={connector} onClose={() => setModal("")} onSaved={() => { setModal(""); onSynced?.(); }} />}
+      {modal === "fallback" && <ConnectionFallbackModal toolName={tool.tool_name} onClose={() => setModal("")} onGmail={() => { setActiveConnector(GMAIL_EVIDENCE_CONNECTOR); setModal("privacy"); }} onUpload={() => setModal("upload")} />}
+      {modal === "upload" && <ReportUploadModal tool={tool} onClose={() => setModal("")} onSaved={() => { setModal(""); onSynced?.(); }} />}
     </div>
   );
 }
