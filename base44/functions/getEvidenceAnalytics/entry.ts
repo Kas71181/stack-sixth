@@ -4,8 +4,8 @@ import { normalizeCanonicalAppId } from '../../shared/canonicalApps.ts';
 
 function usageStatus(app, metrics) {
   if (metrics.activeSeats + metrics.dormantSeats > 0) return 'VERIFIED_LIVE';
-  if (metrics.verifiedAccessOnlySeats > 0 || app.access_status === 'VERIFIED_ACCESS') return 'VERIFIED_ACCESS';
   if (app.usage_status === 'OBSERVED') return 'OBSERVED';
+  if (metrics.verifiedAccessOnlySeats > 0 || app.access_status === 'VERIFIED_ACCESS') return 'VERIFIED_ACCESS';
   return 'INSUFFICIENT_EVIDENCE';
 }
 

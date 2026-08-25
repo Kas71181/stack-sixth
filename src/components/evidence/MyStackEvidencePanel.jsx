@@ -9,6 +9,7 @@ export default function MyStackEvidencePanel() {
   if (isLoading) return <EvidenceLoading />;
   if (isError) return <div className="glass-card p-5 text-sm text-destructive">Evidence data could not be loaded.</div>;
   const summary = data.summary;
+  const hasVerifiedUsage = summary.verifiedUsageApplications > 0;
   const savings = summary.verifiedSavings == null ? "N/A" : `$${summary.verifiedSavings.toLocaleString()}`;
   return (
     <section className="space-y-4">
@@ -17,8 +18,8 @@ export default function MyStackEvidencePanel() {
         <div><h2 className="text-lg font-bold">Evidence coverage</h2><p className="text-sm text-muted-foreground">Every application is scored by the source types actually present.</p></div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <UsageMetricCard label="Daily usage" value={summary.activeSeats} detail="Verified active seats" />
-        <UsageMetricCard label="Dormant seats" value={summary.dormantSeats} detail="License wastage candidates" />
+        <UsageMetricCard label="Daily usage" value={hasVerifiedUsage ? summary.activeSeats : "N/A"} detail={hasVerifiedUsage ? "Verified active seats" : "Usage unavailable"} />
+        <UsageMetricCard label="Dormant seats" value={hasVerifiedUsage ? summary.dormantSeats : "N/A"} detail={hasVerifiedUsage ? "License wastage candidates" : "Usage unavailable"} />
         <UsageMetricCard label="Utilization" value={summary.utilization == null ? "N/A" : `${summary.utilization}%`} detail="Across fully covered apps" />
         <UsageMetricCard label="Verified monthly savings" value={savings} detail="Ready to capture" tone="success" />
       </div>
