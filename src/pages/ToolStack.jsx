@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import AddToolModal from "@/components/stack/AddToolModal";
 import ToolLogo from "@/components/stack/ToolLogo";
+import GoLiveGuide from "@/components/stack/GoLiveGuide";
 import { buildConnectionMap, dedupeTools, getLiveToolNames, getToolConnectionDisplay, normalizeToolName } from "@/lib/connectionStatus";
 
 const LIVE_STATUS = "bg-emerald-500/12 text-emerald-600 border-emerald-500/25";
@@ -242,6 +243,7 @@ export default function ToolStack() {
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
+                {connection.key !== "live" && <GoLiveGuide tool={tool} status={connection} />}
               </motion.div>
             );
           })}
