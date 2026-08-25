@@ -7,11 +7,11 @@ export default async function(req) {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    const { accessToken } = await base44.asServiceRole.connectors.getCurrentAppUserConnection('6a1db9e6a90dd35761465e22');
+    const { accessToken } = await base44.asServiceRole.connectors.getCurrentAppUserConnection('6a1db3c9aaf496e3cd5d7a33');
     const headers = { Authorization: `Bearer ${accessToken}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'Stack-Sixth' };
     const organizationsResponse = await fetch('https://api.github.com/user/memberships/orgs?state=active&per_page=100', { headers });
-    if (!organizationsResponse.ok) return Response.json({ error: `GitHub organization access failed (${organizationsResponse.status})` }, { status: 400 });
-    const organizations = await organizationsResponse.json();
+    if (!organizationsResponse.ok && organizationsResponse.status !== 403) return Response.json({ error: `GitHub organization access failed (${organizationsResponse.status})` }, { status: 400 });
+    const organizations = organizationsResponse.ok ? await organizationsResponse.json() : [];
     const organization = organizations[0]?.organization || null;
     const members = [];
     if (organization) {

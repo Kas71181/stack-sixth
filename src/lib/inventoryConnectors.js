@@ -6,7 +6,7 @@ export const INVENTORY_CONNECTORS = {
     logo: toolLogoUrl("Slack"),
   },
   github: {
-    id: "github", label: "GitHub", connectorId: "6a1db9e6a90dd35761465e22", functionName: "getGitHubActivity",
+    id: "github", label: "GitHub", connectorId: "6a1db3c9aaf496e3cd5d7a33", functionName: "getGitHubActivity",
     logo: toolLogoUrl("GitHub"),
   },
   notion: {
