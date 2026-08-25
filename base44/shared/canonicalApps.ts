@@ -11,6 +11,12 @@ export const CANONICAL_APPS = [
   { canonical_app_id: 'bamboohr', name: 'BambooHR', vendor_name: 'BambooHR', primary_domain: 'bamboohr.com', aliases: ['bamboohr', 'bamboo hr'], category: 'Finance & HR', default_dormancy_days: 90, seasonal: false }
 ];
 
+const CANONICAL_ID_ALIASES = { apollo: 'apollo-io' };
+
+export function normalizeCanonicalAppId(value = '') {
+  return CANONICAL_ID_ALIASES[value] || value;
+}
+
 export function normalizeApplicationName(value = '') {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, ' ').trim();
 }

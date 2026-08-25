@@ -1,4 +1,4 @@
-import { resolveCanonicalApp } from './canonicalApps.ts';
+import { normalizeCanonicalAppId, resolveCanonicalApp } from './canonicalApps.ts';
 
 async function upsertOne(entity, filter, data) {
   const existing = await entity.filter(filter);
@@ -15,10 +15,7 @@ export async function ingestConnectorMembership(base44, user, input) {
   const service = base44.asServiceRole.entities;
   const tenant = base44.entities;
   await upsertOne(service.CanonicalApp, { canonical_app_id: canonical.canonical_app_id }, canonical);
-  const organizationApp = await upsertOne(tenant.OrganizationApp, {
-    organization_id: user.id,
-    canonical_app_id: canonical.canonical_app_id,
-  }, {
+  const appData = {
     organization_id: user.id,
     canonical_app_id: canonical.canonical_app_id,
     display_name: canonical.name,
@@ -32,7 +29,12 @@ export async function ingestConnectorMembership(base44, user, input) {
     dormancy_threshold_days: canonical.default_dormancy_days,
     last_validated_at: now,
     created_by_id: user.id,
-  });
+  };
+  const organizationApps = await tenant.OrganizationApp.filter({ organization_id: user.id });
+  const existingApp = organizationApps.find((item) => item.canonical_app_id === canonical.canonical_app_id)
+    || organizationApps.find((item) => normalizeCanonicalAppId(item.canonical_app_id) === canonical.canonical_app_id);
+  const organizationApp = existingApp ? { ...existingApp, ...appData } : await tenant.OrganizationApp.create(appData);
+  if (existingApp) await tenant.OrganizationApp.update(existingApp.id, appData);
   const shadowConnections = await service.IntegrationConnection.filter({ organization_id: user.id, connector_type: input.connectorType });
   for (const record of shadowConnections.filter((item) => item.created_by_id !== user.id)) await service.IntegrationConnection.delete(record.id);
   const shadowEvidence = await service.EvidenceRecord.filter({ organization_id: user.id, organization_app_id: organizationApp.id, source_type: `${input.connectorType}_membership` });
@@ -86,5 +88,5 @@ export async function ingestConnectorMembership(base44, user, input) {
   }
   const accessEvidence = await upsertOne(tenant.EvidenceRecord, { organization_id: user.id, organization_app_id: organizationApp.id, source_type: `${input.connectorType}_membership`, source_record_id: input.workspaceId || connection.id }, { organization_id: user.id, organization_app_id: organizationApp.id, evidence_category: 'ACCESS', evidence_status: 'VERIFIED_ACCESS', source_type: `${input.connectorType}_membership`, source_connection_id: connection.id, source_record_id: input.workspaceId || connection.id, observed_at: now, valid_from: now, freshness_status: 'fresh', verification_method: 'provider membership endpoint', derived_metadata: { member_count: input.members.length, usage_supported: false, limitations: input.limitations } });
   await tenant.IntegrationConnection.update(connection.id, { records_created: usersCreated + seatsCreated, records_updated: Math.max(0, input.members.length - usersCreated), records_processed: input.members.length });
-  return { app: organizationApp.display_name, members: input.members.length, usersCreated, seatsCreated, evidenceRecordId: accessEvidence.id, evidenceStatus: 'VERIFIED_ACCESS', usageStatus: 'INSUFFICIENT_EVIDENCE', limitations: input.limitations };
+  return { app: organizationApp.display_name, organizationAppId: organizationApp.id, members: input.members.length, usersCreated, seatsCreated, evidenceRecordId: accessEvidence.id, evidenceStatus: 'VERIFIED_ACCESS', usageStatus: 'INSUFFICIENT_EVIDENCE', limitations: input.limitations };
 }

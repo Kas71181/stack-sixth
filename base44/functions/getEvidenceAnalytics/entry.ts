@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { classifySeat, calculateApplicationMetrics, calculateCoverage, validateMetrics } from '../../shared/evidenceEngine.ts';
+import { normalizeCanonicalAppId } from '../../shared/canonicalApps.ts';
 
 function usageStatus(app, metrics) {
   if (metrics.activeSeats + metrics.dormantSeats > 0) return 'VERIFIED_LIVE';
@@ -34,7 +35,7 @@ export default async function(req) {
 
     const appGroups = new Map();
     for (const app of apps) {
-      const key = app.canonical_app_id || app.id;
+      const key = normalizeCanonicalAppId(app.canonical_app_id || app.id);
       if (!appGroups.has(key)) appGroups.set(key, []);
       appGroups.get(key).push(app);
     }
