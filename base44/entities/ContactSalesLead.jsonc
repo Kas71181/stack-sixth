@@ -45,6 +45,9 @@
         "closed"
       ],
       "default": "new"
+    },
+    "request_fingerprint": {
+      "type": "string"
     }
   },
   "required": [
