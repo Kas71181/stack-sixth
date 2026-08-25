@@ -1,4 +1,4 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-export default function ActiveSubscriptionGate({children}){const {data,isLoading}=useQuery({queryKey:["subscription-access"],queryFn:async()=>(await base44.functions.invoke("getSubscriptionAccess",{})).data,staleTime:0,refetchOnMount:"always"});if(isLoading)return <div className="py-16 text-center text-sm text-muted-foreground">Checking subscription access…</div>;if(data?.read_only)return <Navigate to="/settings/billing" replace/>;return children||<Outlet/>}
+export default function ActiveSubscriptionGate({children}){const {data,isLoading}=useQuery({queryKey:["subscription-access"],queryFn:async()=>(await base44.functions.invoke("getSubscriptionAccess",{})).data,staleTime:0,refetchOnMount:"always",refetchOnWindowFocus:"always",refetchInterval:15000});if(isLoading)return <div className="py-16 text-center text-sm text-muted-foreground">Checking subscription access…</div>;if(data?.read_only)return <Navigate to="/settings/billing" replace/>;return children||<Outlet/>}

@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 export default function SubscriptionStatusBanner({ enabled }) {
-  const { data } = useQuery({ queryKey: ["subscription-access"], queryFn: async () => (await base44.functions.invoke("getSubscriptionAccess", {})).data, enabled });
+  const { data } = useQuery({ queryKey: ["subscription-access"], queryFn: async () => (await base44.functions.invoke("getSubscriptionAccess", {})).data, enabled, staleTime: 0, refetchOnMount: "always", refetchOnWindowFocus: "always", refetchInterval: 15000 });
   if (!data) return null;
   const subscription = data.subscription;
   if (data.read_only) return <div className="border-b border-amber-300 bg-amber-50 px-4 py-3 text-center text-sm text-amber-900"><strong>Your Stack Sixth access has ended.</strong> Your software intelligence is still here. <Link to="/pricing" className="ml-2 font-bold underline">Reactivate Stack Sixth</Link></div>;
