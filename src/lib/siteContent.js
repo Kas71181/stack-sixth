@@ -32,5 +32,5 @@ export const site = {
   ],
   contact: { support: "hello@stacksixth.com", privacy: "[PRIVACY_EMAIL]" },
   social: { instagram: "https://www.instagram.com/thestacksixth", twitter: "https://twitter.com/stacksixth", facebook: "https://www.facebook.com/profile.php?id=61593369792157" },
-  legal: { company: "[LEGAL_COMPANY_NAME]", address: "[REGISTERED_ADDRESS]", law: "[GOVERNING_LAW]" }
+  legal: { company: "Stack Sixth Inc", address: "500 W Fifth St, Winston-Salem, NC 27101", law: "North Carolina, United States" }
 };
