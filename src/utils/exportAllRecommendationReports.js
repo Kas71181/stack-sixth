@@ -3,6 +3,32 @@ import PptxGenJS from "pptxgenjs";
 import { recommendationReportData } from "@/utils/exportRecommendationReport";
 
 const BRAND = { blue: "155EEF", navy: "0F172A", sky: "EAF2FF", slate: "64748B", line: "DCE3EE", white: "FFFFFF", green: "059669", amber: "B45309", red: "DC2626", canvas: "F6F8FC" };
+const BRAND_LOGO_URL = "https://media.base44.com/images/public/69f28176704facfd454194e1/d3ef5da50_StackSixth.svg";
+let brandLogoPromise;
+const loadBrandLogoPng = () => {
+  if (!brandLogoPromise) brandLogoPromise = fetch(BRAND_LOGO_URL)
+    .then((response) => {
+      if (!response.ok) throw new Error("Unable to load the Stack Sixth logo.");
+      return response.blob();
+    })
+    .then((blob) => new Promise((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(blob);
+      const image = new Image();
+      image.onload = () => {
+        const width = 900;
+        const ratio = image.naturalWidth && image.naturalHeight ? image.naturalHeight / image.naturalWidth : 0.28;
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = Math.round(width * ratio);
+        canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(objectUrl);
+        resolve(canvas.toDataURL("image/png"));
+      };
+      image.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Unable to render the Stack Sixth logo.")); };
+      image.src = objectUrl;
+    }));
+  return brandLogoPromise;
+};
 const money = (value) => value == null ? "Not provided" : `$${Number(value).toLocaleString()}/month`;
 const compactMoney = (value) => value == null ? "N/A" : `$${Number(value).toLocaleString()}`;
 const safeName = (value = "Stack_Sixth") => value.replace(/[^a-z0-9]+/gi, "_").replace(/^_|_$/g, "");
@@ -33,7 +59,8 @@ export function exportAllRecommendationsCsv(recommendations, existingSoftware, c
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function exportAllRecommendationsPdf(recommendations, existingSoftware, companyName) {
+export async function exportAllRecommendationsPdf(recommendations, existingSoftware, companyName) {
+  const logoPng = await loadBrandLogoPng();
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const items = reports(recommendations, existingSoftware);
   const totalCurrent = total(items, "currentCost");
@@ -45,9 +72,9 @@ export function exportAllRecommendationsPdf(recommendations, existingSoftware, c
 
   const brandHeader = (section) => {
     doc.setFillColor(21, 94, 239); doc.rect(0, 0, pageWidth, 18, "F");
-    doc.setFillColor(255, 255, 255); doc.roundedRect(14, 5, 7, 7, 1.5, 1.5, "F");
-    doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.text("STACK SIXTH", 25, 11);
-    doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.text(section.toUpperCase(), pageWidth - 14, 11, { align: "right" });
+    doc.setFillColor(255, 255, 255); doc.roundedRect(11, 3, 35, 12, 2, 2, "F");
+    doc.addImage(logoPng, "PNG", 14, 5.1, 29, 7.8);
+    doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.text(section.toUpperCase(), pageWidth - 14, 11, { align: "right" });
   };
   const footer = () => {
     doc.setDrawColor(220, 227, 238); doc.line(14, pageHeight - 14, pageWidth - 14, pageHeight - 14);
@@ -68,9 +95,9 @@ export function exportAllRecommendationsPdf(recommendations, existingSoftware, c
   doc.setFillColor(15, 23, 42); doc.rect(0, 0, pageWidth, pageHeight, "F");
   doc.setFillColor(21, 94, 239); doc.circle(178, 32, 44, "F");
   doc.setFillColor(37, 114, 255); doc.circle(18, 276, 36, "F");
-  doc.setFillColor(255, 255, 255); doc.roundedRect(16, 20, 11, 11, 2, 2, "F");
-  doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.text("STACK SIXTH", 33, 28);
-  doc.setFontSize(31); doc.text("Software Recommendation", 16, 92); doc.text("Portfolio Report", 16, 105);
+  doc.setFillColor(255, 255, 255); doc.roundedRect(16, 18, 55, 20, 3, 3, "F");
+  doc.addImage(logoPng, "PNG", 21, 22, 45, 12);
+  doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(31); doc.text("Software Recommendation", 16, 92); doc.text("Portfolio Report", 16, 105);
   doc.setTextColor(147, 197, 253); doc.setFontSize(16); doc.text(clean(companyName, "Software portfolio audit"), 16, 122);
   doc.setTextColor(203, 213, 225); doc.setFont("helvetica", "normal"); doc.setFontSize(10);
   doc.text(`${recommendations.length} evidence-informed recommendations`, 16, 139);
@@ -169,6 +196,7 @@ export function exportAllRecommendationsPdf(recommendations, existingSoftware, c
 }
 
 export async function exportAllRecommendationsPptx(recommendations, existingSoftware, companyName) {
+  const logoPng = await loadBrandLogoPng();
   const pptx = new PptxGenJS();
   pptx.layout = "LAYOUT_WIDE";
   pptx.author = "Stack Sixth";
@@ -185,8 +213,8 @@ export async function exportAllRecommendationsPptx(recommendations, existingSoft
 
   const addBrand = (slide, section, dark = false) => {
     if (!dark) slide.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 13.33, h: 0.1, fill: { color: BRAND.blue }, line: { color: BRAND.blue } });
-    slide.addShape(pptx.ShapeType.rect, { x: 0.55, y: 0.28, w: 0.34, h: 0.34, fill: { color: dark ? BRAND.white : BRAND.blue }, line: { color: dark ? BRAND.white : BRAND.blue }, radius: 0.05 });
-    slide.addText("STACK SIXTH", { x: 1.0, y: 0.27, w: 2.3, h: 0.35, fontSize: 11, bold: true, color: dark ? BRAND.white : BRAND.navy, charSpacing: 1.2, margin: 0 });
+    if (dark) slide.addShape(pptx.ShapeType.rect, { x: 0.46, y: 0.18, w: 2.2, h: 0.58, fill: { color: BRAND.white }, line: { color: BRAND.white }, radius: 0.06 });
+    slide.addImage({ data: logoPng, x: dark ? 0.59 : 0.55, y: dark ? 0.28 : 0.22, w: dark ? 1.92 : 2.0, h: dark ? 0.36 : 0.38 });
     slide.addText(section.toUpperCase(), { x: 9.5, y: 0.3, w: 3.25, h: 0.3, fontSize: 8, bold: true, color: dark ? "93C5FD" : BRAND.slate, align: "right", charSpacing: 1.1, margin: 0 });
   };
   const addFooter = (slide, number, dark = false) => {

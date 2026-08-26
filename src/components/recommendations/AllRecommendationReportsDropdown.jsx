@@ -8,7 +8,7 @@ export default function AllRecommendationReportsDropdown({ recommendations, exis
   const download = async (format) => {
     setLoading(format);
     try {
-      if (format === "pdf") exportAllRecommendationsPdf(recommendations, existingSoftware, companyName);
+      if (format === "pdf") await exportAllRecommendationsPdf(recommendations, existingSoftware, companyName);
       if (format === "pptx") await exportAllRecommendationsPptx(recommendations, existingSoftware, companyName);
       if (format === "csv") exportAllRecommendationsCsv(recommendations, existingSoftware, companyName);
     } finally { setLoading(""); }
