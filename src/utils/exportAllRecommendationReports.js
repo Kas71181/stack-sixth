@@ -72,8 +72,8 @@ export async function exportAllRecommendationsPdf(recommendations, existingSoftw
 
   const brandHeader = (section) => {
     doc.setFillColor(21, 94, 239); doc.rect(0, 0, pageWidth, 18, "F");
-    doc.setFillColor(255, 255, 255); doc.roundedRect(11, 3, 35, 12, 2, 2, "F");
-    doc.addImage(logoPng, "PNG", 14, 5.1, 29, 7.8);
+    doc.setFillColor(255, 255, 255); doc.roundedRect(11, 2.3, 31, 13.4, 2, 2, "F");
+    doc.addImage(logoPng, "PNG", 14, 3.5, 25, 11.45);
     doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.text(section.toUpperCase(), pageWidth - 14, 11, { align: "right" });
   };
   const footer = () => {
@@ -95,8 +95,8 @@ export async function exportAllRecommendationsPdf(recommendations, existingSoftw
   doc.setFillColor(15, 23, 42); doc.rect(0, 0, pageWidth, pageHeight, "F");
   doc.setFillColor(21, 94, 239); doc.circle(178, 32, 44, "F");
   doc.setFillColor(37, 114, 255); doc.circle(18, 276, 36, "F");
-  doc.setFillColor(255, 255, 255); doc.roundedRect(16, 18, 55, 20, 3, 3, "F");
-  doc.addImage(logoPng, "PNG", 21, 22, 45, 12);
+  doc.setFillColor(255, 255, 255); doc.roundedRect(16, 18, 50, 26, 3, 3, "F");
+  doc.addImage(logoPng, "PNG", 22, 22.3, 38, 17.4);
   doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(31); doc.text("Software Recommendation", 16, 92); doc.text("Portfolio Report", 16, 105);
   doc.setTextColor(147, 197, 253); doc.setFontSize(16); doc.text(clean(companyName, "Software portfolio audit"), 16, 122);
   doc.setTextColor(203, 213, 225); doc.setFont("helvetica", "normal"); doc.setFontSize(10);
@@ -213,8 +213,8 @@ export async function exportAllRecommendationsPptx(recommendations, existingSoft
 
   const addBrand = (slide, section, dark = false) => {
     if (!dark) slide.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 13.33, h: 0.1, fill: { color: BRAND.blue }, line: { color: BRAND.blue } });
-    if (dark) slide.addShape(pptx.ShapeType.rect, { x: 0.46, y: 0.18, w: 2.2, h: 0.58, fill: { color: BRAND.white }, line: { color: BRAND.white }, radius: 0.06 });
-    slide.addImage({ data: logoPng, x: dark ? 0.59 : 0.55, y: dark ? 0.28 : 0.22, w: dark ? 1.92 : 2.0, h: dark ? 0.36 : 0.38 });
+    if (dark) slide.addShape(pptx.ShapeType.rect, { x: 0.46, y: 0.14, w: 1.7, h: 0.72, fill: { color: BRAND.white }, line: { color: BRAND.white }, radius: 0.06 });
+    slide.addImage({ data: logoPng, x: dark ? 0.62 : 0.55, y: dark ? 0.2 : 0.2, w: dark ? 1.38 : 1.28, h: dark ? 0.63 : 0.59 });
     slide.addText(section.toUpperCase(), { x: 9.5, y: 0.3, w: 3.25, h: 0.3, fontSize: 8, bold: true, color: dark ? "93C5FD" : BRAND.slate, align: "right", charSpacing: 1.1, margin: 0 });
   };
   const addFooter = (slide, number, dark = false) => {
