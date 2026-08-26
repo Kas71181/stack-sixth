@@ -14,6 +14,7 @@ import ExportPptxButton from "../components/results/ExportPptxButton";
 import DataConfidenceScore from "../components/results/DataConfidenceScore";
 import useDiscountOpportunities from "@/hooks/useDiscountOpportunities";
 import { sanitizeAiContent } from "@/lib/textFormatting";
+import AllRecommendationReportsDropdown from "@/components/recommendations/AllRecommendationReportsDropdown";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -404,6 +405,7 @@ export default function Results() {
         <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-semibold">Recommendations</h2>
           <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+            <AllRecommendationReportsDropdown recommendations={result.recommendations || []} existingSoftware={audit.existing_software || []} companyName={audit.company_name} />
             {viewMode === "list" && (
               <button
                 onClick={() => setGroupByCategory(!groupByCategory)}
@@ -457,7 +459,7 @@ export default function Results() {
                       </div>
                       <div className="space-y-3">
                         {recs.map((rec, i) => (
-                          <RecommendationCard key={i} rec={rec} index={result.recommendations.indexOf(rec)} auditName={audit.company_name} existingSoftware={audit.existing_software || []} onUpdate={handleUpdateRec} discount={offersByTool[rec.name]?.[0]} />
+                          <RecommendationCard key={i} rec={rec} index={result.recommendations.indexOf(rec)} auditName={audit.company_name} onUpdate={handleUpdateRec} discount={offersByTool[rec.name]?.[0]} />
                         ))}
                       </div>
                     </div>
@@ -468,7 +470,7 @@ export default function Results() {
           ) : (
             <div className="space-y-3">
               {result.recommendations?.map((rec, i) => (
-                <RecommendationCard key={i} rec={rec} index={i} auditName={audit.company_name} existingSoftware={audit.existing_software || []} onUpdate={handleUpdateRec} discount={offersByTool[rec.name]?.[0]} />
+                <RecommendationCard key={i} rec={rec} index={i} auditName={audit.company_name} onUpdate={handleUpdateRec} discount={offersByTool[rec.name]?.[0]} />
               ))}
             </div>
           )

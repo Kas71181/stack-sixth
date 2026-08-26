@@ -5,6 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import AuditRecommendationCard from "@/components/savings/AuditRecommendationCard";
 import ComparisonView from "@/components/results/ComparisonView";
+import AllRecommendationReportsDropdown from "@/components/recommendations/AllRecommendationReportsDropdown";
 
 export default function EvidenceRecommendations() {
   const { user } = useAuth();
@@ -28,16 +29,19 @@ export default function EvidenceRecommendations() {
   if (!recommendations.length) return <div className="glass-card p-8 text-center"><p className="font-semibold">No tool recommendations yet</p><p className="mt-1 text-sm text-muted-foreground">Run an audit using your tools, processes, purposes, and pricing to generate alternatives.</p><Link to="/audit" className="mt-4 inline-flex rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground active:scale-[0.96]">Run an audit</Link></div>;
   return (
     <div className="space-y-4">
-      <div className="tab-track inline-flex gap-1">
-        <button type="button" onClick={() => setView("recommendations")} className={`rounded-xl px-4 py-2 text-sm font-semibold active:scale-[0.96] ${view === "recommendations" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>Recommendations</button>
-        <button type="button" onClick={() => setView("compare")} className={`rounded-xl px-4 py-2 text-sm font-semibold active:scale-[0.96] ${view === "compare" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>Compare tools</button>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="tab-track inline-flex gap-1">
+          <button type="button" onClick={() => setView("recommendations")} className={`rounded-xl px-4 py-2 text-sm font-semibold active:scale-[0.96] ${view === "recommendations" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>Recommendations</button>
+          <button type="button" onClick={() => setView("compare")} className={`rounded-xl px-4 py-2 text-sm font-semibold active:scale-[0.96] ${view === "compare" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>Compare tools</button>
+        </div>
+        <AllRecommendationReportsDropdown recommendations={recommendations} existingSoftware={audit.existing_software || []} companyName={audit.company_name} />
       </div>
       {view === "compare" ? (
         <ComparisonView recommendations={recommendations} auditName={audit.company_name} monthlyBudget={audit.monthly_budget} />
       ) : (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">Based on the latest audit of your tools, their purposes, your processes, and pricing.</p>
-          {recommendations.map((rec, index) => <AuditRecommendationCard key={`${rec.name}-${index}`} recommendation={rec} index={index} saving={savingIndex === index} onDecision={decide} existingSoftware={audit.existing_software || []} companyName={audit.company_name} />)}
+          {recommendations.map((rec, index) => <AuditRecommendationCard key={`${rec.name}-${index}`} recommendation={rec} index={index} saving={savingIndex === index} onDecision={decide} />)}
         </div>
       )}
     </div>
