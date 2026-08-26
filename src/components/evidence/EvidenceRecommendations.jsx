@@ -37,7 +37,7 @@ export default function EvidenceRecommendations() {
       ) : (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">Based on the latest audit of your tools, their purposes, your processes, and pricing.</p>
-          {recommendations.map((rec, index) => <AuditRecommendationCard key={`${rec.name}-${index}`} recommendation={rec} index={index} saving={savingIndex === index} onDecision={decide} />)}
+          {recommendations.map((rec, index) => <AuditRecommendationCard key={`${rec.name}-${index}`} recommendation={rec} index={index} saving={savingIndex === index} onDecision={decide} existingSoftware={audit.existing_software || []} companyName={audit.company_name} />)}
         </div>
       )}
     </div>

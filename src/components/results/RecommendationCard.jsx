@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import DiscountOffer from "@/components/discounts/DiscountOffer";
+import RecommendationReportDownloads from "@/components/recommendations/RecommendationReportDownloads";
 
 function ToolLogo({ name, index }) {
   const [imgError, setImgError] = useState(false);
@@ -64,7 +65,7 @@ const LOCK_IN_COLORS = {
   Low: "text-emerald-700 bg-emerald-50 border-emerald-200",
 };
 
-export default function RecommendationCard({ rec, index, auditName = "", onUpdate, discount }) {
+export default function RecommendationCard({ rec, index, auditName = "", existingSoftware = [], onUpdate, discount }) {
   const [expanded, setExpanded] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState("none"); // "none" | "pending" | "approved"
   const [buyUrl, setBuyUrl] = useState(null);
@@ -267,6 +268,8 @@ export default function RecommendationCard({ rec, index, auditName = "", onUpdat
                 </div>
               </div>
             )}
+
+            <RecommendationReportDownloads recommendation={rec} existingSoftware={existingSoftware} companyName={auditName} />
 
             {/* Assign & Due Date */}
             {onUpdate && (

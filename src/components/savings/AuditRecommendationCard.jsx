@@ -1,7 +1,8 @@
 import { ArrowRight, CheckCircle2, CircleDollarSign, Star } from "lucide-react";
 import RecommendationDecision from "@/components/savings/RecommendationDecision";
+import RecommendationReportDownloads from "@/components/recommendations/RecommendationReportDownloads";
 
-export default function AuditRecommendationCard({ recommendation, index, onDecision, saving }) {
+export default function AuditRecommendationCard({ recommendation, index, onDecision, saving, existingSoftware = [], companyName = "" }) {
   const rec = recommendation;
   return (
     <article className="glass-card p-5">
@@ -17,6 +18,7 @@ export default function AuditRecommendationCard({ recommendation, index, onDecis
         <div><p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Why it fits</p><ul className="space-y-1.5">{(rec.why_it_fits || []).map((reason, i) => <li key={i} className="flex items-start gap-2 text-sm"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />{reason}</li>)}</ul></div>
         <div><p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">ROI note</p><p className="flex items-start gap-2 text-sm text-muted-foreground"><CircleDollarSign className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{rec.savings_or_roi_note || "ROI depends on final pricing and implementation scope."}</p></div>
       </div>
+      <RecommendationReportDownloads recommendation={rec} existingSoftware={existingSoftware} companyName={companyName} />
       <div className="mt-4"><RecommendationDecision value={rec.decision_state} disabled={saving} onChange={(decision) => onDecision(index, decision)} /></div>
     </article>
   );

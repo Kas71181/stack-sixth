@@ -457,7 +457,7 @@ export default function Results() {
                       </div>
                       <div className="space-y-3">
                         {recs.map((rec, i) => (
-                          <RecommendationCard key={i} rec={rec} index={result.recommendations.indexOf(rec)} auditName={audit.company_name} onUpdate={handleUpdateRec} discount={offersByTool[rec.name]?.[0]} />
+                          <RecommendationCard key={i} rec={rec} index={result.recommendations.indexOf(rec)} auditName={audit.company_name} existingSoftware={audit.existing_software || []} onUpdate={handleUpdateRec} discount={offersByTool[rec.name]?.[0]} />
                         ))}
                       </div>
                     </div>
@@ -468,7 +468,7 @@ export default function Results() {
           ) : (
             <div className="space-y-3">
               {result.recommendations?.map((rec, i) => (
-                <RecommendationCard key={i} rec={rec} index={i} auditName={audit.company_name} onUpdate={handleUpdateRec} discount={offersByTool[rec.name]?.[0]} />
+                <RecommendationCard key={i} rec={rec} index={i} auditName={audit.company_name} existingSoftware={audit.existing_software || []} onUpdate={handleUpdateRec} discount={offersByTool[rec.name]?.[0]} />
               ))}
             </div>
           )
