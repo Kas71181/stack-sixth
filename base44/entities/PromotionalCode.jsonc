@@ -53,6 +53,13 @@
       "type": "string",
       "format": "date-time"
     },
+    "generated_by_user_id": {
+      "type": "string"
+    },
+    "generated_by_email": {
+      "type": "string",
+      "format": "email"
+    },
     "status": {
       "type": "string",
       "enum": [

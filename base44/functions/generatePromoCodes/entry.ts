@@ -22,7 +22,7 @@ export default async function(req) {
     const prefix = String(body.prefix || partner.partner_name).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 24) || "PARTNER";
     const existing = await base44.asServiceRole.entities.PromotionalCode.filter({ campaign_id: campaign.campaign_id });
     const used = new Set(existing.map((item) => item.code));
-    const baseRecord = { partner_id: partner.partner_id, campaign_id: campaign.campaign_id, benefit_type: campaign.benefit_type, benefit_value: campaign.benefit_value || 0, ...(campaign.benefit_duration_days ? { benefit_duration_days: campaign.benefit_duration_days } : { benefit_duration_months: campaign.benefit_duration_months || 1 }), eligible_plan: campaign.eligible_plan, valid_from: campaign.starts_at, expires_at: campaign.ends_at, current_redemptions: 0, status: "ACTIVE" };
+    const baseRecord = { partner_id: partner.partner_id, campaign_id: campaign.campaign_id, benefit_type: campaign.benefit_type, benefit_value: campaign.benefit_value || 0, ...(campaign.benefit_duration_days ? { benefit_duration_days: campaign.benefit_duration_days } : { benefit_duration_months: campaign.benefit_duration_months || 1 }), eligible_plan: campaign.eligible_plan, valid_from: campaign.starts_at, expires_at: campaign.ends_at, current_redemptions: 0, generated_by_user_id: user.id, generated_by_email: String(user.email).trim().toLowerCase(), created_by_id: user.id, status: "ACTIVE" };
     const records = [];
     if (mode === "reusable") {
       if (used.has(prefix)) return Response.json({ error: "This reusable code already exists." }, { status: 409 });
