@@ -1,5 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.40";
-import { validatePromo } from "../../shared/promo.ts";
+import { normalizeCode, validatePromo } from "../../shared/promo.ts";
 import { accessPayload } from "../../shared/subscriptionState.ts";
 
 export default async function(req) {
@@ -22,11 +22,17 @@ export default async function(req) {
     let attributionData = { organization_id: company.id, owner_user_id: user.id, acquisition_source: "DIRECT", attributed_at: now.toISOString() };
     if (body.promo_code) {
       const { promo, campaign, partner, promotionalEndsAt } = await validatePromo(base44, body.promo_code);
+      const normalizedCode = normalizeCode(body.promo_code);
+      const promotionAlreadyActive = subscription?.promotional_access && subscription.promotional_campaign === campaign.campaign_id && subscription.promotional_ends_at && new Date(subscription.promotional_ends_at) > now;
+      if (promotionAlreadyActive) {
+        const planDefinitions = await base44.asServiceRole.entities.PlanDefinition.filter({ plan_key: subscription.plan, active: true });
+        return Response.json({ ...accessPayload(subscription, planDefinitions[0]), already_applied: true, promo_code: normalizedCode });
+      }
       const update = { organization_id: company.id, owner_user_id: user.id, plan: promo.eligible_plan, subscription_status: "PROMOTIONAL", billing_interval: "none", promotional_access: true, promotional_partner: partner.partner_id, promotional_campaign: campaign.campaign_id, promotional_started_at: now.toISOString(), promotional_ends_at: promotionalEndsAt.toISOString(), payment_status: "NO_PAYMENT_METHOD", workspace_mode: "ACTIVE" };
       subscription = subscription ? await base44.asServiceRole.entities.OrganizationSubscription.update(subscription.id, update) : await base44.asServiceRole.entities.OrganizationSubscription.create(update);
       await base44.asServiceRole.entities.PromotionalCode.update(promo.id, { current_redemptions: (promo.current_redemptions || 0) + 1, redeemed_by: company.id, redeemed_at: now.toISOString(), status: promo.single_use ? "REDEEMED" : "ACTIVE" });
       await base44.asServiceRole.entities.Partner.update(partner.id, { total_redemptions: (partner.total_redemptions || 0) + 1, total_activations: (partner.total_activations || 0) + 1 });
-      await base44.entities.AcquisitionEvent.create({ organization_id: company.id, owner_user_id: user.id, event_name: "promo_code_redeemed", properties: { partner_id: partner.partner_id, campaign_id: campaign.campaign_id }, occurred_at: now.toISOString() });
+      await base44.entities.AcquisitionEvent.create({ organization_id: company.id, owner_user_id: user.id, event_name: "promo_code_redeemed", properties: { partner_id: partner.partner_id, campaign_id: campaign.campaign_id, promo_code: normalizedCode }, occurred_at: now.toISOString() });
       attributionData = { ...attributionData, acquisition_source: "PARTNER", partner_id: partner.partner_id, campaign_id: campaign.campaign_id, promo_code: promo.code };
     } else if (!subscription || ["FREE", "PENDING_PAYMENT", "READ_ONLY", "EXPIRED"].includes(subscription.subscription_status)) {
       const update = { organization_id: company.id, owner_user_id: user.id, plan, subscription_status: "PENDING_PAYMENT", billing_interval: body.billing_interval === "annual" ? "annual" : "monthly", promotional_access: false, payment_status: "PENDING", workspace_mode: "READ_ONLY" };
