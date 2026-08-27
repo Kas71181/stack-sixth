@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Loader2, Sparkles, Globe, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
+import { getActiveLearningPolicy, recommendationPolicyPrompt } from "@/lib/learningPolicy";
 import { useAuth } from "@/lib/AuthContext";
 import StepCompanyInfo from "../components/audit/StepCompanyInfo";
 import StepProcesses from "../components/audit/StepProcesses";
@@ -178,8 +179,9 @@ Return a structured ICP profile with: industry, business_model (B2B/B2C/B2B2C), 
         }
       }
 
+      const learningPolicy = await getActiveLearningPolicy();
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `${SYSTEM_PROMPT}\n\nInput:\n${JSON.stringify(input, null, 2)}`,
+        prompt: `${SYSTEM_PROMPT}\n\n${recommendationPolicyPrompt(learningPolicy)}\n\nInput:\n${JSON.stringify(input, null, 2)}`,
         response_json_schema: {
           type: "object",
           properties: {

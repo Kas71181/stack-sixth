@@ -15,7 +15,8 @@ export function classifySeat(seat, policy, now = new Date()) {
   const daysSinceActivity = Math.floor((now.getTime() - new Date(lastActivity).getTime()) / DAY_MS);
   if (daysSinceActivity > threshold * 2) return hasCoverage ? 'STRONG_DORMANCY_CANDIDATE' : 'INSUFFICIENT_EVIDENCE';
   if (daysSinceActivity > threshold) return hasCoverage ? 'DORMANCY_CANDIDATE' : 'INSUFFICIENT_EVIDENCE';
-  if (daysSinceActivity > Math.floor(threshold / 2) || (seat.usage_event_count ?? seat.activity_event_count ?? 0) <= 1) return 'LOW_ACTIVITY';
+  const lowActivityThreshold = Math.floor(threshold * (policy.lowActivityFraction || 0.5));
+  if (daysSinceActivity > lowActivityThreshold || (seat.usage_event_count ?? seat.activity_event_count ?? 0) <= 1) return 'LOW_ACTIVITY';
   return 'ACTIVE';
 }
 

@@ -1,0 +1,78 @@
+{
+  "name": "ContinuousLearningModel",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "archived"
+      ],
+      "default": "active"
+    },
+    "training_window_start": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "training_window_end": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "signal_counts": {
+      "type": "object"
+    },
+    "recommendation_policy": {
+      "type": "object"
+    },
+    "usage_policy": {
+      "type": "object"
+    },
+    "experience_policy": {
+      "type": "object"
+    },
+    "quality_score": {
+      "type": "number"
+    },
+    "guardrails_passed": {
+      "type": "boolean",
+      "default": false
+    },
+    "summary": {
+      "type": "string"
+    },
+    "activated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "version",
+    "status",
+    "recommendation_policy",
+    "usage_policy",
+    "experience_policy",
+    "guardrails_passed",
+    "activated_at"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

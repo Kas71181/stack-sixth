@@ -1,5 +1,8 @@
 import { Lightbulb, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getActiveLearningPolicy, rankExperienceInsights } from "@/lib/learningPolicy";
+import { trackAcquisition } from "@/lib/acquisitionEvents";
 
 // Generate contextual insight prompts from real user data
 function buildInsights(audits, recommendations, monitorReports) {
@@ -48,7 +51,7 @@ function buildInsights(audits, recommendations, monitorReports) {
     label: "Industry benchmarks",
   });
 
-  return insights.slice(0, 4);
+  return insights;
 }
 
 export default function ProactiveInsights({ audits, recommendations, monitorReports, onSelectInsight }) {
@@ -56,10 +59,13 @@ export default function ProactiveInsights({ audits, recommendations, monitorRepo
     try { return JSON.parse(localStorage.getItem("dismissed_insights") || "[]"); } catch { return []; }
   });
 
-  const insights = buildInsights(audits, recommendations, monitorReports).filter((i) => !dismissed.includes(i.id));
+  const { data: learningPolicy } = useQuery({ queryKey: ["active-learning-policy"], queryFn: getActiveLearningPolicy, staleTime: 300000 });
+  const availableInsights = buildInsights(audits, recommendations, monitorReports).filter((i) => !dismissed.includes(i.id));
+  const insights = rankExperienceInsights(availableInsights, learningPolicy);
 
   const dismiss = (id, e) => {
     e.stopPropagation();
+    trackAcquisition("experience_insight_dismissed", { insight_id: id });
     const next = [...dismissed, id];
     setDismissed(next);
     localStorage.setItem("dismissed_insights", JSON.stringify(next));
@@ -76,8 +82,8 @@ export default function ProactiveInsights({ audits, recommendations, monitorRepo
             key={insight.id}
             role="button"
             tabIndex={0}
-            onClick={() => onSelectInsight(insight.text)}
-            onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") onSelectInsight(insight.text); }}
+            onClick={() => { trackAcquisition("experience_insight_selected", { insight_id: insight.id }); onSelectInsight(insight.text); }}
+            onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { trackAcquisition("experience_insight_selected", { insight_id: insight.id }); onSelectInsight(insight.text); } }}
             className="w-full group flex items-center justify-between gap-2 text-left px-3 py-2.5 rounded-xl bg-accent/60 hover:bg-accent border border-border/40 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2 min-w-0">

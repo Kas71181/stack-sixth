@@ -1,6 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { getActiveLearningPolicy, recommendationPolicyPrompt } from "@/lib/learningPolicy";
 import { useAuth } from "@/lib/AuthContext";
 import { ArrowLeft, Building2, Users, Info, Zap, Globe, Target, LayoutList, Columns2, Tag, RefreshCw, Activity, Share2, Check, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
@@ -115,8 +116,9 @@ export default function Results() {
       existing_software: audit.existing_software,
       icp_profile: audit.icp_profile || null,
     };
+    const learningPolicy = await getActiveLearningPolicy();
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `${SYSTEM_PROMPT}\n\nInput:\n${JSON.stringify(input, null, 2)}`,
+      prompt: `${SYSTEM_PROMPT}\n\n${recommendationPolicyPrompt(learningPolicy)}\n\nInput:\n${JSON.stringify(input, null, 2)}`,
       response_json_schema: {
         type: "object",
         properties: {

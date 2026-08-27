@@ -15,19 +15,21 @@ export default async function(req) {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const now = new Date();
-    const [apps, seats, financialRecords, evidenceRecords, recommendations, acquisitionEvents] = await Promise.all([
+    const [apps, seats, financialRecords, evidenceRecords, recommendations, acquisitionEvents, learningModels] = await Promise.all([
       base44.entities.OrganizationApp.filter({ organization_id: user.id }),
       base44.entities.ApplicationSeat.filter({ organization_id: user.id }),
       base44.entities.FinancialRecord.filter({ organization_id: user.id }),
       base44.entities.EvidenceRecord.filter({ organization_id: user.id }),
       base44.entities.Recommendation.filter({ created_by_id: user.id }),
-      base44.entities.AcquisitionEvent.filter({ organization_id: user.id })
+      base44.entities.AcquisitionEvent.filter({ organization_id: user.id }),
+      base44.entities.ContinuousLearningModel.filter({ status: 'active' }, '-version', 1)
     ]);
+    const usagePolicy = learningModels[0]?.usage_policy || { dormancy_threshold_days: 60, low_activity_fraction: 0.5, minimum_observation_days: 60 };
 
     const seatUpdates = [];
     const normalizedSeats = seats.map((seat) => {
       const app = apps.find((item) => item.id === seat.organization_app_id);
-      const classification = classifySeat(seat, { thresholdDays: app?.dormancy_threshold_days || 60, seasonal: false }, now);
+      const classification = classifySeat(seat, { thresholdDays: app?.dormancy_threshold_days || usagePolicy.dormancy_threshold_days, lowActivityFraction: usagePolicy.low_activity_fraction, minimumObservationDays: usagePolicy.minimum_observation_days, seasonal: false }, now);
       if (classification !== seat.usage_classification) seatUpdates.push({ id: seat.id, usage_classification: classification });
       return { ...seat, usage_classification: classification };
     });
