@@ -30,7 +30,7 @@ export const site = {
     ["Does Stack Sixth sell software?","Stack Sixth may provide software discovery and supported purchasing options. Availability depends on provider, plan, and region."],
     ["Can larger organizations request a custom plan?","Yes. Enterprise customers can contact Stack Sixth about custom limits, integrations, onboarding, security requirements, and support."]
   ],
-  contact: { support: "hello@stacksixth.com", privacy: "[PRIVACY_EMAIL]" },
+  contact: { support: "hello@stacksixth.com", privacy: "hello@stacksixth.com" },
   social: { instagram: "https://www.instagram.com/thestacksixth", twitter: "https://twitter.com/stacksixth", facebook: "https://www.facebook.com/profile.php?id=61593369792157" },
   legal: { company: "Stack Sixth Inc", address: "500 W Fifth St, Winston-Salem, NC 27101", law: "North Carolina, United States" }
 };
