@@ -1,0 +1,36 @@
+# Stack Sixth
+
+> Stack Sixth is a US-focused SaaS spend management and software stack management platform for finance, IT, procurement, and operations teams.
+
+Stack Sixth helps organizations discover and organize business software, track subscriptions and renewals, understand ownership and access, evaluate usage evidence, and identify software optimization opportunities.
+
+## Core capabilities
+- Unified software inventory and application ownership
+- SaaS subscription, spend, and renewal tracking
+- Evidence-based software usage and license optimization
+- Purchasing and lifecycle governance
+- Authorized connections for supported software providers
+- Shared decision support for finance, IT, and procurement
+
+## Evidence-based usage
+Stack Sixth distinguishes four practical evidence states: Verified Live, Observed, Verified Access, and Insufficient Evidence. A connection or assigned license alone is not represented as confirmed active usage.
+
+## Primary audiences
+- Finance leaders seeking SaaS spend visibility and savings
+- IT teams managing software inventory, ownership, access, and usage
+- Procurement teams evaluating purchases, renewals, and consolidation
+- Growing businesses replacing fragmented software records and spreadsheets
+
+## Official pages
+- Home: https://stacksixth.com/
+- Product: https://stacksixth.com/product
+- Features: https://stacksixth.com/features
+- How it works: https://stacksixth.com/how-it-works
+- Integrations: https://stacksixth.com/integrations
+- Pricing: https://stacksixth.com/pricing
+- FAQ: https://stacksixth.com/faq
+- About: https://stacksixth.com/about
+
+## Company
+Stack Sixth Inc
+500 W Fifth St, Winston-Salem, NC 27101, United States

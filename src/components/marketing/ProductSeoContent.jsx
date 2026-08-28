@@ -1,0 +1,16 @@
+import { BarChart3, Boxes, CircleDollarSign, ShieldCheck } from "lucide-react";
+
+const capabilities = [
+  [Boxes, "Software inventory and ownership", "Create one reliable inventory of business applications, owners, teams, subscriptions, and access."],
+  [CircleDollarSign, "SaaS spend and renewal management", "Track software costs, billing cycles, renewal dates, and savings opportunities in one workspace."],
+  [BarChart3, "Evidence-based usage optimization", "Distinguish verified activity, verified access, observed signals, and insufficient evidence before making decisions."],
+  [ShieldCheck, "Governance for IT, finance, and procurement", "Give stakeholders a shared record for purchasing, license reviews, renewals, and software decisions."],
+];
+
+export default function ProductSeoContent() {
+  return <div className="mt-16 space-y-16">
+    <section aria-labelledby="product-capabilities"><div className="max-w-3xl"><p className="text-sm font-bold uppercase tracking-widest text-primary">Core capabilities</p><h2 id="product-capabilities" className="mt-3 text-3xl font-black">SaaS spend, software stack, and usage management in one platform.</h2><p className="mt-4 leading-7 text-muted-foreground">Stack Sixth helps US businesses replace scattered spreadsheets and vendor records with a clear operating system for software management.</p></div><div className="mt-8 grid gap-4 md:grid-cols-2">{capabilities.map(([Icon,title,body])=><article key={title} className="rounded-xl border bg-card p-6"><Icon className="h-5 w-5 text-primary"/><h3 className="mt-4 text-lg font-bold">{title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{body}</p></article>)}</div></section>
+    <section aria-labelledby="product-audiences" className="rounded-2xl bg-slate-950 p-8 text-white sm:p-10"><p className="text-sm font-bold uppercase tracking-widest text-cyan-300">Built for cross-functional teams</p><h2 id="product-audiences" className="mt-3 text-3xl font-black">One source of truth for finance, IT, and procurement.</h2><div className="mt-6 grid gap-6 md:grid-cols-3"><div><h3 className="font-bold">Finance leaders</h3><p className="mt-2 text-sm leading-6 text-slate-300">Understand SaaS spend, upcoming renewals, and evidence-backed savings opportunities.</p></div><div><h3 className="font-bold">IT teams</h3><p className="mt-2 text-sm leading-6 text-slate-300">See application ownership, employee access, connection status, and usage evidence.</p></div><div><h3 className="font-bold">Procurement teams</h3><p className="mt-2 text-sm leading-6 text-slate-300">Support purchasing, renewal, consolidation, and vendor decisions with shared evidence.</p></div></div></section>
+    <section aria-labelledby="evidence-definition"><h2 id="evidence-definition" className="text-3xl font-black">What is evidence-based software usage?</h2><p className="mt-4 max-w-3xl leading-7 text-muted-foreground">Evidence-based software usage is Stack Sixth’s approach to separating confirmed product activity from access records, observed signals, and missing data. This prevents a successful connection or assigned license from being misrepresented as active usage.</p></section>
+  </div>;
+}
