@@ -1,7 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { getActiveLearningPolicy, recommendationPolicyPrompt } from "@/lib/learningPolicy";
 import { useAuth } from "@/lib/AuthContext";
 import { ArrowLeft, Building2, Users, Info, Zap, Globe, Target, LayoutList, Columns2, Tag, RefreshCw, Activity, Share2, Check, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
@@ -22,24 +21,6 @@ const fade = (delay = 0) => ({
   animate: { opacity: 1, y: 0 },
   transition: { duration: 0.4, delay },
 });
-
-const SYSTEM_PROMPT = `You are Stack Sixth, an AI CFO for Software Spend.
-
-Analyze the provided company context and return software recommendations optimized for savings, fit, and integration.
-
-IMPORTANT:
-- Return ONLY valid JSON.
-- Do not include markdown, code fences, or extra text.
-
-Rules:
-1. Return 3 to 5 recommendations.
-2. match_score must be between 0 and 100.
-3. Do not recommend exact duplicates from existing_software unless replacement_candidate_for is set.
-4. For startup users, bias toward essential low-friction tools.
-5. For optimize users, bias toward integration, consolidation, and savings.
-6. Keep recommendations practical and budget-aware.
-7. Do not use em dashes or en dashes. Use commas, periods, or words instead.
-8. Treat each existing tool's stated purpose, current price, usage score, business processes, and pain points as primary inputs when recommending alternatives and writing the ROI note.`;
 
 export default function Results() {
   const { id } = useParams();
@@ -106,52 +87,8 @@ export default function Results() {
   const handleRetry = async () => {
     setRetrying(true);
     setRetryError(false);
-    const input = {
-      company_name: audit.company_name,
-      user_type: audit.user_type,
-      team_size: audit.team_size,
-      monthly_budget: audit.monthly_budget || null,
-      business_processes: audit.business_processes,
-      pain_points: audit.pain_points,
-      existing_software: audit.existing_software,
-      icp_profile: audit.icp_profile || null,
-    };
-    const learningPolicy = await getActiveLearningPolicy();
-    const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `${SYSTEM_PROMPT}\n\n${recommendationPolicyPrompt(learningPolicy)}\n\nInput:\n${JSON.stringify(input, null, 2)}`,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          summary: { type: "string" },
-          budget_fit: { type: "string" },
-          suggested_stack_total: { type: "number" },
-          quick_wins: { type: "array", items: { type: "string" } },
-          assumptions: { type: "array", items: { type: "string" } },
-          recommendations: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                name: { type: "string" },
-                category: { type: "string" },
-                estimated_monthly_cost: { type: "number" },
-                match_score: { type: "number" },
-                why_it_fits: { type: "array", items: { type: "string" } },
-                integration_notes: { type: "array", items: { type: "string" } },
-                savings_or_roi_note: { type: "string" },
-                implementation_priority: { type: "string" },
-                adopt_now_or_later: { type: "string" },
-                replacement_candidate_for: { type: "string" },
-                estimated_savings_opportunity: { type: "number" },
-                migration_risk: { type: "string" },
-              },
-            },
-          },
-        },
-      },
-    });
     try {
-      await base44.entities.SoftwareAudit.update(audit.id, { analysis_result: result, status: "completed" });
+      await base44.functions.invoke("generateSoftwareAudit", { audit_id: audit.id });
       queryClient.invalidateQueries({ queryKey: ["audit", id] });
     } catch {
       setRetryError(true);

@@ -120,7 +120,7 @@ Write a 2-3 sentence decision reason explaining why this request should be ${aiR
 
     let decisionReason;
     try {
-      const llmResult = await base44.integrations.Core.InvokeLLM({
+      const llmResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
         prompt: llmPrompt,
       });
       decisionReason = typeof llmResult === 'string' ? llmResult : llmResult?.response || JSON.stringify(llmResult);

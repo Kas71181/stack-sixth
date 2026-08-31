@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Loader2, Sparkles, Globe, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
-import { getActiveLearningPolicy, recommendationPolicyPrompt } from "@/lib/learningPolicy";
 import { useAuth } from "@/lib/AuthContext";
 import StepCompanyInfo from "../components/audit/StepCompanyInfo";
 import StepProcesses from "../components/audit/StepProcesses";
@@ -15,29 +14,6 @@ const STEPS = [
   { key: "processes", title: "Workflows & Pain Points", subtitle: "What does your team need?" },
   { key: "software", title: "Current Stack", subtitle: "What are you using today?" },
 ];
-
-const SYSTEM_PROMPT = `You are Stack Sixth, an AI CFO for Software Spend.
-
-Analyze the provided company context — including any ICP (Ideal Customer Profile) data derived from their website — and return software recommendations optimized for savings, fit, and integration.
-
-IMPORTANT:
-- Return ONLY valid JSON.
-- Do not include markdown, code fences, or extra text.
-- If uncertain, make best-effort assumptions and list them in "assumptions".
-
-Rules:
-1. Return 3 to 5 recommendations.
-2. match_score must be between 0 and 100. Use the ICP profile to increase or decrease match scores based on industry fit and company stage.
-3. Do not recommend exact duplicates from existing_software unless replacement_candidate_for is set with ROI justification.
-4. For startup users, bias toward essential low-friction tools and include adopt_now_or_later.
-5. For optimize users, bias toward integration, consolidation, and savings opportunities.
-6. Keep recommendations practical and budget-aware.
-7. Use concise, specific business reasoning that references the company's ICP where relevant (industry, growth stage, customer type).
-8. If ICP data is available, tailor why_it_fits bullets to explicitly reference the company's industry, business model, or growth stage.
-9. Do not use em dashes or en dashes. Use commas, periods, or words instead.
-10. Treat each existing tool's stated purpose, current price, usage score, business processes, and pain points as primary inputs when recommending alternatives and writing the ROI note.
-
-Now generate the JSON response from the input context.`;
 
 export default function AuditForm() {
   const navigate = useNavigate();
@@ -143,101 +119,25 @@ export default function AuditForm() {
     setLoading(false);
     navigate(`/results/${audit.id}?new=1`);
 
-    // Run ICP enrichment + analysis in background (fully non-blocking)
+    // Run the app-specific audit operation in the backend.
     try {
-      let icpProfile = null;
-      if (formData.company_website) {
-        try {
-          const icpPromise = base44.integrations.Core.InvokeLLM({
-            prompt: `Analyze this company's online presence and extract their Ideal Customer Profile (ICP) and business context.
-Company name: ${formData.company_name}
-Website/URL: ${formData.company_website}
-
-Return a structured ICP profile with: industry, business_model (B2B/B2C/B2B2C), company_stage (startup/growth/enterprise), primary_customers (who they sell to), key_use_cases (what they do), tech_maturity (low/medium/high), and growth_focus (cost_reduction/scaling/automation/compliance).`,
-            add_context_from_internet: true,
-            model: "gemini_3_flash",
-            response_json_schema: {
-              type: "object",
-              properties: {
-                industry: { type: "string" },
-                business_model: { type: "string" },
-                company_stage: { type: "string" },
-                primary_customers: { type: "string" },
-                key_use_cases: { type: "array", items: { type: "string" } },
-                tech_maturity: { type: "string" },
-                growth_focus: { type: "string" },
-                summary: { type: "string" },
-              },
-            },
-          });
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("ICP timeout")), 15000)
-          );
-          icpProfile = await Promise.race([icpPromise, timeoutPromise]);
-        } catch {
-          icpProfile = null;
-        }
-      }
-
-      const learningPolicy = await getActiveLearningPolicy();
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `${SYSTEM_PROMPT}\n\n${recommendationPolicyPrompt(learningPolicy)}\n\nInput:\n${JSON.stringify(input, null, 2)}`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            summary: { type: "string" },
-            budget_fit: { type: "string" },
-            suggested_stack_total: { type: "number" },
-            quick_wins: { type: "array", items: { type: "string" } },
-            assumptions: { type: "array", items: { type: "string" } },
-            recommendations: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  name: { type: "string" },
-                  category: { type: "string" },
-                  estimated_monthly_cost: { type: "number" },
-                  match_score: { type: "number" },
-                  why_it_fits: { type: "array", items: { type: "string" } },
-                  integration_notes: { type: "array", items: { type: "string" } },
-                  savings_or_roi_note: { type: "string" },
-                  implementation_priority: { type: "string" },
-                  adopt_now_or_later: { type: "string" },
-                  replacement_candidate_for: { type: "string" },
-                  estimated_savings_opportunity: { type: "number" },
-                  migration_risk: { type: "string" },
-                },
-              },
-            },
-          },
-        },
-      });
-      await base44.entities.SoftwareAudit.update(audit.id, {
-        analysis_result: result,
-        icp_profile: icpProfile || null,
-        status: "completed",
-      });
-      base44.analytics.track({ eventName: "audit_completed", properties: { user_type: formData.user_type, tool_count: formData.existing_software.length } });
-
-      // Auto-contribute anonymized data to the benchmark network
+      await base44.functions.invoke("generateSoftwareAudit", { audit_id: audit.id });
+      base44.analytics.track({ eventName: "audit_completed", properties: { user_type: formData.user_type, tool_count: dedupedSoftware.length } });
       const teamSize = formData.team_size || 10;
       const sizeRange = teamSize <= 10 ? "1-10" : teamSize <= 50 ? "11-50" : teamSize <= 200 ? "51-200" : teamSize <= 500 ? "201-500" : "500+";
       try {
         await base44.functions.invoke("submitBenchmark", {
-          integrations: dedupedSoftware.map((s) => ({
-            tool_name: s.name,
-            category: s.category || "",
-            monthly_cost: s.monthly_cost || 0,
+          integrations: dedupedSoftware.map((software) => ({
+            tool_name: software.name,
+            category: software.category || "",
+            monthly_cost: software.monthly_cost || 0,
             licensed_seats: 0,
             active_users: 0,
           })),
           company_size: sizeRange,
         });
       } catch {}
-    } catch {
-      await base44.entities.SoftwareAudit.update(audit.id, { status: "error" });
-    }
+    } catch {}
   };
 
   return (

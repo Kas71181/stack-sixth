@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { motion } from "framer-motion";
@@ -8,18 +8,6 @@ import { Button } from "@/components/ui/button";
 import AuditScoreRing from "@/components/auditreport/AuditScoreRing";
 import RecommendationsList from "@/components/auditreport/RecommendationsList";
 import RedundancyDetector from "@/components/auditreport/RedundancyDetector";
-
-const SYSTEM_PROMPT = `You are an expert SaaS spend auditor. Analyze the provided tool stack data and return a JSON audit report.
-
-Rules:
-- Flag tools with utilization < 50%
-- Detect redundant tools: 2+ in same category = consolidation opportunity
-- Calculate total wasted spend
-- Generate 5-10 prioritized recommendations sorted by estimated monthly savings
-- Audit Score 0-100: avg utilization (40%) - redundancy penalty (30%) - inactive user % (30%)
-- Write 2-3 sentence executive summary
-
-Return ONLY valid JSON, no markdown.`;
 
 export default function AuditReportPage() {
   const qc = useQueryClient();
@@ -36,89 +24,20 @@ export default function AuditReportPage() {
     queryFn: () => base44.entities.SaasIntegration.filter({ created_by_id: user?.id }),
     enabled: !!user?.id,
   });
-  const { data: companies = [] } = useQuery({
-    queryKey: ["companies", user?.id],
-    queryFn: () => base44.entities.Company.filter({ created_by_id: user?.id }),
-    enabled: !!user?.id,
-  });
-
   const latestReport = reports[0];
-  const company = companies[0];
-
-  const createReport = useMutation({
-    mutationFn: (data) => base44.entities.AuditReport.create(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["audit-reports"] }),
-  });
-
-  const createRec = useMutation({
-    mutationFn: (data) => base44.entities.Recommendation.create(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["recommendations"] }),
-  });
-
-  const updateCompany = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Company.update(id, data),
-  });
 
   const runAudit = async () => {
     setRunning(true);
-    const toolData = integrations.map((i) => ({
-      name: i.tool_name,
-      category: i.category,
-      monthly_cost: i.monthly_cost,
-      licensed_seats: i.licensed_seats,
-      active_users: i.active_users,
-      utilization: i.licensed_seats > 0 ? Math.round((i.active_users / i.licensed_seats) * 100) : 0,
-    }));
-
-    const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `${SYSTEM_PROMPT}\n\nTool Stack:\n${JSON.stringify(toolData, null, 2)}`,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          audit_score: { type: "number" },
-          executive_summary: { type: "string" },
-          total_monthly_waste: { type: "number" },
-          inactive_seat_count: { type: "number" },
-          redundant_tool_count: { type: "number" },
-          recommendations: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                category: { type: "string" },
-                tool_name: { type: "string" },
-                description: { type: "string" },
-                estimated_monthly_savings: { type: "number" },
-                priority: { type: "string" },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    const totalSpend = integrations.reduce((s, i) => s + (i.monthly_cost || 0), 0);
-    const report = await createReport.mutateAsync({
-      company_id: company?.id || user?.id || "unknown",
-      company_name: company?.name || "My Company",
-      generated_date: new Date().toISOString().split("T")[0],
-      total_monthly_spend: totalSpend,
-      estimated_monthly_waste: result.total_monthly_waste || 0,
-      inactive_seat_count: result.inactive_seat_count || 0,
-      redundant_tool_count: result.redundant_tool_count || 0,
-      audit_score: result.audit_score || 0,
-      executive_summary: result.executive_summary || "",
-      status: "Final",
-    });
-
-    for (const rec of (result.recommendations || [])) {
-      await createRec.mutateAsync({ ...rec, audit_id: report.id, company_id: company?.id || user?.id || "unknown", status: "Open" });
+    try {
+      await base44.functions.invoke("generateUsageAuditReport", { confirm: true });
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["audit-reports"] }),
+        qc.invalidateQueries({ queryKey: ["recommendations"] }),
+        qc.invalidateQueries({ queryKey: ["companies"] }),
+      ]);
+    } finally {
+      setRunning(false);
     }
-
-    if (company?.id) {
-      updateCompany.mutate({ id: company.id, data: { audit_score: result.audit_score, last_audit_date: new Date().toISOString().split("T")[0] } });
-    }
-    setRunning(false);
   };
 
   const totalSpend = integrations.reduce((s, i) => s + (i.monthly_cost || 0), 0);

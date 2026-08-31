@@ -4,7 +4,7 @@ import { waitUntil } from 'base44:runtime';
 const normalize = (value = '') => value.toLowerCase().replace(/[^a-z0-9]/g, '');
 
 async function refreshVendorOffers(base44, toolNames, cachedOffers) {
-  const result = await base44.integrations.Core.InvokeLLM({
+  const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
     model: 'gemini_3_flash',
     add_context_from_internet: true,
     prompt: `Find currently published SaaS discounts for these tools: ${toolNames.join(', ')}. Only return offers supported by a public vendor-controlled pricing, promotion, startup, nonprofit, education, or annual-plan page. Do not infer discounts, use coupon aggregators, or return expired offers. Include the exact source URL and concise eligibility terms.`,

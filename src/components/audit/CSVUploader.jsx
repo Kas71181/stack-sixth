@@ -16,25 +16,7 @@ export default function CSVUploader({ onToolsExtracted }) {
 
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
-    const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
-      file_url,
-      json_schema: {
-        type: "object",
-        properties: {
-          tools: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                name: { type: "string" },
-                category: { type: "string" },
-                monthly_cost: { type: "number" },
-              },
-            },
-          },
-        },
-      },
-    });
+    const { data: result } = await base44.functions.invoke("extractSoftwareInventoryFile", { file_url });
 
     if (result.status === "error" || !result.output?.tools?.length) {
       setStatus("error");
