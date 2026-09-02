@@ -1,5 +1,18 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { appParams } from "@/lib/app-params";
+
+// Our own OAuth service on Vercel (custom flows live at /api/oauth/<provider>/start,
+// served by serverless functions ahead of the /api -> Base44 rewrite).
+const startCustomOAuth = async (connector) => {
+  const response = await fetch(connector.customOAuthPath, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${appParams.token || ""}`, "X-App-Id": appParams.appId },
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.url) throw new Error(data.error || "Could not start the authorization flow.");
+  return data.url;
+};
 
 const waitForClose = (popup) => new Promise((resolve) => {
   const timer = window.setInterval(() => {
@@ -41,7 +54,9 @@ export default function useInventoryConnection({ tool, connector, connection, is
       const popup = window.open("", "_blank", "width=620,height=760");
       if (!popup) throw new Error("Please allow pop-ups to connect this tool.");
       const liveOrigin = window.location.origin.replace("preview--", "");
-      const url = connector.oauthFunction
+      const url = connector.customOAuthPath
+        ? await startCustomOAuth(connector)
+        : connector.oauthFunction
         ? (await base44.functions.invoke(connector.oauthFunction, {
             callback_url: `${liveOrigin}/functions/${connector.oauthFunction}`,
           })).data.url

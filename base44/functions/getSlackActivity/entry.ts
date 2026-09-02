@@ -6,7 +6,23 @@ export default async function(req) {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    const { accessToken } = await base44.asServiceRole.connectors.getCurrentAppUserConnection('6a1dba44349cdfe5f00d8fb7');
+
+    // Token vault first (our OAuth service on Vercel); Base44 managed connector as
+    // fallback for users who connected before the custom flow shipped.
+    let accessToken: string | undefined;
+    const internalKey = Deno.env.get('INTERNAL_SYNC_KEY');
+    if (internalKey) {
+      const vaultResponse = await fetch('https://stacksixth.com/api/oauth/slack/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Internal-Key': internalKey },
+        body: JSON.stringify({ app_user_id: user.id }),
+      });
+      if (vaultResponse.ok) accessToken = (await vaultResponse.json()).access_token;
+    }
+    if (!accessToken) {
+      const connection = await base44.asServiceRole.connectors.getCurrentAppUserConnection('6a1dba44349cdfe5f00d8fb7');
+      accessToken = connection.accessToken;
+    }
     const headers = { Authorization: `Bearer ${accessToken}` };
     const authResponse = await fetch('https://slack.com/api/auth.test', { headers });
     const authData = await authResponse.json();

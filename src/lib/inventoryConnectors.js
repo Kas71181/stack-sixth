@@ -2,7 +2,7 @@ import { toolLogoUrl } from "@/lib/toolLogos";
 
 export const INVENTORY_CONNECTORS = {
   slack: {
-    id: "slack", label: "Slack", connectorId: "6a1dba44349cdfe5f00d8fb7", functionName: "getSlackActivity",
+    id: "slack", label: "Slack", customOAuthPath: "/api/oauth/slack/start", functionName: "getSlackActivity",
     logo: toolLogoUrl("Slack"),
   },
   github: {

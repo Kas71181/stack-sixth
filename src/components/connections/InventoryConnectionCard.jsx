@@ -14,7 +14,7 @@ export default function InventoryConnectionCard({ tool, connector, connection, i
   const [activeConnector, setActiveConnector] = useState(connector);
   const flow = useInventoryConnection({ tool, connector: activeConnector, connection, isLive, onSynced });
   const busy = flow.status === "authorizing" || flow.status === "syncing";
-  const direct = Boolean(connector?.connectorId || connector?.oauthFunction);
+  const direct = Boolean(connector?.connectorId || connector?.oauthFunction || connector?.customOAuthPath);
   const nativeConnection = Boolean(connector && !connector.setupRequired && (direct || connector.functionName));
   const verified = ["live", "access", "evidence"].includes(flow.status);
   const configured = verified || ["manual", "snapshot"].includes(flow.status);
