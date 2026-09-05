@@ -1,7 +1,7 @@
 export const site = {
-  announcement: { enabled: true, text: "Bring clarity to your company’s entire software stack.", link: "Explore Stack Sixth →" },
-  nav: [["Product","product"],["Features","features"],["How It Works","how-it-works"],["Integrations","integrations"],["Pricing","pricing"],["About","about"],["FAQ","faq"]],
-  hero: { eyebrow: "SaaS Spend & Software Stack Management", title: "Control SaaS spend and manage your entire software stack.", body: "Stack Sixth gives finance, IT, and procurement teams one place to manage software inventory, subscriptions, spending, ownership, access, usage evidence, licenses, and renewals." },
+  announcement: { enabled: true, text: "Built for growing businesses without an enterprise IT department.", link: "See how it works →" },
+  nav: [["Product","product"],["How It Works","how-it-works"],["Evidence","evidence"],["Who It's For","about"],["Pricing","pricing"]],
+  hero: { eyebrow: "For Growing Businesses", title: "Stop Guessing About Your Software Spend.", body: "Your business runs on dozens of software and AI tools. Stack Sixth helps you see what you have, understand what you're paying for, identify what deserves attention, and make smarter software decisions." },
   problems: [
     ["Scattered subscriptions","Software plans and billing information are spread across different accounts and vendors."],
     ["Unclear software usage","Teams often pay for tools without knowing whether they are actively being used."],

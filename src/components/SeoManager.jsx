@@ -4,8 +4,8 @@ import { site } from "@/lib/siteContent";
 
 const origin = "https://stacksixth.com";
 const seo = {
-  "/": ["SaaS Spend & Software Stack Management | Stack Sixth", "Manage SaaS spend, software inventory, usage evidence, licenses, and renewals in one workspace built for finance, IT, and procurement teams."],
-  "/product": ["Software Stack Management Platform | Stack Sixth", "Control SaaS spend, inventory, access, evidence-based usage, licenses, and renewals with Stack Sixth software stack management."],
+  "/": ["SaaS Spend & Software Stack Management for Growing Businesses | Stack Sixth", "Stack Sixth helps growing businesses discover their software stack, understand SaaS and AI spend, manage renewals, evaluate usage evidence, and make smarter software decisions."],
+  "/product": ["Software Decision Intelligence for Growing Businesses | Stack Sixth", "Discover your software stack, understand spend and usage evidence, identify what deserves attention, and turn findings into measurable decisions."],
   "/features": ["SaaS Management Features | Stack Sixth", "Explore software inventory, spend tracking, usage evidence, renewal management, ownership, and procurement features from Stack Sixth."],
   "/how-it-works": ["How Stack Sixth Manages SaaS Spend", "See how Stack Sixth turns scattered software, subscription, access, usage, and renewal data into evidence-based decisions."],
   "/integrations": ["Software Integrations | Stack Sixth", "Connect supported business software securely to improve application inventory, access, subscription, and usage visibility."],
