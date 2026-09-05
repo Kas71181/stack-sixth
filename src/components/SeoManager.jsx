@@ -1,18 +1,36 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { site } from "@/lib/siteContent";
+import { buildStructuredData } from "@/lib/structuredData";
+import { SEO_ORIGIN, SEO_PAGES, SHARE_IMAGE } from "@/lib/seoConfig";
 
-const origin = "https://stacksixth.com";
-const seo = {
-  "/": ["SaaS Spend & Software Stack Management for Growing Businesses | Stack Sixth", "Stack Sixth helps growing businesses discover their software stack, understand SaaS and AI spend, manage renewals, evaluate usage evidence, and make smarter software decisions."],
-  "/product": ["Software Decision Intelligence for Growing Businesses | Stack Sixth", "Discover your software stack, understand spend and usage evidence, identify what deserves attention, and turn findings into measurable decisions."],
-  "/features": ["SaaS Management Features | Stack Sixth", "Explore software inventory, spend tracking, usage evidence, renewal management, ownership, and procurement features from Stack Sixth."],
-  "/how-it-works": ["How Stack Sixth Manages SaaS Spend", "See how Stack Sixth turns scattered software, subscription, access, usage, and renewal data into evidence-based decisions."],
-  "/integrations": ["Software Integrations | Stack Sixth", "Connect supported business software securely to improve application inventory, access, subscription, and usage visibility."],
-  "/pricing": ["Stack Sixth Pricing | SaaS Management Plans", "Compare Stack Sixth plans for SaaS spend management, software inventory, usage optimization, renewals, and governance."],
-  "/about": ["About Stack Sixth | Software Management", "Learn how Stack Sixth helps US organizations make transparent, evidence-based software and SaaS spend decisions."],
-  "/faq": ["Stack Sixth FAQ | SaaS Management Answers", "Answers about Stack Sixth software inventory, SaaS spend, integrations, usage evidence, subscriptions, billing, and renewals."],
+const upsertMeta = (key, value, property = false) => {
+  const attribute = property ? "property" : "name";
+  let node = document.head.querySelector(`meta[${attribute}="${key}"]`);
+  if (!node) {
+    node = document.createElement("meta");
+    node.setAttribute(attribute, key);
+    document.head.appendChild(node);
+  }
+  node.content = value;
 };
-const upsert = (selector, attribute, value) => { let node=document.head.querySelector(selector); if(!node){node=document.createElement("meta"); document.head.appendChild(node)} node.setAttribute(attribute,value); return node; };
 
-export default function SeoManager(){const {pathname}=useLocation();useEffect(()=>{const [title,description]=seo[pathname]||["Stack Sixth","Software stack management for growing businesses."];const url=`${origin}${pathname==="/"?"":pathname}`;document.title=title;upsert('meta[name="description"]',"name","description").content=description;upsert('meta[name="robots"]',"name","robots").content=["/login","/register","/signup","/checkout","/onboarding","/settings","/app","/my-stack","/savings","/governance"].some(p=>pathname.startsWith(p))?"noindex,nofollow":"index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1";[["og:title",title],["og:description",description],["og:url",url],["twitter:title",title],["twitter:description",description]].forEach(([key,value])=>{const property=key.startsWith("og:");upsert(`meta[${property?"property":"name"}="${key}"]`,property?"property":"name",key).content=value});let canonical=document.head.querySelector('link[rel="canonical"]');if(!canonical){canonical=document.createElement("link");canonical.rel="canonical";document.head.appendChild(canonical)}canonical.href=url;const software={"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":`${origin}/#organization`,name:"Stack Sixth Inc",url:origin,address:{"@type":"PostalAddress",streetAddress:"500 W Fifth St",addressLocality:"Winston-Salem",addressRegion:"NC",postalCode:"27101",addressCountry:"US"}},{"@type":"WebSite","@id":`${origin}/#website`,name:"Stack Sixth",url:origin,publisher:{"@id":`${origin}/#organization`}},{"@type":"SoftwareApplication","@id":`${origin}/#software`,name:"Stack Sixth",url:origin,applicationCategory:"BusinessApplication",operatingSystem:"Web",areaServed:"US",description,featureList:["SaaS spend management","Software inventory","Evidence-based usage optimization","License management","Renewal management","Application ownership and access","Procurement governance"],audience:{"@type":"BusinessAudience",audienceType:"Finance, IT, procurement, and operations teams"},offers:{"@type":"AggregateOffer",priceCurrency:"USD",lowPrice:"199",highPrice:"999",offerCount:"3"}},{"@type":"FAQPage",mainEntity:site.faqs.map(([name,text])=>({"@type":"Question",name,acceptedAnswer:{"@type":"Answer",text}}))}]};let script=document.getElementById("stack-sixth-structured-data");if(!script){script=document.createElement("script");script.id="stack-sixth-structured-data";script.type="application/ld+json";document.head.appendChild(script)}script.textContent=JSON.stringify(software)},[pathname]);return null}
+export default function SeoManager() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const page = SEO_PAGES[pathname];
+    const title = page?.title || "StackSixth";
+    const description = page?.description || "The sixth sense for smarter software decisions.";
+    const url = `${SEO_ORIGIN}${pathname === "/" ? "" : pathname}`;
+    document.title = title;
+    upsertMeta("description", description);
+    upsertMeta("robots", page ? "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" : "noindex,nofollow");
+    [["og:title", title], ["og:description", description], ["og:url", url], ["og:type", "website"], ["og:site_name", "StackSixth"], ["og:image", SHARE_IMAGE], ["og:image:width", "300"], ["og:image:height", "137"], ["og:image:alt", "StackSixth"], ["twitter:card", "summary_large_image"], ["twitter:title", title], ["twitter:description", description], ["twitter:image", SHARE_IMAGE], ["twitter:image:alt", "StackSixth"]].forEach(([key, value]) => upsertMeta(key, value, key.startsWith("og:")));
+    let canonical = document.head.querySelector('link[rel="canonical"]');
+    if (!canonical) { canonical = document.createElement("link"); canonical.rel = "canonical"; document.head.appendChild(canonical); }
+    canonical.href = url;
+    let script = document.getElementById("stack-sixth-structured-data");
+    if (!script) { script = document.createElement("script"); script.id = "stack-sixth-structured-data"; script.type = "application/ld+json"; document.head.appendChild(script); }
+    script.textContent = page ? JSON.stringify(buildStructuredData(pathname, page)) : "";
+  }, [pathname]);
+  return null;
+}

@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://stacksixth.com/</loc><lastmod>2026-08-28</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://stacksixth.com/product</loc><lastmod>2026-08-28</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://stacksixth.com/features</loc><lastmod>2026-08-28</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://stacksixth.com/how-it-works</loc><lastmod>2026-08-28</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://stacksixth.com/integrations</loc><lastmod>2026-08-28</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://stacksixth.com/pricing</loc><lastmod>2026-08-28</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://stacksixth.com/about</loc><lastmod>2026-08-28</lastmod><changefreq>yearly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://stacksixth.com/contact-sales</loc><lastmod>2026-08-28</lastmod><changefreq>yearly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://stacksixth.com/faq</loc><lastmod>2026-08-28</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://stacksixth.com/privacy</loc><lastmod>2026-08-28</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://stacksixth.com/terms</loc><lastmod>2026-08-28</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://stacksixth.com/</loc></url>
+  <url><loc>https://stacksixth.com/product</loc></url>
+  <url><loc>https://stacksixth.com/features</loc></url>
+  <url><loc>https://stacksixth.com/how-it-works</loc></url>
+  <url><loc>https://stacksixth.com/integrations</loc></url>
+  <url><loc>https://stacksixth.com/pricing</loc></url>
+  <url><loc>https://stacksixth.com/about</loc></url>
+  <url><loc>https://stacksixth.com/contact</loc></url>
+  <url><loc>https://stacksixth.com/contact-sales</loc></url>
+  <url><loc>https://stacksixth.com/faq</loc></url>
+  <url><loc>https://stacksixth.com/privacy</loc></url>
+  <url><loc>https://stacksixth.com/terms</loc></url>
+  <url><loc>https://stacksixth.com/cookies</loc></url>
+  <url><loc>https://stacksixth.com/acceptable-use</loc></url>
 </urlset>

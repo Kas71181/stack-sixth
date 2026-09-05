@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -6,48 +7,40 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { CartProvider } from '@/components/cart/CartContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import Layout from './components/Layout';
-import Dashboard from './pages/Dashboard';
-import AuditForm from './pages/AuditForm';
-import Results from './pages/Results.jsx';
-import History from './pages/History';
-import ITDashboard from './pages/ITDashboard';
-import Monitoring from './pages/Monitoring';
-import ContractIntelligence from './pages/ContractIntelligence';
-import SwitchPlanner from './pages/SwitchPlanner';
-import SettingsPage from './pages/SettingsPage';
-import DataCoverageSetup from './pages/DataCoverageSetup';
-import SharedReport from './pages/SharedReport';
-import PurchaseRequests from './pages/PurchaseRequests';
-import LifecycleGovernance from './pages/LifecycleGovernance';
-import Marketplace from './pages/Marketplace';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import IntelligenceLibrary from './pages/IntelligenceLibrary';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import MyStack from './pages/MyStack';
-import Savings from './pages/Savings';
-import Governance from './pages/Governance';
-import UsageEvidenceAdmin from './pages/UsageEvidenceAdmin';
-import SupportInbox from './pages/SupportInbox';
-import SupportRoom from './pages/SupportRoom';
-import Pricing from './pages/Pricing';
-import SignupSetup from './pages/SignupSetup';
-import PricingPartners from './pages/PricingPartners';
-import ActiveSubscriptionGate from '@/components/subscription/ActiveSubscriptionGate';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import MarketingLayout from '@/components/marketing/MarketingLayout';
 import MarketingHome from '@/pages/MarketingHome';
-import PublicInfoPage from '@/pages/PublicInfoPage';
-import LegalPage from '@/pages/LegalPage';
-import ContactSales from '@/pages/ContactSales';
-import CheckoutSuccess from '@/pages/CheckoutSuccess';
-import CheckoutCancelled from '@/pages/CheckoutCancelled';
-import BillingSettings from '@/pages/BillingSettings';
-import Onboarding from '@/pages/Onboarding';
 import SeoManager from '@/components/SeoManager';
+
+const Layout = lazy(() => import('./components/Layout'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const AuditForm = lazy(() => import('./pages/AuditForm'));
+const Results = lazy(() => import('./pages/Results.jsx'));
+const History = lazy(() => import('./pages/History'));
+const SwitchPlanner = lazy(() => import('./pages/SwitchPlanner'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const SharedReport = lazy(() => import('./pages/SharedReport'));
+const UsageEvidenceAdmin = lazy(() => import('./pages/UsageEvidenceAdmin'));
+const SupportInbox = lazy(() => import('./pages/SupportInbox'));
+const SupportRoom = lazy(() => import('./pages/SupportRoom'));
+const Pricing = lazy(() => import('./pages/Pricing'));
+const SignupSetup = lazy(() => import('./pages/SignupSetup'));
+const PricingPartners = lazy(() => import('./pages/PricingPartners'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const MyStack = lazy(() => import('./pages/MyStack'));
+const Savings = lazy(() => import('./pages/Savings'));
+const Governance = lazy(() => import('./pages/Governance'));
+const PublicInfoPage = lazy(() => import('@/pages/PublicInfoPage'));
+const LegalPage = lazy(() => import('@/pages/LegalPage'));
+const ContactSales = lazy(() => import('@/pages/ContactSales'));
+const CheckoutSuccess = lazy(() => import('@/pages/CheckoutSuccess'));
+const CheckoutCancelled = lazy(() => import('@/pages/CheckoutCancelled'));
+const BillingSettings = lazy(() => import('@/pages/BillingSettings'));
+const Onboarding = lazy(() => import('@/pages/Onboarding'));
+const ActiveSubscriptionGate = lazy(() => import('@/components/subscription/ActiveSubscriptionGate'));
 
 
 const AuthenticatedApp = () => {
@@ -75,6 +68,7 @@ const AuthenticatedApp = () => {
   return (
     <>
       <SeoManager />
+      <Suspense fallback={null}>
       <Routes>
         <Route element={<MarketingLayout />}>
           <Route path="/" element={<MarketingHome />} />
@@ -134,6 +128,7 @@ const AuthenticatedApp = () => {
         </Route>
         <Route path="*" element={<PageNotFound />} />
       </Routes>
+      </Suspense>
     </>
   );
 };
