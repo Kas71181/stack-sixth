@@ -31,6 +31,6 @@ export const site = {
     ["Can larger organizations request a custom plan?","Yes. Enterprise customers can contact Stack Sixth about custom limits, integrations, onboarding, security requirements, and support."]
   ],
   contact: { support: "hello@stacksixth.com", privacy: "hello@stacksixth.com" },
-  social: { instagram: "https://www.instagram.com/thestacksixth", twitter: "https://twitter.com/stacksixth", facebook: "https://www.facebook.com/profile.php?id=61593369792157" },
+  social: { instagram: "https://www.instagram.com/thestacksixth", twitter: "https://twitter.com/stacksixth", facebook: "https://www.facebook.com/profile.php?id=61593369792157", linkedin: "https://www.linkedin.com/company/stack-sixth-inc/home/?viewAsMember=true" },
   legal: { company: "Stack Sixth Inc", address: "500 W Fifth St, Winston-Salem, NC 27101", law: "North Carolina, United States" }
 };
