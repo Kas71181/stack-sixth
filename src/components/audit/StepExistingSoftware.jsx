@@ -12,6 +12,7 @@ import ToolAutocomplete from "./ToolAutocomplete";
 import GmailDetectButton from "./GmailDetectButton";
 
 const CATEGORY_OPTIONS = [
+  "AI & Machine Learning",
   "Communication",
   "Project Management",
   "CRM & Sales",

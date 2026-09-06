@@ -1,5 +1,23 @@
 // 200+ SaaS tool catalog with pre-filled category and avg monthly cost
 export const TOOL_CATALOG = [
+  // AI & Machine Learning
+  { name: "ChatGPT", category: "AI & Machine Learning", avg_monthly_cost: 200 },
+  { name: "Claude", category: "AI & Machine Learning", avg_monthly_cost: 200 },
+  { name: "Gemini", category: "AI & Machine Learning", avg_monthly_cost: 200 },
+  { name: "Microsoft Copilot", category: "AI & Machine Learning", avg_monthly_cost: 300 },
+  { name: "Perplexity", category: "AI & Machine Learning", avg_monthly_cost: 200 },
+  { name: "Grok", category: "AI & Machine Learning", avg_monthly_cost: 160 },
+  { name: "Notion AI", category: "AI & Machine Learning", avg_monthly_cost: 100 },
+  { name: "GitHub Copilot", category: "AI & Machine Learning", avg_monthly_cost: 190 },
+  { name: "Jasper", category: "AI & Machine Learning", avg_monthly_cost: 125 },
+  { name: "Grammarly", category: "AI & Machine Learning", avg_monthly_cost: 150 },
+  { name: "Otter.ai", category: "AI & Machine Learning", avg_monthly_cost: 100 },
+  { name: "Midjourney", category: "AI & Machine Learning", avg_monthly_cost: 120 },
+  { name: "Adobe Firefly", category: "AI & Machine Learning", avg_monthly_cost: 100 },
+  { name: "Runway", category: "AI & Machine Learning", avg_monthly_cost: 150 },
+  { name: "Synthesia", category: "AI & Machine Learning", avg_monthly_cost: 300 },
+  { name: "ElevenLabs", category: "AI & Machine Learning", avg_monthly_cost: 100 },
+
   // Communication
   { name: "Slack", category: "Communication", avg_monthly_cost: 87 },
   { name: "Microsoft Teams", category: "Communication", avg_monthly_cost: 60 },
