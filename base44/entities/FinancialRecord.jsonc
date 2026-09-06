@@ -54,6 +54,9 @@
       "type": "string",
       "format": "date-time"
     },
+    "source_fingerprint": {
+      "type": "string"
+    },
     "status": {
       "type": "string",
       "enum": [
@@ -78,6 +81,19 @@
     "superseded_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "resolved_by_user_id": {
+      "type": "string"
+    },
+    "resolved_by_email": {
+      "type": "string"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolution_note": {
+      "type": "string"
     }
   },
   "required": [

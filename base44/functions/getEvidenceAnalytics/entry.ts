@@ -45,7 +45,8 @@ export default async function(req) {
       const app = group[0];
       const ids = new Set(group.map((item) => item.id));
       const metrics = calculateApplicationMetrics(app, normalizedSeats.filter((seat) => ids.has(seat.organization_app_id)), financialRecords.filter((record) => ids.has(record.organization_app_id)));
-      return { app, duplicateIds: group.slice(1).map((item) => item.id), metrics, usageStatus: usageStatus(app, metrics) };
+      metrics.evidence.sources = [...new Set(evidenceRecords.filter((record) => ids.has(record.organization_app_id) && ['USAGE', 'FINANCIAL'].includes(record.evidence_category)).map((record) => record.source_type))];
+      return { app, appIds: ids, duplicateIds: group.slice(1).map((item) => item.id), metrics, usageStatus: usageStatus(app, metrics) };
     });
 
     const summary = {
@@ -58,7 +59,9 @@ export default async function(req) {
       verifiedUsageApplications: applicationMetrics.filter((item) => item.usageStatus === 'VERIFIED_LIVE').length,
       partialEvidenceApplications: applicationMetrics.filter((item) => ['VERIFIED_ACCESS', 'OBSERVED'].includes(item.usageStatus)).length,
       insufficientEvidenceApplications: applicationMetrics.filter((item) => item.usageStatus === 'INSUFFICIENT_EVIDENCE').length,
+      reclaimableSeats: applicationMetrics.reduce((sum, item) => sum + (item.metrics.savings.classification === 'SAVINGS_READY_TO_CAPTURE' ? item.metrics.savings.reclaimableSeats || 0 : 0), 0),
       verifiedSavings: applicationMetrics.filter((item) => item.metrics.savings.classification === 'SAVINGS_READY_TO_CAPTURE').reduce((sum, item) => sum + (item.metrics.savings.amount || 0), 0),
+      verifiedAnnualSavings: applicationMetrics.filter((item) => item.metrics.savings.classification === 'SAVINGS_READY_TO_CAPTURE').reduce((sum, item) => sum + (item.metrics.savings.annualAmount || 0), 0),
       renewalOpportunity: applicationMetrics.filter((item) => item.metrics.savings.classification === 'RENEWAL_SAVINGS_OPPORTUNITY').reduce((sum, item) => sum + (item.metrics.savings.amount || 0), 0),
       optimizationCandidates: applicationMetrics.filter((item) => item.metrics.savings.classification === 'OPTIMIZATION_CANDIDATE').length,
       usageCoverage: applicationMetrics.length ? Math.round(applicationMetrics.reduce((sum, item) => sum + item.metrics.usageCoverage, 0) / applicationMetrics.length) : 0,
@@ -95,8 +98,8 @@ export default async function(req) {
       const savings = item.metrics.savings;
       const type = savings.classification === 'SAVINGS_READY_TO_CAPTURE' ? 'seat_reclamation' : savings.classification === 'RENEWAL_SAVINGS_OPPORTUNITY' ? 'renewal_optimization' : item.metrics.usageCoverage < 100 ? 'usage_verification' : null;
       if (!type || openKeys.has(`${item.app.id}:${type}`)) continue;
-      const evidenceIds = evidenceRecords.filter((record) => record.organization_app_id === item.app.id).map((record) => record.id);
-      recommendationCreates.push({ company_id: user.id, organization_app_id: item.app.id, recommendation_type: type, recommended_action: type === 'seat_reclamation' ? `Review ${savings.reclaimableSeats} verified reclaimable seat(s)` : type === 'renewal_optimization' ? 'Review seat commitment at renewal' : 'Connect a supported usage source', category: type === 'seat_reclamation' ? 'Reclaim Seats' : type === 'renewal_optimization' ? 'Negotiate Contract' : 'Downgrade Plan', tool_name: item.app.display_name, description: type === 'usage_verification' ? 'Usage evidence is insufficient for a precise utilization or savings claim.' : `${savings.reclaimableSeats} seat(s) meet the deterministic evidence requirements.`, financial_impact: savings.amount ?? undefined, financial_impact_status: savings.classification, evidence_sources: evidenceIds, evidence_level: type === 'usage_verification' ? item.usageStatus : 'VERIFIED_LIVE', confidence_level: type === 'usage_verification' ? 'insufficient' : 'high', calculation_method: savings.method, last_validated_at: now.toISOString(), validation_status: validationIssues.some((issue) => issue.organizationAppId === item.app.id) ? 'suppressed' : 'valid', priority: type === 'seat_reclamation' ? 'High' : 'Medium', status: 'Open', created_by_id: user.id });
+      const evidenceIds = evidenceRecords.filter((record) => item.appIds.has(record.organization_app_id)).map((record) => record.id);
+      recommendationCreates.push({ company_id: user.id, organization_app_id: item.app.id, recommendation_type: type, recommended_action: type === 'seat_reclamation' ? `Review ${savings.reclaimableSeats} verified reclaimable seat(s)` : type === 'renewal_optimization' ? 'Review seat commitment at renewal' : 'Connect a supported usage source', category: type === 'seat_reclamation' ? 'Reclaim Seats' : type === 'renewal_optimization' ? 'Negotiate Contract' : 'Downgrade Plan', tool_name: item.app.display_name, description: type === 'usage_verification' ? 'Usage evidence is insufficient for a precise utilization or savings claim.' : `${savings.reclaimableSeats} seat(s) meet the deterministic evidence requirements.`, financial_impact: savings.amount ?? undefined, financial_impact_status: savings.classification, savings_state: savings.classification === 'SAVINGS_READY_TO_CAPTURE' ? 'ready_to_capture' : 'not_realized', evidence_sources: evidenceIds, evidence_snapshot: item.metrics.evidence, evidence_level: type === 'usage_verification' ? item.usageStatus : 'VERIFIED_LIVE', confidence_level: type === 'usage_verification' ? 'insufficient' : 'high', calculation_method: savings.method, last_validated_at: now.toISOString(), validation_status: validationIssues.some((issue) => issue.organizationAppId === item.app.id) ? 'suppressed' : 'valid', priority: type === 'seat_reclamation' ? 'High' : 'Medium', status: 'Open', created_by_id: user.id });
     }
     if (recommendationCreates.length) await base44.entities.Recommendation.bulkCreate(recommendationCreates);
 

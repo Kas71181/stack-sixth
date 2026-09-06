@@ -1,4 +1,5 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { financialFingerprint, normalizeBilling } from '../../shared/evidenceEngine.ts';
 
 export default async function(req) {
   try {
@@ -23,13 +24,18 @@ export default async function(req) {
     if (amount > 0) {
       const evidence = await base44.entities.EvidenceRecord.create({ organization_id: organizationId, organization_app_id: app.id, evidence_category: 'FINANCIAL', evidence_status: 'FINANCIAL_EVIDENCE', source_type: candidate.source_type, source_record_id: `${candidate.source_record_id}:financial`, observed_at: now, valid_from: candidate.invoice_date ? new Date(candidate.invoice_date).toISOString() : now, freshness_status: 'fresh', verification_method: 'user_confirmed', derived_metadata: metadata });
       const current = await base44.entities.FinancialRecord.filter({ organization_id: organizationId, organization_app_id: app.id });
-      const active = current.filter((record) => record.status !== 'superseded');
-      const monthly = (value, period) => String(period || '').toLowerCase().includes('annual') ? Number(value) / 12 : String(period || '').toLowerCase().includes('quarter') ? Number(value) / 3 : Number(value);
-      const candidateMonthly = monthly(amount, candidate.billing_period || candidate.billing_frequency);
-      const conflict = active.some((record) => Math.abs(monthly(record.amount, record.billing_period) - candidateMonthly) > 0.01);
+      const billingPeriod = candidate.billing_period || candidate.billing_frequency || 'unknown';
+      const sourceFingerprint = financialFingerprint({ organization_app_id: app.id, source_name: candidate.source_type, invoice_number: candidate.invoice_number, source_date: candidate.invoice_date, amount, currency: candidate.currency || 'USD', billing_period: billingPeriod });
+      const duplicateFinancial = current.find((record) => record.source_fingerprint === sourceFingerprint);
+      if (duplicateFinancial) return Response.json({ success: true, duplicate: true, application_id: app.id, financial_record_id: duplicateFinancial.id, cost_status: duplicateFinancial.status });
+      const active = current.filter((record) => record.status !== 'superseded' && normalizeBilling(record).recurring);
+      const candidateNormalized = normalizeBilling({ amount, billing_period: billingPeriod });
+      const conflict = candidateNormalized.recurring && active.some((record) => record.currency !== (candidate.currency || 'USD') || Math.abs(normalizeBilling(record).monthlyAmount - candidateNormalized.monthlyAmount) > 0.01);
+      const candidateMonthly = candidateNormalized.monthlyAmount;
       costStatus = conflict ? 'needs_review' : 'confirmed';
       if (active.length) await base44.entities.FinancialRecord.bulkUpdate(active.map((record) => ({ id: record.id, authoritative: false, status: conflict ? 'needs_review' : 'superseded', ...(conflict ? {} : { superseded_at: now }) })));
-      financialRecord = await base44.entities.FinancialRecord.create({ organization_id: organizationId, organization_app_id: app.id, record_type: candidate.source_type === 'manual' ? 'verified_manual' : 'invoice', amount, currency: candidate.currency || 'USD', billing_period: candidate.billing_period || candidate.billing_frequency || 'monthly', quantity: Number(candidate.quantity) || undefined, unit_price: Number(candidate.unit_price) || undefined, evidence_id: evidence.id, source_name: candidate.source_type === 'gmail' ? 'Gmail invoice' : candidate.source_type, source_date: candidate.invoice_date ? new Date(candidate.invoice_date).toISOString() : now, status: costStatus, authoritative: !conflict, verified_at: now });
+      const validThrough = new Date(Date.now() + 400 * 24 * 60 * 60 * 1000).toISOString();
+      financialRecord = await base44.entities.FinancialRecord.create({ organization_id: organizationId, organization_app_id: app.id, record_type: candidate.source_type === 'manual' ? 'verified_manual' : 'invoice', amount, currency: candidate.currency || 'USD', billing_period: billingPeriod, quantity: Number(candidate.quantity) || undefined, unit_price: Number(candidate.unit_price) || undefined, marginal_unit_price: Number(candidate.marginal_unit_price) || undefined, minimum_commitment: Number(candidate.minimum_commitment) || undefined, seat_reduction_changes_spend: candidate.seat_reduction_changes_spend === true, evidence_id: evidence.id, source_fingerprint: sourceFingerprint, source_name: candidate.source_type === 'gmail' ? 'Gmail invoice' : candidate.source_type, source_date: candidate.invoice_date ? new Date(candidate.invoice_date).toISOString() : now, status: costStatus, authoritative: !conflict, verified_at: now, valid_through: validThrough });
       if (conflict) await base44.asServiceRole.entities.ValidationIssue.create({ organization_id: organizationId, organization_app_id: app.id, rule_code: 'COST_SOURCE_CONFLICT', severity: 'error', message: `${candidate.vendor_name} has conflicting cost evidence`, metric_name: 'currentMonthlySpend', suppressed_value: String(candidateMonthly), resolved: false, created_by_id: user.id });
     }
     let contract = null;

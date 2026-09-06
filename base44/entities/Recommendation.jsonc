@@ -3,16 +3,13 @@
   "type": "object",
   "properties": {
     "audit_id": {
-      "type": "string",
-      "title": "Audit ID"
+      "type": "string"
     },
     "company_id": {
-      "type": "string",
-      "title": "Company ID"
+      "type": "string"
     },
     "organization_app_id": {
-      "type": "string",
-      "title": "Organization Application ID"
+      "type": "string"
     },
     "recommendation_type": {
       "type": "string",
@@ -39,20 +36,16 @@
       ]
     },
     "tool_name": {
-      "type": "string",
-      "title": "Tool Name"
+      "type": "string"
     },
     "description": {
-      "type": "string",
-      "title": "Description"
+      "type": "string"
     },
     "estimated_monthly_savings": {
-      "type": "number",
-      "title": "Legacy Estimated Monthly Savings"
+      "type": "number"
     },
     "financial_impact": {
-      "type": "number",
-      "title": "Verified Financial Impact"
+      "type": "number"
     },
     "financial_impact_status": {
       "type": "string",
@@ -63,11 +56,33 @@
         "INSUFFICIENT_EVIDENCE"
       ]
     },
+    "savings_state": {
+      "type": "string",
+      "enum": [
+        "not_realized",
+        "ready_to_capture",
+        "captured"
+      ],
+      "default": "not_realized"
+    },
+    "captured_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "captured_by_user_id": {
+      "type": "string"
+    },
     "evidence_sources": {
       "type": "array",
       "items": {
         "type": "string"
       }
+    },
+    "evidence_snapshot": {
+      "type": "object"
+    },
+    "source_audit_id": {
+      "type": "string"
     },
     "evidence_level": {
       "type": "string",
@@ -102,9 +117,36 @@
       "enum": [
         "valid",
         "suppressed",
-        "stale"
+        "stale",
+        "requires_revalidation",
+        "resolved"
       ],
       "default": "valid"
+    },
+    "decision_state": {
+      "type": "string",
+      "enum": [
+        "approved",
+        "declined",
+        "deferred"
+      ]
+    },
+    "decision_reason": {
+      "type": "string"
+    },
+    "defer_option": {
+      "type": "string"
+    },
+    "deferred_until": {
+      "type": "string",
+      "format": "date"
+    },
+    "decision_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "decision_by_user_id": {
+      "type": "string"
     },
     "priority": {
       "type": "string",

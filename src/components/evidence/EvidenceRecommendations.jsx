@@ -15,13 +15,12 @@ export default function EvidenceRecommendations() {
   const { data: audit, isLoading } = useQuery({
     queryKey: ["latest-audit-recommendations", user?.id],
     enabled: !!user?.id,
-    queryFn: async () => (await base44.entities.SoftwareAudit.filter({ created_by_id: user.id, status: "completed" }, "-created_date", 1))[0] || null,
+    queryFn: async () => (await base44.functions.invoke("getReliableRecommendations", {})).data.audit,
   });
   const recommendations = audit?.analysis_result?.recommendations || [];
-  const decide = async (index, decision) => {
+  const decide = async (index, decision, details = {}) => {
     setSavingIndex(index);
-    const updated = recommendations.map((rec, i) => i === index ? { ...rec, decision_state: decision, decision_at: new Date().toISOString() } : rec);
-    await base44.entities.SoftwareAudit.update(audit.id, { analysis_result: { ...audit.analysis_result, recommendations: updated } });
+    await base44.functions.invoke("saveRecommendationDecision", { auditId: audit.id, recommendationIndex: index, decision, details });
     await queryClient.invalidateQueries({ queryKey: ["latest-audit-recommendations", user.id] });
     setSavingIndex(null);
   };
@@ -36,6 +35,7 @@ export default function EvidenceRecommendations() {
         </div>
         {!!recommendations.length && <AllRecommendationReportsDropdown recommendations={recommendations} existingSoftware={audit?.existing_software || []} companyName={audit?.company_name || ""} />}
       </div>
+      {audit?.analysis_result?.recommendations?.some((rec) => rec.freshness_status !== "current") && <p className="rounded-xl border border-amber-300/60 bg-amber-50/70 px-4 py-3 text-sm text-amber-900">These recommendations require revalidation because the supporting audit snapshot is missing or the software environment has changed.</p>}
       {view === "compare" ? (
         <IndependentToolComparison existingSoftware={audit?.existing_software || []} />
       ) : recommendations.length ? (

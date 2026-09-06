@@ -8,16 +8,17 @@ export default function AuditRecommendationCard({ recommendation, index, onDecis
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div><h3 className="font-bold">{rec.name}</h3><p className="text-xs text-muted-foreground">{rec.category}</p></div>
         <div className="flex items-center gap-3 text-xs">
-          <span className="flex items-center gap-1 font-semibold"><Star className="h-3.5 w-3.5 fill-primary text-primary" />{rec.match_score || 0}% match</span>
+          <span className="flex items-center gap-1 font-semibold"><Star className="h-3.5 w-3.5 text-primary" />{rec.match_score == null ? "Insufficient data" : `${rec.match_score}% match`}</span>
           {rec.estimated_monthly_cost != null && <span className="font-mono font-semibold">${rec.estimated_monthly_cost}/mo</span>}
         </div>
       </div>
       {rec.replacement_candidate_for && <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-primary"><ArrowRight className="h-3.5 w-3.5" />Alternative to {rec.replacement_candidate_for}</p>}
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        <div><p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Why it fits</p><ul className="space-y-1.5">{(rec.why_it_fits || []).map((reason, i) => <li key={i} className="flex items-start gap-2 text-sm"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />{reason}</li>)}</ul></div>
+        <div><p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Evidence basis</p><ul className="space-y-1.5">{(rec.why_it_fits || []).map((reason, i) => <li key={i} className="flex items-start gap-2 text-sm"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />{reason}</li>)}</ul></div>
         <div><p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">ROI note</p><p className="flex items-start gap-2 text-sm text-muted-foreground"><CircleDollarSign className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{rec.savings_or_roi_note || "ROI depends on final pricing and implementation scope."}</p></div>
       </div>
-      <div className="mt-4"><RecommendationDecision value={rec.decision_state} disabled={saving} onChange={(decision) => onDecision(index, decision)} /></div>
+      {rec.validation_status === "requires_revalidation" && <p className="mt-4 text-xs font-semibold text-amber-700">Candidate requires product and customer validation before action.</p>}
+      <div className="mt-4"><RecommendationDecision value={rec.decision_state} disabled={saving} onChange={(decision, details) => onDecision(index, decision, details)} /></div>
     </article>
   );
 }

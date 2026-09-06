@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { hardenAnalysisResult } from '../../shared/recommendationReliability.ts';
 
 const defaultPolicy = { minimum_match_score: 60, max_recommendations: 5, priority_order: ['savings', 'fit', 'integration', 'migration_risk'], guidance: [] };
 
@@ -54,10 +55,11 @@ export default async function(req) {
       monthly_budget: audit.monthly_budget || null, business_processes: audit.business_processes || [], pain_points: audit.pain_points || [],
       existing_software: audit.existing_software || [], icp_profile: icpProfile
     };
-    const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt: `You are Stack Sixth, an AI CFO for software spend. Return only JSON. Generate 3 to 5 practical, budget-aware software recommendations optimized for savings, fit, integration, and migration risk. Do not recommend exact duplicates unless identifying a replacement. Treat each existing tool's purpose, price, usage score, business processes, and pain points as primary evidence. Do not use em dashes.\n\nValidated policy version ${model?.version || 'baseline'}: maximum ${policy.max_recommendations || 5} recommendations, prefer supported match scores of at least ${policy.minimum_match_score || 60}, rank factors ${(policy.priority_order || defaultPolicy.priority_order).join(', ')}. ${(policy.guidance || []).join(' ')}\n\nInput:\n${JSON.stringify(input)}`,
+    const rawResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: `You are Stack Sixth. Return only JSON. Identify 3 to 5 software candidates for customer validation using only the supplied customer context. Do not invent or calculate pricing, savings, ROI, match scores, integrations, migration complexity, usage, compatibility, or contract terms. Candidate discovery is advisory; deterministic validation occurs after this response. Do not recommend exact duplicates unless identifying a possible replacement. Do not use em dashes.\n\nPolicy version ${model?.version || 'baseline'}: maximum ${policy.max_recommendations || 5}. ${(policy.guidance || []).join(' ')}\n\nInput:\n${JSON.stringify(input)}`,
       response_json_schema: analysisSchema
     });
+    const result = hardenAnalysisResult(rawResult, audit);
     await base44.entities.SoftwareAudit.update(audit.id, { analysis_result: result, icp_profile: icpProfile, status: 'completed' });
     return Response.json({ success: true, audit_id: audit.id, status: 'completed' });
   } catch (error) {

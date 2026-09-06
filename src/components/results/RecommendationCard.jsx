@@ -68,6 +68,7 @@ export default function RecommendationCard({ rec, index, auditName = "", onUpdat
   const [expanded, setExpanded] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState("none"); // "none" | "pending" | "approved"
   const [buyUrl, setBuyUrl] = useState(null);
+  const [affiliate, setAffiliate] = useState(false);
   const [assignee, setAssignee] = useState(rec.assignee || "");
   const [dueDate, setDueDate] = useState(rec.due_date || "");
   const [saving, setSaving] = useState(false);
@@ -99,14 +100,14 @@ export default function RecommendationCard({ rec, index, auditName = "", onUpdat
   };
 
   const { addItem, items } = useCart();
-  const { getUrl } = useAffiliateLinks();
+  const { getLink } = useAffiliateLinks();
   const { user } = useAuth();
 
   const isAdmin = user?.role === "admin";
   const inCart = items.some((i) => i.name === rec.name);
 
   useEffect(() => {
-    getUrl(rec.name).then(setBuyUrl);
+    getLink(rec.name).then((link) => { setBuyUrl(link.url); setAffiliate(link.isAffiliate); });
   }, [rec.name]);
 
   const handleSaveTask = async () => {
@@ -144,6 +145,7 @@ export default function RecommendationCard({ rec, index, auditName = "", onUpdat
               )}
               {buyUrl && (
                 <a
+                  title={affiliate ? "Stack Sixth may earn a referral fee. This does not affect recommendations." : undefined}
                   href={buyUrl}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -216,6 +218,7 @@ export default function RecommendationCard({ rec, index, auditName = "", onUpdat
           </div>
 
           <div className="mt-4 space-y-3">
+            {affiliate && <p className="text-xs text-muted-foreground">Stack Sixth may earn a referral fee if you purchase through this link. This does not affect how recommendations are generated.</p>}
             {rec.savings_or_roi_note && (
               <div className="bg-primary/5 rounded-lg px-4 py-2.5">
                 <p className="text-sm text-primary font-medium">{rec.savings_or_roi_note}</p>
