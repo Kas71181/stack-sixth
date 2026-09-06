@@ -18,6 +18,7 @@ const RISK_CONFIG = {
 };
 
 function ScoreBar({ value, max = 100 }) {
+  if (value == null) return <span className="text-xs font-semibold text-muted-foreground">Insufficient data</span>;
   const pct = Math.round((value / max) * 100);
   return (
     <div className="flex items-center gap-2">
@@ -66,7 +67,7 @@ function ComparisonCell({ rec, auditName, monthlyBudget, discount }) {
             {rec.implementation_priority} priority
           </Badge>
           <Badge variant="outline" className="text-[10px] font-medium px-1.5">
-            {rec.adopt_now_or_later === "now" ? "Adopt now" : "Adopt later"}
+            {rec.adopt_now_or_later === "now" ? "Adopt now" : rec.adopt_now_or_later === "requires_validation" ? "Requires validation" : "Adopt later"}
           </Badge>
         </div>
       </div>
@@ -75,7 +76,7 @@ function ComparisonCell({ rec, auditName, monthlyBudget, discount }) {
       <div className="p-4 space-y-3 border-b border-border/40">
         <div>
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Match Score</p>
-          <ScoreBar value={rec.match_score || 0} />
+          <ScoreBar value={rec.match_score} />
         </div>
 
         <div className="flex justify-between items-center">

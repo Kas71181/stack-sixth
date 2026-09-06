@@ -164,13 +164,13 @@ export default function RecommendationCard({ rec, index, auditName = "", onUpdat
           <div className="flex flex-wrap items-center gap-2 mt-2">
             <div className="flex items-center gap-1">
               <Star className="w-3.5 h-3.5 text-primary fill-primary" />
-              <span className="text-xs font-semibold">{rec.match_score}</span>
+              <span className="text-xs font-semibold">{rec.match_score == null ? "Insufficient data" : `${rec.match_score}%`}</span>
             </div>
             <Badge variant="outline" className={`text-[10px] font-medium px-2 ${PRIORITY_STYLES[rec.implementation_priority] || ""}`}>
               {rec.implementation_priority} priority
             </Badge>
             <Badge variant="outline" className="text-[10px] font-medium px-2">
-              {rec.adopt_now_or_later === "now" ? "Adopt now" : "Adopt later"}
+              {rec.adopt_now_or_later === "now" ? "Adopt now" : rec.adopt_now_or_later === "requires_validation" ? "Requires validation" : "Adopt later"}
             </Badge>
             {discount && <DiscountOffer offer={discount} compact />}
             <button
@@ -194,7 +194,7 @@ export default function RecommendationCard({ rec, index, auditName = "", onUpdat
         <div className="px-5 pb-5 pt-0 border-t border-border/40">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Why It Fits</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Evidence Basis</p>
               <ul className="space-y-1.5">
                 {rec.why_it_fits?.map((w, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm">

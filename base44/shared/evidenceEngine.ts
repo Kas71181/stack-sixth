@@ -61,11 +61,12 @@ export function reconcileCurrentCost(records, now = new Date()) {
   const unique = deduplicateFinancialRecords(records);
   const current = unique.filter((record) => record.status !== 'superseded' && normalizeBilling(record).recurring && isFinancialFresh(record, now));
   const alternatives = current.map((record) => { const normalized = normalizeBilling(record); return { id: record.id, originalAmount: record.amount, amount: normalized.monthlyAmount, annualAmount: normalized.annualAmount, billingPeriod: normalized.billingPeriod, currency: record.currency || 'USD', source: record.source_name || record.record_type, verifiedAt: record.verified_at, validThrough: record.valid_through }; });
-  const selected = current.find((record) => record.authoritative === true && record.status === 'confirmed');
-  if (selected) return { status: 'confirmed', record: selected, ...normalizeBilling(selected), alternatives, duplicateCount: records.length - unique.length };
   if (!current.length) return { status: 'unknown', record: null, monthlyAmount: null, annualAmount: null, recurring: false, alternatives, duplicateCount: records.length - unique.length };
   const values = new Set(alternatives.map((item) => `${item.currency}:${Math.round(item.amount * 100)}`));
-  if (values.size === 1 && current.every((record) => record.status === 'confirmed')) {
+  if (values.size > 1) return { status: 'needs_review', record: null, monthlyAmount: null, annualAmount: null, recurring: false, alternatives, duplicateCount: records.length - unique.length };
+  const selected = current.find((record) => record.authoritative === true && record.status === 'confirmed');
+  if (selected) return { status: 'confirmed', record: selected, ...normalizeBilling(selected), alternatives, duplicateCount: records.length - unique.length };
+  if (current.every((record) => record.status === 'confirmed')) {
     const latest = [...current].sort((a, b) => new Date(b.verified_at || b.created_date) - new Date(a.verified_at || a.created_date))[0];
     return { status: 'confirmed', record: latest, ...normalizeBilling(latest), alternatives, duplicateCount: records.length - unique.length };
   }

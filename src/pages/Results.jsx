@@ -52,7 +52,7 @@ export default function Results() {
 
   const { data: audit, isLoading } = useQuery({
     queryKey: ["audit", id],
-    queryFn: () => base44.entities.SoftwareAudit.get(id),
+    queryFn: async () => (await base44.functions.invoke("getReliableRecommendations", { auditId: id })).data.audit,
     enabled: !!user,
     // Poll every 3s while the analysis is still running
     refetchInterval: (query) => query.state.data?.status === "pending" ? 3000 : false,

@@ -65,8 +65,9 @@ export async function exportAllRecommendationsPdf(recommendations, existingSoftw
   const items = reports(recommendations, existingSoftware);
   const totalCurrent = total(items, "currentCost");
   const totalRecommended = total(items, "recommendedCost");
-  const monthlyOpportunity = total(recommendations, "estimated_savings_opportunity");
-  const annualOpportunity = monthlyOpportunity * 12;
+  const hasSupportedOpportunity = recommendations.some((item) => item.estimated_savings_opportunity != null);
+  const monthlyOpportunity = hasSupportedOpportunity ? total(recommendations, "estimated_savings_opportunity") : null;
+  const annualOpportunity = monthlyOpportunity == null ? null : monthlyOpportunity * 12;
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
 
@@ -208,8 +209,9 @@ export async function exportAllRecommendationsPptx(recommendations, existingSoft
   const items = reports(recommendations, existingSoftware);
   const totalCurrent = total(items, "currentCost");
   const totalRecommended = total(items, "recommendedCost");
-  const monthlyOpportunity = total(recommendations, "estimated_savings_opportunity");
-  const annualOpportunity = monthlyOpportunity * 12;
+  const hasSupportedOpportunity = recommendations.some((item) => item.estimated_savings_opportunity != null);
+  const monthlyOpportunity = hasSupportedOpportunity ? total(recommendations, "estimated_savings_opportunity") : null;
+  const annualOpportunity = monthlyOpportunity == null ? null : monthlyOpportunity * 12;
 
   const addBrand = (slide, section, dark = false) => {
     if (!dark) slide.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 13.33, h: 0.1, fill: { color: BRAND.blue }, line: { color: BRAND.blue } });

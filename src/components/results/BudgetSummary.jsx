@@ -11,22 +11,21 @@ export default function BudgetSummary({ result, audit }) {
   const budgetInfo = BUDGET_MAP[result.budget_fit] || BUDGET_MAP.unknown;
   const BudgetIcon = budgetInfo.icon;
 
-  const totalSavings = result.recommendations?.reduce(
-    (sum, r) => sum + (r.estimated_savings_opportunity || 0),
-    0
-  ) || 0;
-
-  const totalWaste = 0;
+  const tools = audit.existing_software || [];
+  const currentSpendSupported = tools.length > 0 && tools.every((tool) => Number.isFinite(Number(tool.monthly_cost)));
+  const currentSpend = currentSpendSupported ? tools.reduce((sum, tool) => sum + Number(tool.monthly_cost), 0) : null;
+  const supportedSavings = (result.recommendations || []).filter((rec) => rec.estimated_savings_opportunity != null);
+  const totalSavings = supportedSavings.length ? supportedSavings.reduce((sum, rec) => sum + Number(rec.estimated_savings_opportunity), 0) : null;
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <div className="bg-card border border-border/60 rounded-xl p-4">
         <div className="flex items-center gap-2 mb-2">
           <DollarSign className="w-4 h-4 text-muted-foreground" />
-          <span className="text-xs text-muted-foreground">Current Spend</span>
+          <span className="text-xs text-muted-foreground">Audit-input Spend</span>
         </div>
         <p className="text-xl font-bold font-mono">
-          ${(audit.existing_software?.reduce((s, t) => s + (t.monthly_cost || 0), 0) || 0).toLocaleString()}
+          {currentSpend == null ? "Insufficient data" : `$${currentSpend.toLocaleString()}`}
         </p>
         <p className="text-xs text-muted-foreground">/month</p>
       </div>
@@ -50,7 +49,7 @@ export default function BudgetSummary({ result, audit }) {
           <span className="text-xs text-muted-foreground">Savings Potential</span>
         </div>
         <p className="text-xl font-bold font-mono text-primary">
-          ${totalSavings.toLocaleString()}
+          {totalSavings == null ? "Insufficient data" : `$${totalSavings.toLocaleString()}`}
         </p>
         <p className="text-xs text-muted-foreground">/month</p>
       </div>
