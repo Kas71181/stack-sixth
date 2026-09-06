@@ -20,10 +20,12 @@ export default function ManualRenewalForm({ onCreated, onCancel }) {
   const { user } = useAuth();
   const [form, setForm] = useState({ vendor_name: "", last_renewal_date: "", renewal_date: "", billing_frequency: "annual", monthly_cost: "", notice_period_days: "30", governance_owner_name: user?.full_name || "", governance_owner_email: user?.email || "" });
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
   const set = (key, value) => setForm((current) => ({ ...current, [key]: value }));
   const submit = async (event) => {
-    event.preventDefault(); setSaving(true);
+    event.preventDefault(); setSaving(true); setError("");
     try { await base44.functions.invoke("saveGovernanceContract", { source: "manual", details: { ...form, contract_type: "Other", auto_renewal_status: "unknown" } }); onCreated(); }
+    catch (err) { setError(err?.response?.data?.error || "This renewal could not be saved."); }
     finally { setSaving(false); }
   };
   const changeLast = (value) => setForm((current) => ({ ...current, last_renewal_date: value, renewal_date: nextDate(value, current.billing_frequency) }));
@@ -38,6 +40,7 @@ export default function ManualRenewalForm({ onCreated, onCancel }) {
     <Input type="number" min="0" placeholder="Cancellation notice (days)" value={form.notice_period_days} onChange={(e) => set("notice_period_days", e.target.value)} />
     <Input placeholder="Decision owner" value={form.governance_owner_name} onChange={(e) => set("governance_owner_name", e.target.value)} />
     <Input type="email" placeholder="Owner email" value={form.governance_owner_email} onChange={(e) => set("governance_owner_email", e.target.value)} />
+    {error && <p role="alert" className="text-sm text-destructive sm:col-span-2">{error}</p>}
     <div className="flex justify-end gap-2 sm:col-span-2"><Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button><Button disabled={saving}>{saving ? "Saving…" : "Track renewal"}</Button></div>
   </form>;
 }
