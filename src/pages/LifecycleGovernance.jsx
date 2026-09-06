@@ -49,63 +49,8 @@ export default function LifecycleGovernance({ embedded = false }) {
   const handleAction = async (alert, action) => {
     setSavingId(alert.tool_name);
     try {
-      if (action === "dismiss") {
-        toast.success(`Alert dismissed for ${alert.tool_name}`);
-      } else if (alert.type === "dormant" && alert.integration_id) {
-        // Update integration status
-        if (action === "cancel") {
-          await base44.entities.SaasIntegration.update(alert.integration_id, {
-            connection_status: "Manual Upload",
-            notes: `Cancelled. ${alert.inactive_pct}% inactive users. ${new Date().toLocaleDateString()}`,
-          });
-          toast.success(`${alert.tool_name} marked for cancellation`);
-        } else if (action === "downgrade") {
-          await base44.entities.SaasIntegration.update(alert.integration_id, {
-            notes: `Downgrade recommended. ${alert.inactive_pct}% inactive. Downgrading seats from ${alert.licensed_seats}.`,
-          });
-          toast.success(`${alert.tool_name} marked for downgrade`);
-        }
-      } else if (alert.type === "renewal" && alert.contract_id) {
-        if (action === "cancel") {
-          await base44.entities.Contract.update(alert.contract_id, {
-            status: "Cancelled",
-            negotiation_leverage: `Cancelled due to low activity (${alert.avg_activity_score}/100). ${new Date().toLocaleDateString()}`,
-          });
-          toast.success(`${alert.tool_name} contract cancelled`);
-        } else if (action === "renew") {
-          const contract = await base44.entities.Contract.get(alert.contract_id);
-          const nextRenewalDate = getNextRenewalDate(contract.renewal_date, contract.billing_frequency);
-          if (!nextRenewalDate) throw new Error("A billing frequency is required to calculate the next renewal.");
-          const days = Math.ceil((new Date(`${nextRenewalDate}T12:00:00`) - new Date()) / 86400000);
-          await base44.entities.Contract.update(alert.contract_id, {
-            last_renewal_date: contract.renewal_date,
-            renewal_date: nextRenewalDate,
-            decision_state: "continue",
-            last_reviewed: new Date().toISOString(),
-            needs_confirmation: false,
-            status: days <= 60 ? "Expiring Soon" : "Active",
-            negotiation_leverage: `Renewed with good usage. ${new Date().toLocaleDateString()}`,
-          });
-          toast.success(`${alert.tool_name} renewed through ${nextRenewalDate}`);
-        } else if (action === "negotiate") {
-          await base44.entities.Contract.update(alert.contract_id, {
-            negotiation_leverage: `Negotiating with activity score ${alert.avg_activity_score}/100. Target 10-15% discount. ${new Date().toLocaleDateString()}`,
-          });
-          toast.success(`${alert.tool_name} marked for negotiation`);
-        }
-      }
-      await base44.entities.AuditTrailEvent.create({
-        entity_type: alert.type === "renewal" ? "Contract" : "SaasIntegration",
-        entity_id: alert.contract_id || alert.integration_id || alert.tool_name,
-        entity_label: alert.tool_name,
-        action: action === "cancel" ? "status_changed" : "updated",
-        actor_name: user.full_name || user.email,
-        actor_email: user.email,
-        old_value: "Review required",
-        new_value: action,
-        note: `Governance action: ${action}`,
-      });
-      // Reload alerts after action
+      await base44.functions.invoke("recordGovernanceAction", { entity_type: alert.type === "renewal" ? "Contract" : "SaasIntegration", entity_id: alert.contract_id || alert.integration_id, action, details: {} });
+      toast.success(`${alert.tool_name}: decision recorded; external action remains unverified`);
       await loadAlerts();
     } catch {
       toast.error("Failed to process action");
@@ -149,8 +94,8 @@ export default function LifecycleGovernance({ embedded = false }) {
           </div>
           <div className="stat-card">
             <DollarSign className="w-4 h-4 text-emerald-500 mb-1" />
-            <p className="text-2xl font-black">${summary.total_wasted.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">Wasted / Month</p>
+            <p className="text-2xl font-black">{summary.total_wasted == null ? "—" : `$${summary.total_wasted.toLocaleString()}`}</p>
+            <p className="text-xs text-muted-foreground">Evidence-backed potential / month</p>
           </div>
         </motion.div>
       )}

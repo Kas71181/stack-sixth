@@ -31,7 +31,7 @@ function TimelineEvent({ event }) {
       <div className="pb-4 flex-1 min-w-0">
         <div className="flex items-baseline justify-between gap-2">
           <p className="text-xs font-semibold">
-            <span className="text-foreground">{event.actor_name || "System"}</span>
+            <span className="text-foreground">{event.actor_name || "System"}</span>{event.actor_type && <span className="ml-1 text-[9px] font-bold text-muted-foreground">({event.actor_type})</span>}
             {" "}
             <span className="font-normal text-muted-foreground capitalize">{event.action.replace("_", " ")}</span>
             {event.entity_label && <span className="font-medium text-foreground"> {event.entity_label}</span>}
@@ -58,11 +58,7 @@ export default function AuditTrailPanel({ entityType, entityId, title }) {
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ["audit-trail", entityType || "all", entityId || user?.id],
-    queryFn: () => base44.entities.AuditTrailEvent.filter({
-      created_by_id: user.id,
-      ...(entityId ? { entity_id: entityId } : {}),
-      ...(entityType ? { entity_type: entityType } : {}),
-    }, "-created_date", 50),
+    queryFn: async () => (await base44.functions.invoke("getGovernanceRecords", { type: "history", entity_type: entityType, entity_id: entityId })).data.records,
     enabled: !!user?.id,
   });
 

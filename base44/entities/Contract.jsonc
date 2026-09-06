@@ -2,6 +2,18 @@
   "name": "Contract",
   "type": "object",
   "properties": {
+    "company_id": {
+      "type": "string",
+      "title": "Company ID"
+    },
+    "canonical_app_id": {
+      "type": "string",
+      "title": "Canonical Application ID"
+    },
+    "organization_app_id": {
+      "type": "string",
+      "title": "Organization Application ID"
+    },
     "vendor_name": {
       "type": "string",
       "title": "Vendor Name"
@@ -39,6 +51,16 @@
       "format": "date",
       "title": "Next Renewal Date"
     },
+    "notice_deadline": {
+      "type": "string",
+      "format": "date",
+      "title": "Cancellation Notice Deadline"
+    },
+    "decision_deadline": {
+      "type": "string",
+      "format": "date",
+      "title": "Decision Deadline"
+    },
     "billing_frequency": {
       "type": "string",
       "enum": [
@@ -59,8 +81,50 @@
         "billing",
         "inferred"
       ],
-      "default": "contract",
+      "default": "inferred",
       "title": "Renewal Source"
+    },
+    "renewal_source_record_id": {
+      "type": "string",
+      "title": "Source Record ID"
+    },
+    "renewal_source_label": {
+      "type": "string",
+      "title": "Source Label"
+    },
+    "extraction_method": {
+      "type": "string",
+      "title": "Extraction Method"
+    },
+    "source_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Source Timestamp"
+    },
+    "last_verified_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Last Verified"
+    },
+    "verified_by_user_id": {
+      "type": "string",
+      "title": "Verified By User ID"
+    },
+    "verified_by_email": {
+      "type": "string",
+      "title": "Verified By Email"
+    },
+    "verification_status": {
+      "type": "string",
+      "enum": [
+        "detected",
+        "needs_review",
+        "customer_confirmed",
+        "verified",
+        "unknown"
+      ],
+      "default": "unknown",
+      "title": "Verification Status"
     },
     "renewal_confidence": {
       "type": "number",
@@ -68,7 +132,7 @@
     },
     "needs_confirmation": {
       "type": "boolean",
-      "default": false,
+      "default": true,
       "title": "Needs Confirmation"
     },
     "notice_period_days": {
@@ -77,8 +141,17 @@
     },
     "auto_renews": {
       "type": "boolean",
-      "title": "Auto-Renews",
-      "default": true
+      "title": "Legacy Auto-Renews"
+    },
+    "auto_renewal_status": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "no",
+        "unknown"
+      ],
+      "default": "unknown",
+      "title": "Auto-Renewal Status"
     },
     "seats_licensed": {
       "type": "number",
@@ -99,6 +172,17 @@
       "type": "string",
       "title": "Uploaded File URL"
     },
+    "source_fingerprint": {
+      "type": "string",
+      "title": "Source Fingerprint"
+    },
+    "evidence_conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "title": "Evidence Conflicts"
+    },
     "status": {
       "type": "string",
       "enum": [
@@ -109,10 +193,6 @@
       ],
       "default": "Active",
       "title": "Status"
-    },
-    "company_id": {
-      "type": "string",
-      "title": "Company ID"
     },
     "decision_state": {
       "type": "string",
@@ -125,6 +205,45 @@
       ],
       "default": "undecided",
       "title": "Renewal Decision"
+    },
+    "action_state": {
+      "type": "string",
+      "enum": [
+        "none",
+        "decision_recorded",
+        "action_pending",
+        "in_progress",
+        "completed",
+        "verified"
+      ],
+      "default": "none",
+      "title": "Action State"
+    },
+    "action_type": {
+      "type": "string",
+      "title": "Requested Action"
+    },
+    "action_requested_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Action Requested At"
+    },
+    "action_requested_by_user_id": {
+      "type": "string",
+      "title": "Action Requested By User ID"
+    },
+    "action_requested_by_email": {
+      "type": "string",
+      "title": "Action Requested By Email"
+    },
+    "action_details": {
+      "type": "object",
+      "title": "Action Details"
+    },
+    "execution_verified_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Execution Verified At"
     },
     "last_reviewed": {
       "type": "string",

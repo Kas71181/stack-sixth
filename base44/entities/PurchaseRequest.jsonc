@@ -72,7 +72,19 @@
     },
     "estimated_monthly_cost": {
       "type": "number",
-      "title": "Estimated Monthly Cost ($)"
+      "title": "Requested Cost per Seat/Month"
+    },
+    "requested_monthly_cost": {
+      "type": "number",
+      "title": "Requested Total Monthly Cost"
+    },
+    "approved_monthly_cost": {
+      "type": "number",
+      "title": "Approved Monthly Cost"
+    },
+    "actual_purchased_monthly_cost": {
+      "type": "number",
+      "title": "Actual Purchased Monthly Cost"
     },
     "requested_seats": {
       "type": "number",
@@ -103,9 +115,25 @@
       "default": "pending",
       "title": "Status"
     },
+    "execution_state": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "pending",
+        "in_progress",
+        "completed",
+        "verified"
+      ],
+      "default": "not_started",
+      "title": "Execution State"
+    },
     "decision_reason": {
       "type": "string",
-      "title": "AI Decision Reason"
+      "title": "Evaluation Reason"
+    },
+    "evaluation_evidence": {
+      "type": "object",
+      "title": "Evaluation Evidence"
     },
     "conflict_flags": {
       "type": "array",
@@ -119,7 +147,16 @@
       "items": {
         "type": "string"
       },
-      "title": "Redundancy Warnings"
+      "title": "Potential Overlap Warnings"
+    },
+    "budget_status": {
+      "type": "string",
+      "enum": [
+        "available",
+        "unavailable"
+      ],
+      "default": "unavailable",
+      "title": "Budget Status"
     },
     "budget_impact_pct": {
       "type": "number",
@@ -132,15 +169,41 @@
         "reject",
         "needs_review"
       ],
-      "title": "AI Recommendation"
+      "title": "System Recommendation"
     },
     "reviewer": {
       "type": "string",
       "title": "Reviewer"
     },
+    "reviewer_user_id": {
+      "type": "string",
+      "title": "Reviewer User ID"
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Reviewed At"
+    },
     "reviewer_note": {
       "type": "string",
       "title": "Reviewer Note"
+    },
+    "provisioning_confirmed_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Provisioning Confirmed At"
+    },
+    "provisioning_confirmed_by_user_id": {
+      "type": "string",
+      "title": "Provisioning Confirmed By User ID"
+    },
+    "provisioning_confirmed_by_email": {
+      "type": "string",
+      "title": "Provisioning Confirmed By Email"
+    },
+    "provisioned_integration_id": {
+      "type": "string",
+      "title": "Provisioned Integration ID"
     }
   },
   "required": [

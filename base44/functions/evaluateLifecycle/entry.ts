@@ -1,152 +1,34 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { resolveOrganizationContext } from '../../shared/organizationContext.ts';
+import { resolveCanonicalApp } from '../../shared/canonicalApps.ts';
+import { calculateApplicationMetrics } from '../../shared/evidenceEngine.ts';
+import { autoRenewalStatus, daysBetweenDateOnly, deduplicateContracts, isVerifiedRenewal, subtractNoticeDays, todayDateOnly } from '../../shared/governanceReliability.ts';
 
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-
-    // Fetch user's activity data, contracts, and integrations in parallel
-    const [activities, contracts, integrations, companies] = await Promise.all([
-      base44.entities.UserActivity.filter({ created_by_id: user.id }),
-      base44.entities.Contract.filter({ created_by_id: user.id }),
-      base44.entities.SaasIntegration.filter({ created_by_id: user.id }),
-      base44.entities.Company.filter({ created_by_id: user.id }),
+    const base44 = createClientFromRequest(req); const user = await base44.auth.me(); if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    const context = await resolveOrganizationContext(base44, user); if (!context) return Response.json({ alerts: [], summary: { total_alerts: 0, dormant_count: 0, renewal_count: 0, critical_count: 0, total_wasted: null, total_at_risk: null } });
+    const service = base44.asServiceRole.entities; const ownerId = context.company.owner_user_id || context.company.created_by_id; const organizationIds = [...new Set([context.companyId, ownerId].filter(Boolean))];
+    const [appsByCompany, appsByOwner, integrations, contractsByCompany, legacyContracts, seatsByCompany, seatsByOwner, financialByCompany, financialByOwner] = await Promise.all([
+      service.OrganizationApp.filter({ organization_id: context.companyId }), service.OrganizationApp.filter({ organization_id: ownerId }), service.SaasIntegration.filter({ company_id: context.companyId }), service.Contract.filter({ company_id: context.companyId }), service.Contract.filter({ created_by_id: ownerId }), service.ApplicationSeat.filter({ organization_id: context.companyId }), service.ApplicationSeat.filter({ organization_id: ownerId }), service.FinancialRecord.filter({ organization_id: context.companyId }), service.FinancialRecord.filter({ organization_id: ownerId })
     ]);
-
-    const company = companies[0];
-    const now = new Date();
-    const alerts = [];
-
-    // ── 1. Dormant tool detection ──
-    // Group activity by tool_name
-    const toolActivityMap = {};
-    for (const a of activities) {
-      const key = a.tool_name?.toLowerCase().trim();
-      if (!key) continue;
-      if (!toolActivityMap[key]) {
-        toolActivityMap[key] = { tool_name: a.tool_name, records: [], total_cost: 0, active_users: 0, inactive_users: 0 };
-      }
-      toolActivityMap[key].records.push(a);
-      toolActivityMap[key].total_cost += a.license_cost_per_month || 0;
-      if (a.status === 'Active') {
-        toolActivityMap[key].active_users++;
-      } else {
-        toolActivityMap[key].inactive_users++;
-      }
+    const apps = [...new Map([...appsByCompany, ...appsByOwner].map((item) => [item.id, item])).values()]; const seats = [...new Map([...seatsByCompany, ...seatsByOwner].map((item) => [item.id, item])).values()]; const financial = [...new Map([...financialByCompany, ...financialByOwner].map((item) => [item.id, item])).values()]; const alerts = [];
+    for (const app of apps) {
+      const appSeats = seats.filter((item) => item.organization_app_id === app.id); const appFinancial = financial.filter((item) => item.organization_app_id === app.id); const metrics = calculateApplicationMetrics(app, appSeats, appFinancial);
+      if (!metrics.dormantApplication) continue;
+      const integration = integrations.find((item) => resolveCanonicalApp(item.tool_name).canonical_app_id === app.canonical_app_id);
+      if (!integration) continue;
+      alerts.push({ type: 'dormant', severity: metrics.dormantSeats === metrics.assignedSeats ? 'high' : 'medium', tool_name: app.display_name, active_users: metrics.activeSeats, inactive_users: metrics.dormantSeats, inactive_pct: metrics.assignedSeats ? Math.round(metrics.dormantSeats / metrics.assignedSeats * 100) : null, avg_activity_score: null, wasted_cost: metrics.savings.amount, monthly_cost: metrics.cost.monthlyAmount, licensed_seats: metrics.assignedSeats, recommended_action: 'review', integration_id: integration.id, evidence: metrics.evidence, usage_evidence_status: 'verified', classification: 'DORMANT_APPLICATION' });
     }
-
-    for (const [key, data] of Object.entries(toolActivityMap)) {
-      const totalUsers = data.active_users + data.inactive_users;
-      const inactivePct = totalUsers > 0 ? Math.round((data.inactive_users / totalUsers) * 100) : 0;
-      const avgActivityScore = data.records.length > 0
-        ? Math.round(data.records.reduce((s, r) => s + (r.activity_score || 0), 0) / data.records.length)
-        : 0;
-      const wastedCost = data.records
-        .filter((r) => r.wasted_cost_flag || r.status !== 'Active')
-        .reduce((s, r) => s + (r.license_cost_per_month || 0), 0);
-
-      // Dormant = >50% inactive OR avg activity score < 30
-      if (inactivePct >= 50 || avgActivityScore < 30) {
-        const matchingIntegration = integrations.find(
-          (i) => i.tool_name?.toLowerCase().trim() === key
-        );
-        alerts.push({
-          type: 'dormant',
-          severity: avgActivityScore < 15 ? 'critical' : inactivePct >= 75 ? 'high' : 'medium',
-          tool_name: data.tool_name,
-          active_users: data.active_users,
-          inactive_users: data.inactive_users,
-          inactive_pct: inactivePct,
-          avg_activity_score: avgActivityScore,
-          wasted_cost: wastedCost,
-          monthly_cost: matchingIntegration?.monthly_cost || data.total_cost,
-          licensed_seats: matchingIntegration?.licensed_seats || totalUsers,
-          recommended_action: wastedCost > 500 ? 'downgrade' : 'review',
-          integration_id: matchingIntegration?.id || null,
-        });
-      }
-    }
-
-    // ── 2. Renewal decision gates ──
+    const contracts = deduplicateContracts([...contractsByCompany, ...legacyContracts]); const today = todayDateOnly();
     for (const contract of contracts) {
-      if (!contract.renewal_date || contract.status === 'Cancelled' || contract.status === 'Expired') continue;
-
-      const renewalDate = new Date(contract.renewal_date);
-      const daysUntilRenewal = Math.ceil((renewalDate - now) / (1000 * 60 * 60 * 24));
-
-      // Only alert for renewals within 90 days
-      if (daysUntilRenewal > 90 || daysUntilRenewal < -30) continue;
-
-      // Check if there's activity data for this tool
-      const contractActivity = activities.filter(
-        (a) => a.tool_name?.toLowerCase().includes(contract.vendor_name?.toLowerCase().split(' ')[0] || '')
-      );
-      const avgScore = contractActivity.length > 0
-        ? Math.round(contractActivity.reduce((s, a) => s + (a.activity_score || 0), 0) / contractActivity.length)
-        : null;
-
-      let recommendedAction = 'renew';
-      let severity = 'low';
-      if (avgScore !== null && avgScore < 30) {
-        recommendedAction = 'cancel';
-        severity = 'high';
-      } else if (avgScore !== null && avgScore < 50) {
-        recommendedAction = 'negotiate';
-        severity = 'medium';
-      } else if (contract.auto_renews && daysUntilRenewal <= contract.notice_period_days) {
-        recommendedAction = 'urgent_review';
-        severity = 'critical';
-      } else if (daysUntilRenewal <= 30) {
-        severity = 'high';
-      }
-
-      alerts.push({
-        type: 'renewal',
-        severity,
-        tool_name: contract.vendor_name,
-        renewal_date: contract.renewal_date,
-        days_until_renewal: daysUntilRenewal,
-        monthly_cost: contract.monthly_cost || 0,
-        annual_cost: contract.annual_cost || 0,
-        auto_renews: contract.auto_renews,
-        notice_period_days: contract.notice_period_days || 0,
-        avg_activity_score: avgScore,
-        recommended_action: recommendedAction,
-        contract_id: contract.id,
-        seats_licensed: contract.seats_licensed || 0,
-      });
+      if (!isVerifiedRenewal(contract) || ['Cancelled', 'Expired'].includes(contract.status)) continue;
+      const days = daysBetweenDateOnly(today, contract.renewal_date); if (days === null || days > 90 || days < -30) continue;
+      const deadline = contract.notice_deadline || subtractNoticeDays(contract.renewal_date, contract.notice_period_days); const deadlineDays = deadline ? daysBetweenDateOnly(today, deadline) : null; const autoStatus = autoRenewalStatus(contract);
+      let action = 'review', severity = days <= 30 ? 'high' : 'low'; if (deadlineDays !== null && deadlineDays <= 14 && deadlineDays >= 0) { action = 'urgent_review'; severity = 'critical'; }
+      alerts.push({ type: 'renewal', severity, tool_name: contract.vendor_name, renewal_date: contract.renewal_date, notice_deadline: deadline, decision_deadline: contract.decision_deadline || deadline, days_until_renewal: days, days_until_deadline: deadlineDays, monthly_cost: contract.monthly_cost ?? null, annual_cost: contract.annual_cost ?? null, auto_renewal_status: autoStatus, auto_renews: autoStatus === 'yes', notice_period_days: contract.notice_period_days ?? null, avg_activity_score: null, recommended_action: action, contract_id: contract.id, seats_licensed: contract.seats_licensed ?? null, evidence: { source: contract.renewal_source_label || contract.renewal_source, sourceRecordId: contract.renewal_source_record_id, verifiedAt: contract.last_verified_at, verificationStatus: contract.verification_status } });
     }
-
-    // Sort by severity then by wasted cost / days
-    const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-    alerts.sort((a, b) => {
-      const sevDiff = (severityOrder[a.severity] || 4) - (severityOrder[b.severity] || 4);
-      if (sevDiff !== 0) return sevDiff;
-      if (a.type === 'dormant') return (b.wasted_cost || 0) - (a.wasted_cost || 0);
-      return (a.days_until_renewal || 0) - (b.days_until_renewal || 0);
-    });
-
-    const totalWasted = alerts
-      .filter((a) => a.type === 'dormant')
-      .reduce((s, a) => s + (a.wasted_cost || 0), 0);
-    const totalAtRisk = alerts
-      .filter((a) => a.type === 'renewal')
-      .reduce((s, a) => s + (a.monthly_cost || 0), 0);
-
-    return Response.json({
-      alerts,
-      summary: {
-        total_alerts: alerts.length,
-        dormant_count: alerts.filter((a) => a.type === 'dormant').length,
-        renewal_count: alerts.filter((a) => a.type === 'renewal').length,
-        critical_count: alerts.filter((a) => a.severity === 'critical').length,
-        total_wasted: totalWasted,
-        total_at_risk: totalAtRisk,
-        company_name: company?.name || 'Your Company',
-      },
-    });
-  } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
-  }
-});
+    const order = { critical: 0, high: 1, medium: 2, low: 3 }; alerts.sort((a,b) => (order[a.severity] ?? 4) - (order[b.severity] ?? 4)); const pricedDormancy = alerts.filter((item) => item.type === 'dormant' && item.wasted_cost != null);
+    return Response.json({ alerts, summary: { total_alerts: alerts.length, dormant_count: alerts.filter((item) => item.type === 'dormant').length, renewal_count: alerts.filter((item) => item.type === 'renewal').length, critical_count: alerts.filter((item) => item.severity === 'critical').length, total_wasted: pricedDormancy.length ? pricedDormancy.reduce((sum,item) => sum + item.wasted_cost,0) : null, total_at_risk: null, company_name: context.company.name, evidence_scope: organizationIds } });
+  } catch (error) { console.error('Lifecycle evaluation failed', error); return Response.json({ error: error.message }, { status: 500 }); }
+}

@@ -27,11 +27,9 @@ export default function ContractUploader({ onComplete, onCancel }) {
     setDetails(response.data.extracted); setStage("review");
   };
   const save = async () => {
-    setStage("saving");
-    const days = details.renewal_date ? Math.ceil((new Date(details.renewal_date) - new Date()) / 86400000) : 999;
-    const contract = await base44.entities.Contract.create({ ...details, monthly_cost: Number(details.monthly_cost) || 0, annual_cost: Number(details.annual_cost) || 0, notice_period_days: details.notice_period_days ? Number(details.notice_period_days) : undefined, file_url: fileUrl, renewal_source: "contract", needs_confirmation: false, decision_state: "undecided", status: days < 0 ? "Expired" : days <= 60 ? "Expiring Soon" : "Active" });
-    if (user?.role === "admin") await base44.entities.AuditTrailEvent.create({ entity_type: "Contract", entity_id: contract.id, entity_label: contract.vendor_name, action: "created", actor_name: user.full_name || user.email, actor_email: user.email, new_value: contract.renewal_date || "Date not found", note: "Contract uploaded and renewal details confirmed." });
-    onComplete();
+    setStage("saving"); setError("");
+    try { await base44.functions.invoke("saveGovernanceContract", { source: "contract", details: { ...details, file_url: fileUrl } }); onComplete(); }
+    catch (err) { setStage("review"); setError(err?.response?.data?.error || "Conflicting or invalid contract evidence requires review."); }
   };
   const processing = stage === "uploading" || stage === "extracting";
   return <Dialog open onOpenChange={(open) => !open && onCancel()}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl"><DialogHeader><DialogTitle>Extract renewal details</DialogTitle><DialogDescription>Upload a contract and Governance will identify important dates, renewal terms, and relevant information.</DialogDescription></DialogHeader>

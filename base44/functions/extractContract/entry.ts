@@ -31,7 +31,7 @@ export default async function(req) {
       file_urls: [file_url],
       response_json_schema: schema
     });
-    return Response.json({ success: true, extracted, file_url });
+    return Response.json({ success: true, extracted: { ...extracted, verification_status: 'detected', needs_confirmation: true, auto_renewal_status: extracted.auto_renews === true ? 'yes' : extracted.auto_renews === false ? 'no' : 'unknown', extraction_method: 'AI document extraction', source_timestamp: new Date().toISOString() }, file_url });
   } catch (error) {
     console.error('Contract extraction failed', error);
     return Response.json({ error: error.message }, { status: 500 });

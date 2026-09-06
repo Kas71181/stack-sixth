@@ -49,15 +49,15 @@ export default function LifecycleAlertCard({ alert, onAction, isSaving }) {
               <>
                 <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {alert.inactive_pct}% inactive</span>
                 <span>·</span>
-                <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" /> ${alert.wasted_cost}/mo wasted</span>
+                <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" /> {alert.wasted_cost == null ? "Cost unavailable" : `$${alert.wasted_cost}/mo potential`}</span>
               </>
             )}
             {isRenewal && (
               <>
                 <span className="flex items-center gap-1"><CalendarClock className="w-3 h-3" /> {alert.days_until_renewal > 0 ? `${alert.days_until_renewal}d to renewal` : "Overdue"}</span>
                 <span>·</span>
-                <span className="font-mono">${alert.monthly_cost}/mo</span>
-                {alert.auto_renews && <span className="text-amber-600 font-medium">auto-renews</span>}
+                <span className="font-mono">{alert.monthly_cost == null ? "Cost unavailable" : `$${alert.monthly_cost}/mo`}</span>
+                <span className="font-medium capitalize">Auto-renewal: {alert.auto_renewal_status || "unknown"}</span>
               </>
             )}
           </div>
@@ -97,11 +97,11 @@ export default function LifecycleAlertCard({ alert, onAction, isSaving }) {
               </div>
               <div className="bg-muted/50 rounded-lg p-2.5 text-center">
                 <p className="text-muted-foreground">Monthly Cost</p>
-                <p className="font-bold text-sm mt-0.5">${alert.monthly_cost}</p>
+                <p className="font-bold text-sm mt-0.5">{alert.monthly_cost == null ? "Unknown" : `$${alert.monthly_cost}`}</p>
               </div>
               <div className="bg-muted/50 rounded-lg p-2.5 text-center">
                 <p className="text-muted-foreground">Notice Period</p>
-                <p className="font-bold text-sm mt-0.5">{alert.notice_period_days}d</p>
+                <p className="font-bold text-sm mt-0.5">{alert.notice_period_days == null ? "Unknown" : `${alert.notice_period_days}d`}</p>
               </div>
               <div className="bg-muted/50 rounded-lg p-2.5 text-center">
                 <p className="text-muted-foreground">Activity</p>

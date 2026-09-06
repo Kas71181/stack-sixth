@@ -7,20 +7,7 @@ export default function GovernanceOverview({ onSelect }) {
   const { user } = useAuth();
   const { data, isLoading } = useQuery({
     queryKey: ["governance-overview", user?.id], enabled: !!user?.id,
-    queryFn: async () => {
-      const [requests, contracts, events] = await Promise.all([
-        base44.entities.PurchaseRequest.filter({ created_by_id: user.id }),
-        base44.entities.Contract.filter({ created_by_id: user.id }),
-        base44.entities.AuditTrailEvent.filter({ created_by_id: user.id }, "-created_date", 100),
-      ]);
-      const today = Date.now();
-      return {
-        pending: requests.filter((item) => ["pending", "auto_approved"].includes(item.status)).length,
-        renewals: contracts.filter((item) => item.status !== "Cancelled" && item.renewal_date && new Date(item.renewal_date).getTime() - today <= 60 * 86400000).length,
-        unassigned: contracts.filter((item) => item.status !== "Cancelled" && !item.governance_owner_email).length,
-        decisions: events.length,
-      };
-    },
+    queryFn: async () => (await base44.functions.invoke("getGovernanceOverview", {})).data,
   });
   if (isLoading) return <div className="py-16 text-center text-sm text-muted-foreground">Loading governance…</div>;
   const cards = [

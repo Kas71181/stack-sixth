@@ -19,7 +19,7 @@ export default function RequestCard({ request, onDecision, isSaving, onProvision
   const status = STATUS_STYLES[request.status] || STATUS_STYLES.pending;
   const StatusIcon = status.icon;
 
-  const totalCost = (request.estimated_monthly_cost || 0) * (request.requested_seats || 1);
+  const totalCost = request.requested_monthly_cost ?? (request.estimated_monthly_cost != null ? request.estimated_monthly_cost * (request.requested_seats || 1) : null);
 
   return (
     <div className="glass-card overflow-hidden hover-lift">
@@ -41,10 +41,10 @@ export default function RequestCard({ request, onDecision, isSaving, onProvision
           <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-muted-foreground">
             <span>{request.category}</span>
             <span>·</span>
-            <span className="font-mono font-medium">${totalCost}/mo</span>
+            <span className="font-mono font-medium">{totalCost == null ? "Cost unavailable" : `$${totalCost}/mo requested`}</span>
             <span>·</span>
             <span>{request.requested_seats} seat{request.requested_seats !== 1 ? "s" : ""}</span>
-            {request.budget_impact_pct > 0 && (
+            {request.budget_status === "available" && request.budget_impact_pct != null && (
               <>
                 <span>·</span>
                 <span className="text-primary font-medium">{request.budget_impact_pct}% of budget</span>
@@ -56,12 +56,12 @@ export default function RequestCard({ request, onDecision, isSaving, onProvision
 
       {expanded && (
         <div className="px-4 pb-4 border-t border-border/40 pt-3 space-y-3">
-          {/* AI Decision */}
+          {/* Evidence-based system evaluation */}
           {request.decision_reason && (
             <div className="bg-primary/5 rounded-xl p-3">
               <div className="flex items-center gap-1.5 mb-1">
                 <Sparkles className="w-3.5 h-3.5 text-primary" />
-                <p className="text-[10px] font-bold uppercase tracking-wider text-primary">AI Assessment</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-primary">Evidence-based assessment</p>
               </div>
               <p className="text-sm leading-relaxed">{withoutLongDashes(request.decision_reason)}</p>
             </div>

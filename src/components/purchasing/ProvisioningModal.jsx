@@ -32,22 +32,7 @@ export default function ProvisioningModal({ request, onClose, onProvisioned }) {
   const handleProvision = async () => {
     setProvisioning(true);
     try {
-      // Add to live stack
-      await base44.entities.SaasIntegration.create({
-        tool_name: request.tool_name,
-        category: request.category,
-        connection_status: "Manual Upload",
-        monthly_cost: (request.estimated_monthly_cost || 0) * (request.requested_seats || 1),
-        licensed_seats: request.requested_seats || 1,
-        active_users: 0,
-        notes: `Provisioned from purchase request. Team: ${request.team_affected || "N/A"}`,
-      });
-
-      // Mark request as provisioned
-      await base44.entities.PurchaseRequest.update(request.id, {
-        status: "provisioned",
-        reviewer_note: `Provisioned on ${new Date().toLocaleDateString()}`,
-      });
+      await base44.functions.invoke("confirmProvisioning", { request_id: request.id, confirmations: checked });
 
       toast.success(`${request.tool_name} added to your stack!`);
       onProvisioned?.();
@@ -141,7 +126,7 @@ export default function ProvisioningModal({ request, onClose, onProvisioned }) {
             className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {provisioning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-            {provisioning ? "Provisioning…" : "Add to Stack"}
+            {provisioning ? "Confirming…" : "Confirm Provisioning"}
           </button>
         </div>
       </div>

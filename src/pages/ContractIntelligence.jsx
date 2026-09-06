@@ -26,7 +26,7 @@ export default function ContractIntelligence() {
   const qc = useQueryClient();
   const [showUploader, setShowUploader] = useState(false), [showManual, setShowManual] = useState(false), [gmailKey, setGmailKey] = useState(0);
   const [search, setSearch] = useState(""), [filter, setFilter] = useState("All"), [sort, setSort] = useState("date"), [view, setView] = useState("list");
-  const query = useQuery({ queryKey: ["contracts", user?.id], queryFn: () => base44.entities.Contract.filter({ created_by_id: user.id }, "renewal_date", 100), enabled: !!user?.id });
+  const query = useQuery({ queryKey: ["contracts", user?.id], queryFn: async () => (await base44.functions.invoke("getGovernanceRecords", { type: "contracts" })).data.records, enabled: !!user?.id });
   const contracts = query.data || [];
   const { data: discountData } = useDiscountOpportunities(contracts.map((contract) => contract.vendor_name));
   const offersByTool = discountData?.by_tool || {};

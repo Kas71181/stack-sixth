@@ -6,6 +6,20 @@
       "type": "string",
       "title": "Company ID"
     },
+    "purchase_request_id": {
+      "type": "string",
+      "title": "Purchase Request ID"
+    },
+    "provisioning_status": {
+      "type": "string",
+      "enum": [
+        "unverified",
+        "user_confirmed",
+        "integration_verified"
+      ],
+      "default": "unverified",
+      "title": "Provisioning Status"
+    },
     "tool_name": {
       "type": "string",
       "title": "Tool Name"

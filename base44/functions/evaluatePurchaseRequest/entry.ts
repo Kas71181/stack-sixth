@@ -1,166 +1,29 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { resolveOrganizationContext, companyScope } from '../../shared/organizationContext.ts';
+import { budgetEvaluation, governanceActor, potentialOverlap } from '../../shared/governanceReliability.ts';
 
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const body = await req.json();
-    const { tool_name, category, estimated_monthly_cost, requested_seats, justification, team_affected, use_case, vendor_url } = body;
-
-    if (!tool_name || !category) {
-      return Response.json({ error: 'tool_name and category are required' }, { status: 400 });
-    }
-
-    const context = await resolveOrganizationContext(base44, user);
-    if (!context) return Response.json({ error: 'Complete company setup before submitting a purchase request' }, { status: 400 });
-    const ownerId = context.company.owner_user_id || context.company.created_by_id;
-    const [integrations, policies, rolePolicies] = await Promise.all([
-      base44.asServiceRole.entities.SaasIntegration.filter({ company_id: context.companyId }),
-      base44.asServiceRole.entities.PurchasePolicy.filter({ is_active: true, created_by_id: ownerId }),
-      base44.asServiceRole.entities.RolePolicy.filter({ created_by_id: ownerId }),
-    ]);
-
-    const company = context.company;
-    const monthlyBudget = company?.monthly_saas_budget || 0;
-    const cost = estimated_monthly_cost || 0;
-    const seats = requested_seats || 1;
-    const totalCost = cost * seats;
-
-    // ── 1. Redundancy check ──
-    const existingInCategory = integrations.filter(
-      (i) => i.category === category
-    );
-    const redundancyWarnings = [];
-    if (existingInCategory.length > 0) {
-      redundancyWarnings.push(
-        `You already have ${existingInCategory.length} tool(s) in the "${category}" category: ${existingInCategory.map((i) => i.tool_name).join(', ')}`
-      );
-    }
-
-    // ── 2. Budget impact ──
-    const budgetImpactPct = monthlyBudget > 0 ? Math.round((totalCost / monthlyBudget) * 100) : 0;
-
-    // ── 3. Policy evaluation ──
-    const policy = policies[0] || {
-      max_auto_approve_cost: 100,
-      requires_manual_above: 500,
-      blocked_categories: [],
-      auto_approve_categories: [],
-      max_budget_pct_per_request: 15,
-      block_redundant_tools: true,
-    };
-
-    const conflictFlags = [];
-
-    if (policy.blocked_categories?.includes(category)) {
-      conflictFlags.push(`Category "${category}" is blocked by policy`);
-    }
-    if (budgetImpactPct > (policy.max_budget_pct_per_request || 15)) {
-      conflictFlags.push(`Request consumes ${budgetImpactPct}% of monthly budget (max allowed: ${policy.max_budget_pct_per_request || 15}%)`);
-    }
-    if (totalCost > (policy.requires_manual_above || 500)) {
-      conflictFlags.push(`Cost exceeds manual review threshold of $${policy.requires_manual_above || 500}/mo`);
-    }
-    if (policy.block_redundant_tools && existingInCategory.length > 0) {
-      conflictFlags.push(`Redundant tool — existing tools in same category detected`);
-    }
-
-    // ── 4. Role policy check ──
-    if (team_affected && rolePolicies.length > 0) {
-      const matchingRole = rolePolicies.find((r) =>
-        team_affected.toLowerCase().includes(r.role_name?.toLowerCase()?.split(' ')[0] || '')
-      );
-      if (matchingRole && matchingRole.blocked_tools) {
-        const isBlocked = matchingRole.blocked_tools.some((t) =>
-          tool_name.toLowerCase().includes(t.toLowerCase())
-        );
-        if (isBlocked) {
-          conflictFlags.push(`Tool is blocked for role "${matchingRole.role_name}" by role policy`);
-        }
-      }
-    }
-
-    // ── 5. AI recommendation ──
-    const hasBlockingFlags = conflictFlags.length > 0;
-    const isUnderAutoThreshold = totalCost <= (policy.max_auto_approve_cost || 100);
-    const isAutoApproveCategory = policy.auto_approve_categories?.includes(category);
-
-    let aiRecommendation;
-    if (hasBlockingFlags) {
-      aiRecommendation = 'needs_review';
-    } else if (isUnderAutoThreshold || isAutoApproveCategory) {
-      aiRecommendation = 'approve';
-    } else {
-      aiRecommendation = 'needs_review';
-    }
-
-    // ── 6. LLM reasoning ──
-    const llmPrompt = `You are Stack Sixth, an AI procurement advisor. A purchase request has been submitted. Provide a concise decision summary.
-
-Request details:
-- Tool: ${tool_name}
-- Category: ${category}
-- Monthly cost: $${cost}/seat × ${seats} seats = $${totalCost}/mo total
-- Team affected: ${team_affected || 'Not specified'}
-- Justification: ${justification || 'Not provided'}
-- Use case: ${use_case || 'Not provided'}
-
-Company context:
-- Monthly SaaS budget: $${monthlyBudget.toLocaleString()}
-- Budget impact: ${budgetImpactPct}%
-- Existing tools in same category: ${existingInCategory.map((i) => i.tool_name).join(', ') || 'None'}
-- Conflict flags: ${conflictFlags.join('; ') || 'None'}
-
-AI recommendation: ${aiRecommendation}
-
-Write a 2-3 sentence decision reason explaining why this request should be ${aiRecommendation === 'approve' ? 'auto-approved' : aiRecommendation === 'reject' ? 'rejected' : 'reviewed by a human'}. Be direct and specific. Reference the data above.`;
-
-    let decisionReason;
-    try {
-      const llmResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
-        prompt: llmPrompt,
-      });
-      decisionReason = typeof llmResult === 'string' ? llmResult : llmResult?.response || JSON.stringify(llmResult);
-    } catch {
-      decisionReason = aiRecommendation === 'approve'
-        ? `Request is under the auto-approval cost threshold ($${policy.max_auto_approve_cost || 100}/mo), no redundancy conflicts detected, and within budget limits.`
-        : `Request requires human review due to: ${conflictFlags.join('; ') || 'cost or category considerations'}.`;
-    }
-
-    const status = aiRecommendation === 'approve' ? 'auto_approved' : 'pending';
-    const request = await base44.asServiceRole.entities.PurchaseRequest.create({
-      ...companyScope(context),
-      requester_user_id: user.id,
-      requester_name: user.full_name || '',
-      requester_email: user.email || '',
-      tool_name,
-      category,
-      estimated_monthly_cost: cost,
-      requested_seats: seats,
-      justification: justification || '',
-      team_affected: team_affected || '',
-      use_case: use_case || '',
-      vendor_url: vendor_url || '',
-      status,
-      ai_recommendation: aiRecommendation,
-      decision_reason: decisionReason,
-      conflict_flags: conflictFlags,
-      redundancy_warnings: redundancyWarnings,
-      budget_impact_pct: budgetImpactPct,
-    });
-    return Response.json({
-      request,
-      ai_recommendation: aiRecommendation,
-      decision_reason: decisionReason,
-      conflict_flags: conflictFlags,
-      redundancy_warnings: redundancyWarnings,
-      budget_impact_pct: budgetImpactPct,
-      total_monthly_cost: totalCost,
-    });
-  } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
-  }
-});
+    const base44 = createClientFromRequest(req); const user = await base44.auth.me(); if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    const body = await req.json(); const { tool_name, category, estimated_monthly_cost, requested_seats, justification, team_affected, use_case, vendor_url } = body;
+    if (!tool_name || !category) return Response.json({ error: 'tool_name and category are required' }, { status: 400 });
+    const unitCost = estimated_monthly_cost === '' || estimated_monthly_cost == null ? null : Number(estimated_monthly_cost); const seats = Number(requested_seats || 1);
+    if ((unitCost !== null && (!Number.isFinite(unitCost) || unitCost < 0)) || !Number.isInteger(seats) || seats < 1) return Response.json({ error: 'Cost and seats must be valid non-negative values' }, { status: 400 });
+    const context = await resolveOrganizationContext(base44, user); if (!context) return Response.json({ error: 'Complete company setup before submitting a purchase request' }, { status: 400 });
+    const ownerId = context.company.owner_user_id || context.company.created_by_id; const service = base44.asServiceRole.entities;
+    const [integrations, policies, rolePolicies] = await Promise.all([service.SaasIntegration.filter({ company_id: context.companyId }), service.PurchasePolicy.filter({ is_active: true, created_by_id: ownerId }), service.RolePolicy.filter({ created_by_id: ownerId })]);
+    const overlap = potentialOverlap({ tool_name, category }, integrations); const budget = budgetEvaluation(context.company.monthly_saas_budget, unitCost, seats); const policy = policies[0] || null; const conflictFlags = [];
+    if (policy?.blocked_categories?.includes(category)) conflictFlags.push(`Category "${category}" is blocked by policy "${policy.rule_name}".`);
+    if (budget.status === 'available' && Number.isFinite(policy?.max_budget_pct_per_request) && budget.impactPct > policy.max_budget_pct_per_request) conflictFlags.push(`Requested cost is ${budget.impactPct}% of the verified monthly budget; policy maximum is ${policy.max_budget_pct_per_request}%.`);
+    if (budget.monthlyRequestedCost !== null && Number.isFinite(policy?.requires_manual_above) && budget.monthlyRequestedCost > policy.requires_manual_above) conflictFlags.push(`Requested cost exceeds the configured manual-review threshold of $${policy.requires_manual_above}/month.`);
+    if (overlap.exact.length && policy?.block_redundant_tools === true) conflictFlags.push('An exact canonical application match exists; confirm whether this is an additional subscription.');
+    if (team_affected && rolePolicies.length) { const role = rolePolicies.find((item) => team_affected.toLowerCase().includes(String(item.role_name || '').toLowerCase())); if (role?.blocked_tools?.some((item) => tool_name.toLowerCase() === String(item).toLowerCase())) conflictFlags.push(`Tool is blocked for role "${role.role_name}" by role policy.`); }
+    const explicitlyAutoEligible = policy && budget.monthlyRequestedCost !== null && ((Number.isFinite(policy.max_auto_approve_cost) && budget.monthlyRequestedCost <= policy.max_auto_approve_cost) || policy.auto_approve_categories?.includes(category));
+    const recommendation = !conflictFlags.length && explicitlyAutoEligible ? 'approve' : 'needs_review'; const status = recommendation === 'approve' ? 'auto_approved' : 'pending';
+    const evidence = { company_id: context.companyId, policy_id: policy?.id || null, policy_name: policy?.rule_name || null, budget_status: budget.status, budget_value: budget.status === 'available' ? Number(context.company.monthly_saas_budget) : null, requested_cost: budget.monthlyRequestedCost, requested_seats: seats, exact_application_matches: overlap.exact.map((item) => item.id), category_candidates: overlap.category.map((item) => item.id), evaluated_at: new Date().toISOString() };
+    const reasons = [`Requested ${seats} seat${seats === 1 ? '' : 's'}${budget.monthlyRequestedCost === null ? ' with cost unavailable' : ` at $${budget.monthlyRequestedCost}/month`}.`, budget.status === 'unavailable' ? 'Budget status unavailable because no authoritative customer budget is present.' : `Budget impact is ${budget.impactPct}% of the customer budget.`, policy ? `Evaluated against policy "${policy.rule_name}".` : 'No active purchase policy exists; human review is required.', ...overlap.warnings, ...conflictFlags];
+    const request = await service.PurchaseRequest.create({ ...companyScope(context), requester_user_id: user.id, requester_name: user.full_name || '', requester_email: user.email || '', tool_name, category, ...(unitCost === null ? {} : { estimated_monthly_cost: unitCost }), ...(budget.monthlyRequestedCost === null ? {} : { requested_monthly_cost: budget.monthlyRequestedCost }), requested_seats: seats, justification: justification || '', team_affected: team_affected || '', use_case: use_case || '', vendor_url: vendor_url || '', status, execution_state: 'not_started', ai_recommendation: recommendation, decision_reason: reasons.join(' '), evaluation_evidence: evidence, conflict_flags: conflictFlags, redundancy_warnings: overlap.warnings, budget_status: budget.status, ...(budget.impactPct === null ? {} : { budget_impact_pct: budget.impactPct }) });
+    await service.AuditTrailEvent.create({ company_id: context.companyId, entity_type: 'PurchaseRequest', entity_id: request.id, entity_label: tool_name, action: 'created', ...governanceActor('SYSTEM', user), new_value: status, note: 'Deterministic policy evaluation completed from recorded evidence.', source: 'purchase_policy' });
+    return Response.json({ request, ai_recommendation: recommendation, decision_reason: request.decision_reason, conflict_flags: conflictFlags, redundancy_warnings: overlap.warnings, budget_status: budget.status, budget_impact_pct: budget.impactPct, total_monthly_cost: budget.monthlyRequestedCost });
+  } catch (error) { console.error('Purchase evaluation failed', error); return Response.json({ error: error.message }, { status: 500 }); }
+}
