@@ -54,6 +54,7 @@ function buildHolidays(year) {
 
 function getActiveHoliday(date) {
   const year = date.getFullYear();
+  const calendarDate = new Date(year, date.getMonth(), date.getDate());
   // Check current year and adjacent year (for Dec→Jan boundary)
   for (const y of [year - 1, year, year + 1]) {
     for (const h of buildHolidays(y)) {
@@ -61,7 +62,7 @@ function getActiveHoliday(date) {
       const [em, ed] = h.end;
       const start = new Date(y, sm - 1, sd);
       const end = new Date(y, em - 1, ed);
-      if (date >= start && date <= end) return h;
+      if (calendarDate >= start && calendarDate <= end) return h;
     }
   }
   return null;
