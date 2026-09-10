@@ -11,7 +11,7 @@ export const FRESHNESS_POLICIES = {
 
 export const QUALIFYING_ACTIVITY = {
   slack: new Set(['message', 'call', 'file_shared', 'search']),
-  github: new Set(['push', 'pull_request', 'pull_request_review', 'issues', 'issue_comment', 'repository_access', 'repo_admin']),
+  github: new Set(['login']),
   google_workspace_admin: new Set(['login', 'service_access', 'application_access']),
   microsoft_entra: new Set(['successful_sign_in']),
   okta: new Set(['successful_app_authentication', 'app_access']),

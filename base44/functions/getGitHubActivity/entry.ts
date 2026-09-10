@@ -34,7 +34,7 @@ export default async function(req) {
       const profile = await profileResponse.json();
       members.push({ id: String(profile.id), email: profile.email || null, name: profile.name || profile.login, isBot: profile.type === 'Bot' });
     }
-    const limitations = organization ? ['Organization membership is Verified Access only', 'Live usage requires successful organization audit-log access', 'No inactivity conclusion without a complete observation window'] : ['Personal GitHub account link only', 'No organization seat population is available', 'No inactivity or savings classification'];
+    const limitations = organization ? ['Organization membership verifies an Enterprise seat only', 'Usage requires an explicit successful GitHub login event', 'Repository activity is not treated as usage', 'No inactivity conclusion without a complete login observation window'] : ['Personal GitHub account link only', 'No GitHub Enterprise seat population is available', 'No login, inactivity, or savings classification'];
     const evidence = await ingestConnectorMembership(base44, user, { appName: 'GitHub', connectorType: 'github', workspaceId: organization ? String(organization.id) : `user:${members[0].id}`, organizationVerified: false, capabilities: organization ? ['users', 'seat_assignments'] : ['users'], seatAssignments: Boolean(organization), members, limitations });
     let activity = { available: false, eventsCreated: 0, reason: organization ? 'Organization audit permission unavailable' : 'Organization connection required' };
     if (organization) {
@@ -55,7 +55,7 @@ export default async function(req) {
         if (batch.length < 100) { auditComplete = true; break; }
       }
       if (auditComplete) {
-        const normalizeAction = (action = '') => action.includes('pull_request_review') ? 'pull_request_review' : action.includes('pull_request') ? 'pull_request' : action.includes('push') ? 'push' : action.includes('issue') ? 'issues' : action.includes('repo') ? 'repo_admin' : null;
+        const normalizeAction = (action = '') => action === 'user.login' ? 'login' : null;
         const qualifying = auditEvents.map((event) => ({ event, eventType: normalizeAction(event.action) })).filter((item) => item.eventType && item.event.actor_id);
         const usage = await ingestUsageEvents(base44, user, { provider: 'github', application: 'GitHub', providerDataCurrentThrough: new Date().toISOString(), syncStatus: 'succeeded', observationWindowDays: 30, events: qualifying.map(({ event, eventType }) => ({ providerEventId: event._document_id || event.request_id, providerUserId: String(event.actor_id), providerAppIdentifier: organization.login, eventType, occurredAt: typeof event.created_at === 'number' ? new Date(event.created_at * 1000).toISOString() : event.created_at, succeeded: true, metadata: { action: event.action, repository: event.repo } })) });
         const appRows = await base44.entities.OrganizationApp.filter({ organization_id: user.id, canonical_app_id: 'github' });
